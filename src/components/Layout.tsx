@@ -421,7 +421,7 @@ export default function Layout({ children, currentView, onViewChange, user, onLo
           // Navegar a la vista indicada
           if (link.startsWith('/')) {
             const view = link.substring(1); // Quitar el /
-            onNavigate(view);
+            onViewChange(view);
           }
           setNotificationsOpen(false);
         }}
