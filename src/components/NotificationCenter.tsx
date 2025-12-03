@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import api from '../services/api';
 import toast from 'react-hot-toast';
+import socketService from '../services/socket';
 
 interface Notification {
   _id: string;
@@ -48,6 +49,40 @@ export default function NotificationCenter({ isOpen, onClose, onNavigate }: Noti
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, filter]);
+
+  // Escuchar notificaciones en tiempo real
+  useEffect(() => {
+    const handleNewNotification = (notification: any) => {
+      console.log('🔔 Nueva notificación recibida:', notification);
+      
+      // Agregar la notificación al inicio de la lista
+      setNotifications(prev => [
+        {
+          _id: notification._id || Date.now().toString(),
+          type: notification.type,
+          title: notification.title,
+          message: notification.message,
+          link: notification.link,
+          is_read: false,
+          created_at: notification.createdAt || new Date().toISOString(),
+          sender: notification.sender
+        },
+        ...prev
+      ]);
+
+      // Mostrar toast
+      toast.success(notification.message, {
+        icon: '🔔',
+        duration: 4000
+      });
+    };
+
+    socketService.on('new-notification', handleNewNotification);
+
+    return () => {
+      socketService.off('new-notification', handleNewNotification);
+    };
+  }, []);
 
   const loadNotifications = async () => {
     try {

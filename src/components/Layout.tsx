@@ -30,6 +30,7 @@ import NotificationCenter from './NotificationCenter';
 import EditProfile from './EditProfile';
 import api from '../services/api';
 import { notificationService } from '../services/notifications';
+import socketService from '../services/socket';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -81,14 +82,36 @@ export default function Layout({ children, currentView, onViewChange, user, onLo
     if (user) {
       loadUnreadCount();
       loadUnreadMessages();
+      
+      // Escuchar nuevas notificaciones en tiempo real
+      const handleNewNotification = () => {
+        console.log('🔔 Layout: Nueva notificación detectada, actualizando contador');
+        setUnreadCount(prev => prev + 1);
+      };
+
+      const handleNewMessage = () => {
+        console.log('💬 Layout: Nuevo mensaje detectado, actualizando contador');
+        if (currentView !== 'messages') {
+          setUnreadMessages(prev => prev + 1);
+        }
+      };
+
+      socketService.on('new-notification', handleNewNotification);
+      socketService.on('new-message', handleNewMessage);
+      
       // Actualizar contadores cada 30 segundos
       const interval = setInterval(() => {
         loadUnreadCount();
         loadUnreadMessages();
       }, 30000);
-      return () => clearInterval(interval);
+      
+      return () => {
+        socketService.off('new-notification', handleNewNotification);
+        socketService.off('new-message', handleNewMessage);
+        clearInterval(interval);
+      };
     }
-  }, [user]);
+  }, [user, currentView]);
 
   // Recargar contador de mensajes cuando se cambia de vista (especialmente al salir de Messages)
   useEffect(() => {
