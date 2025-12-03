@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import rateLimit from 'express-rate-limit';
+import { ObjectId } from 'mongodb';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'arc-raiders-super-secret-key-change-in-production-2024';
 
@@ -14,6 +15,16 @@ export const authenticateToken = (req, res, next) => {
   try {
     const verified = jwt.verify(token, JWT_SECRET);
     req.user = verified;
+    
+    // Convertir userId a ObjectId si es necesario
+    if (req.user.userId && typeof req.user.userId === 'string') {
+      try {
+        req.user.userId = new ObjectId(req.user.userId);
+      } catch (err) {
+        console.error('Error converting userId to ObjectId:', err);
+      }
+    }
+    
     next();
   } catch (error) {
     if (error.name === 'TokenExpiredError') {
@@ -31,6 +42,15 @@ export const optionalAuth = (req, res, next) => {
     try {
       const verified = jwt.verify(token, JWT_SECRET);
       req.user = verified;
+      
+      // Convertir userId a ObjectId si es necesario
+      if (req.user.userId && typeof req.user.userId === 'string') {
+        try {
+          req.user.userId = new ObjectId(req.user.userId);
+        } catch (err) {
+          console.error('Error converting userId to ObjectId:', err);
+        }
+      }
     } catch (error) {
       // Token inválido pero seguimos adelante
     }

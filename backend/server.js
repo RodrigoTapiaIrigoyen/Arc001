@@ -3123,7 +3123,8 @@ app.delete('/api/wishlist/:itemId', authenticateToken, async (req, res) => {
 // Obtener estadísticas del usuario
 app.get('/api/users/my-stats', authenticateToken, async (req, res) => {
   try {
-    const userId = req.user.userId;
+    // Normalizar userId (puede venir como string u ObjectId desde JWT)
+    const userId = req.user.userId?.toString ? req.user.userId.toString() : req.user.userId;
     
     // Trades stats
     const totalTrades = await marketplaceService.db.collection('trade_offers').countDocuments({
@@ -3185,7 +3186,8 @@ app.get('/api/users/my-stats', authenticateToken, async (req, res) => {
 // Obtener actividad reciente del usuario
 app.get('/api/users/recent-activity', authenticateToken, async (req, res) => {
   try {
-    const userId = req.user.userId;
+    // Normalizar userId (puede venir como string u ObjectId desde JWT)
+    const userId = req.user.userId?.toString ? req.user.userId.toString() : req.user.userId;
     const activity = [];
     
     // Trades recientes
