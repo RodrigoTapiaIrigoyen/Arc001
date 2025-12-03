@@ -113,11 +113,16 @@ export default function Friends() {
 
     setSearchLoading(true);
     try {
+      console.log('🔍 Buscando usuarios con query:', query);
       const response = await api.get(`/friends/search?q=${encodeURIComponent(query)}`);
-      setSearchResults(response.data);
+      console.log('✅ Usuarios encontrados:', response.data?.length || 0, response.data);
+      setSearchResults(response.data || []);
     } catch (error: any) {
-      console.error('Error searching users:', error);
-      toast.error('Error al buscar usuarios');
+      console.error('❌ Error searching users:', error);
+      setSearchResults([]);
+      if (error.message !== 'Failed to fetch') {
+        toast.error('Error al buscar usuarios');
+      }
     } finally {
       setSearchLoading(false);
     }
