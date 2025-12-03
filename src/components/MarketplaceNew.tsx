@@ -15,7 +15,6 @@ import {
   TrendingUp
 } from 'lucide-react';
 import api from '../services/api';
-import toast from 'react-hot-toast';
 import OffersModal from './OffersModal';
 
 const API_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/marketplace`;
@@ -160,7 +159,7 @@ export default function MarketplaceNew() {
       
       await api.post('/marketplace/trades', body);
       
-      toast.success('Listing creado exitosamente');
+      alert('Listing creado exitosamente');
       setShowNewListing(false);
       setSelectedItem(null);
       setNewListingOffering('');
@@ -170,7 +169,7 @@ export default function MarketplaceNew() {
       loadListings();
     } catch (error: any) {
       console.error('Error creating listing:', error);
-      toast.error(error.message || 'Error al crear listing');
+      alert(error.message || 'Error al crear listing');
     }
   };
 
@@ -189,14 +188,14 @@ export default function MarketplaceNew() {
         offer_items: newOfferItems.split(',').map(i => i.trim()).filter(Boolean)
       });
 
-      toast.success('Oferta enviada exitosamente');
+      alert('Oferta enviada exitosamente');
       setNewOfferText('');
       setNewOfferItems('');
       loadOffers(listingId);
       loadListings();
     } catch (error: any) {
       console.error('Error creating offer:', error);
-      toast.error(error.message || 'Error al enviar oferta');
+      alert(error.message || 'Error al enviar oferta');
     }
   };
 
