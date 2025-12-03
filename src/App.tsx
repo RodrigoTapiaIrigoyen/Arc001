@@ -187,11 +187,34 @@ function App() {
   }
 
   const renderView = () => {
-    const LoadingFallback = () => (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="w-12 h-12 border-4 border-red-500/30 border-t-red-500 rounded-full animate-spin"></div>
-      </div>
-    );
+    const LoadingFallback = () => {
+      const [showError, setShowError] = useState(false);
+      
+      useEffect(() => {
+        const timer = setTimeout(() => setShowError(true), 10000);
+        return () => clearTimeout(timer);
+      }, []);
+      
+      if (showError) {
+        return (
+          <div className="flex flex-col items-center justify-center min-h-[400px] text-center p-4">
+            <p className="text-red-400 mb-4">La página está tardando demasiado en cargar</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="px-4 py-2 bg-yellow-500 text-black rounded-lg font-medium"
+            >
+              Recargar
+            </button>
+          </div>
+        );
+      }
+      
+      return (
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="w-12 h-12 border-4 border-red-500/30 border-t-red-500 rounded-full animate-spin"></div>
+        </div>
+      );
+    };
 
     return (
       <Suspense fallback={<LoadingFallback />}>
