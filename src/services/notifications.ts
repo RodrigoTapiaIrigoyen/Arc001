@@ -10,7 +10,13 @@ class NotificationService {
   private offerSound: HTMLAudioElement | null = null;
 
   constructor() {
-    this.permission = Notification.permission;
+    // Verificar si Notification API está disponible (iOS Safari puede no tenerla)
+    if (typeof Notification !== 'undefined') {
+      this.permission = Notification.permission;
+    } else {
+      console.warn('Notification API no disponible en este navegador');
+      this.permission = 'denied';
+    }
     this.loadSoundPreference();
     this.initSounds();
   }
@@ -64,6 +70,12 @@ class NotificationService {
       return;
     }
 
+    // Verificar que Notification esté disponible
+    if (typeof Notification === 'undefined') {
+      console.warn('Notification API no disponible');
+      return;
+    }
+
     const notification = new Notification(`Nuevo mensaje de ${username}`, {
       body: message.length > 100 ? message.substring(0, 100) + '...' : message,
       icon: '/icon-message.png',
@@ -113,6 +125,15 @@ class NotificationService {
 
     if (!this.canShowNotifications()) {
       // Solo sonido si está visible
+      if (this.soundEnabled) {
+        this.playOfferSound();
+      }
+      return;
+    }
+
+    // Verificar que Notification esté disponible
+    if (typeof Notification === 'undefined') {
+      console.warn('Notification API no disponible');
       if (this.soundEnabled) {
         this.playOfferSound();
       }
