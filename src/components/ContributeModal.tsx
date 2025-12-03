@@ -14,7 +14,7 @@ interface ContributeModalProps {
   onSubmit: () => void;
 }
 
-const API_URL = 'http://localhost:3001/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 export default function ContributeModal({ enemyId, enemyName, currentStats, onClose, onSubmit }: ContributeModalProps) {
   const [contributionType, setContributionType] = useState<'hp' | 'damage' | 'ability' | 'description'>('hp');

@@ -13,7 +13,7 @@ interface MapLocation {
   mapImage?: string;
 }
 
-const API_URL = 'http://localhost:3001/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 // Mapas oficiales interactivos con marcadores personalizables
 const GAME_MAPS: Record<string, { image: string }> = {

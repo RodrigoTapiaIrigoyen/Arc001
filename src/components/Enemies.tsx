@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Target, Zap, Shield as ShieldIcon, Search, Skull, ThumbsUp, Edit } from 'lucide-react';
 
-const API_URL = 'http://localhost:3001/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 interface EnemyComponent {
   name: string;
@@ -280,7 +280,7 @@ export default function Enemies() {
       }
 
       // Cargar componentes de items
-      const itemsResponse = await fetch('http://localhost:3001/api/items');
+      const itemsResponse = await fetch(`${API_URL}/items`);
       const items = await itemsResponse.json();
       
       const enemyComponents = items.filter((item: EnemyComponent) =>

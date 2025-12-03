@@ -18,9 +18,10 @@ export default function WeaponsDatabase() {
   const loadData = async () => {
     setLoading(true);
     try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
       // Cargar items de ArcForge + weapons de ARDB
       const [itemsData, weaponsData, raritiesData] = await Promise.all([
-        (await fetch('http://localhost:3001/api/items')).json(),
+        (await fetch(`${API_URL}/items`)).json(),
         db.collection('weapons').find().toArray(),
         db.collection('rarities').find().toArray()
       ]);
