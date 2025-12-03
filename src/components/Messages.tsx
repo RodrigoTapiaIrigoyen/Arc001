@@ -83,7 +83,10 @@ export default function Messages() {
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    // Conectar al WebSocket
+    // Setup WebSocket listeners PRIMERO
+    setupSocketListeners();
+
+    // Conectar al WebSocket DESPUÉS de configurar listeners
     const token = localStorage.getItem('token');
     console.log('🔌 Verificando conexión WebSocket...');
     console.log('🔌 Token existe:', !!token);
@@ -96,9 +99,6 @@ export default function Messages() {
 
     loadConversations();
     loadUnreadCount();
-
-    // Setup WebSocket listeners
-    setupSocketListeners();
 
     return () => {
       // Cleanup socket listeners
@@ -150,14 +150,17 @@ export default function Messages() {
 
     // Usuarios online con estados
     socketClient.on('online-users', (users: any[]) => {
-      console.log('👥 Lista de usuarios online recibida:', users.length);
-      console.log('👥 Usuarios:', users);
+      console.log('👥 Lista de usuarios online recibida:', users?.length || 0);
+      console.log('👥 Usuarios completos:', JSON.stringify(users, null, 2));
       const usersMap = new Map();
-      users.forEach((u: any) => {
+      users?.forEach((u: any) => {
+        console.log('👥 Agregando usuario al Map:', u.userId, u.username, u.status);
         usersMap.set(u.userId, { status: u.status || 'online', username: u.username });
       });
+      console.log('👥 Map creado con tamaño:', usersMap.size);
+      console.log('👥 Contenido del Map:', Array.from(usersMap.entries()));
       setOnlineUsers(usersMap);
-      console.log('👥 OnlineUsers Map actualizado, tamaño:', usersMap.size);
+      console.log('👥 setOnlineUsers llamado');
     });
 
     socketClient.on('user-online', (data: any) => {
