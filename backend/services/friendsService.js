@@ -101,9 +101,23 @@ class FriendsService {
       throw new Error('Solicitud no encontrada');
     }
 
+    // Debug logs
+    console.log('🔍 Respondiendo solicitud:', {
+      friendshipId,
+      userId,
+      friendship: {
+        user1Id: friendship.user1Id.toString(),
+        user2Id: friendship.user2Id.toString(),
+        requesterId: friendship.requesterId.toString(),
+        status: friendship.status
+      }
+    });
+
     // Verificar que el usuario sea el receptor de la solicitud (no el que la envió)
     const isReceiver = friendship.user2Id.toString() === userId;
     const isRequester = friendship.requesterId.toString() === userId;
+    
+    console.log('✅ Verificación:', { isReceiver, isRequester, shouldPass: isReceiver && !isRequester });
     
     if (!isReceiver || isRequester) {
       throw new Error('No tienes permiso para responder esta solicitud');
