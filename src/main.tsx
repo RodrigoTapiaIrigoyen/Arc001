@@ -3,8 +3,6 @@ import App from './App.tsx';
 import './index.css';
 import 'leaflet/dist/leaflet.css';
 
-console.log('🟡 main.tsx cargado - iniciando React');
-
 // Error boundary simple
 const rootElement = document.getElementById('root');
 
@@ -13,13 +11,9 @@ if (!rootElement) {
   throw new Error('Root element not found');
 }
 
-console.log('🟢 Root element encontrado, creando React app...');
-
 try {
   const root = createRoot(rootElement);
-  console.log('🟢 Root creado, renderizando App...');
   root.render(<App />);
-  console.log('✅ App renderizada exitosamente');
 } catch (error) {
   console.error('❌ Error rendering app:', error);
   rootElement.innerHTML = `

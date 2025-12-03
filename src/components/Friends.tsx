@@ -60,14 +60,12 @@ export default function Friends({ onViewChange, onSelectUser }: FriendsProps = {
   const setupSocketListeners = () => {
     // Nueva solicitud de amistad recibida
     socketClient.on('new-friend-request', (data: any) => {
-      console.log('🔔 Nueva solicitud recibida:', data);
       toast.success(`${data.senderUsername} te envió una solicitud de amistad`);
       loadPendingRequests();
     });
 
     // Solicitud aceptada
     socketClient.on('friend-request-accepted', (data: any) => {
-      console.log('✅ Solicitud aceptada:', data);
       toast.success(`${data.username} aceptó tu solicitud de amistad`);
       loadFriends();
       loadSentRequests();
@@ -127,10 +125,7 @@ export default function Friends({ onViewChange, onSelectUser }: FriendsProps = {
 
     setSearchLoading(true);
     try {
-      console.log('🔍 Buscando usuarios con query:', query);
       const response = await api.get(`/friends/search?q=${encodeURIComponent(query)}`);
-      console.log('✅ Respuesta completa:', response);
-      console.log('✅ Usuarios encontrados:', Array.isArray(response) ? response.length : 0);
       setSearchResults(Array.isArray(response) ? response : []);
     } catch (error: any) {
       console.error('❌ Error searching users:', error);
@@ -214,7 +209,6 @@ export default function Friends({ onViewChange, onSelectUser }: FriendsProps = {
   };
 
   const handleSendMessage = (userId: string, username: string) => {
-    console.log('💬 Abriendo chat con:', username, userId);
     // Guardar el usuario seleccionado en localStorage para Messages
     localStorage.setItem('selectedUserId', userId);
     localStorage.setItem('selectedUsername', username);

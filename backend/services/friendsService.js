@@ -109,23 +109,9 @@ class FriendsService {
     const user2IdStr = friendship.user2Id.toString();
     const requesterIdStr = friendship.requesterId.toString();
 
-    // Debug logs
-    console.log('🔍 Respondiendo solicitud:', {
-      friendshipId,
-      userId: userIdStr,
-      friendship: {
-        user1Id: user1IdStr,
-        user2Id: user2IdStr,
-        requesterId: requesterIdStr,
-        status: friendship.status
-      }
-    });
-
     // Verificar que el usuario sea el receptor de la solicitud (no el que la envió)
     const isReceiver = user2IdStr === userIdStr;
     const isRequester = requesterIdStr === userIdStr;
-    
-    console.log('✅ Verificación:', { isReceiver, isRequester, shouldPass: isReceiver && !isRequester });
     
     if (!isReceiver || isRequester) {
       throw new Error('No tienes permiso para responder esta solicitud');

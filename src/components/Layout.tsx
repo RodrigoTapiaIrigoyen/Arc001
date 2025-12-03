@@ -85,12 +85,10 @@ export default function Layout({ children, currentView, onViewChange, user, onLo
       
       // Escuchar nuevas notificaciones en tiempo real
       const handleNewNotification = () => {
-        console.log('🔔 Layout: Nueva notificación detectada, actualizando contador');
         setUnreadCount(prev => prev + 1);
       };
 
       const handleNewMessage = () => {
-        console.log('💬 Layout: Nuevo mensaje detectado, actualizando contador');
         if (currentView !== 'messages') {
           setUnreadMessages(prev => prev + 1);
         }

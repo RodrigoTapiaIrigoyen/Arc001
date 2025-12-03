@@ -53,8 +53,6 @@ export default function NotificationCenter({ isOpen, onClose, onNavigate }: Noti
   // Escuchar notificaciones en tiempo real
   useEffect(() => {
     const handleNewNotification = (notification: any) => {
-      console.log('🔔 Nueva notificación recibida:', notification);
-      
       // Agregar la notificación al inicio de la lista
       setNotifications(prev => [
         {

@@ -59,7 +59,7 @@ export default function Login({ onLogin, onSwitchToRegister }: LoginProps) {
             />
           </div>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-red-500 via-yellow-400 to-green-500 bg-clip-text text-transparent mb-2">
-            DON'T SHOOT
+            BIENVENIDO RAIDER
           </h1>
           <p className="text-gray-300 text-lg mb-2">¡Únete a la comunidad!</p>
           <p className="text-gray-400 text-sm">Comercia, planea estrategias y domina el campo de batalla</p>

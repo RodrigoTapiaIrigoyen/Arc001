@@ -61,8 +61,6 @@ function App() {
   }, []);
 
   useEffect(() => {
-    console.log('🔄 App useEffect - verificando auth en background (sin loading)');
-    
     // Verificar si hay un usuario guardado y validar token EN BACKGROUND
     const verifyAuth = async () => {
       try {
@@ -78,7 +76,6 @@ function App() {
               const now = new Date();
               
               if (now > expirationDate) {
-                console.log('Token expirado localmente, limpiando sesión');
                 throw new Error('Token expirado');
               }
             }
@@ -93,7 +90,6 @@ function App() {
                 new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 2000))
               ]);
               setUser((userData as any).user);
-              console.log('✅ Token verificado, usuario autenticado');
               
               // Conectar WebSocket con token válido
               if (storedToken && !socketClient.isConnected()) {
@@ -114,7 +110,6 @@ function App() {
               setUser(parsedUser);
             }
           } catch (error: any) {
-            console.log('Limpiando sesión por:', error.message);
             localStorage.removeItem('user');
             localStorage.removeItem('token');
             localStorage.removeItem('tokenExpiration');
@@ -167,7 +162,6 @@ function App() {
   };
 
   if (loading) {
-    console.log('🔄 Renderizando loading screen...');
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0a0e1a] via-[#0f1420] to-[#1a1f2e]">
         <div className="text-center space-y-4">
@@ -250,9 +244,6 @@ function App() {
         {currentView === 'friends' && (
           <Friends 
             onViewChange={setCurrentView}
-            onSelectUser={(userId, username) => {
-              console.log('Usuario seleccionado desde Friends:', userId, username);
-            }}
           />
         )}
         {currentView === 'help' && <HelpGuide />}
