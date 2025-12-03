@@ -68,7 +68,7 @@ export default function Friends() {
   const loadFriends = async () => {
     try {
       const response = await api.get('/friends');
-      setFriends(response.data || []);
+      setFriends(Array.isArray(response) ? response : []);
     } catch (error: any) {
       console.error('Error loading friends:', error);
       setFriends([]); // Asegurar que siempre sea un array
@@ -82,7 +82,7 @@ export default function Friends() {
   const loadPendingRequests = async () => {
     try {
       const response = await api.get('/friends/requests/pending');
-      setPendingRequests(response.data || []);
+      setPendingRequests(Array.isArray(response) ? response : []);
     } catch (error: any) {
       console.error('Error loading pending requests:', error);
       setPendingRequests([]); // Asegurar que siempre sea un array
@@ -95,7 +95,7 @@ export default function Friends() {
   const loadSentRequests = async () => {
     try {
       const response = await api.get('/friends/requests/sent');
-      setSentRequests(response.data || []);
+      setSentRequests(Array.isArray(response) ? response : []);
     } catch (error: any) {
       console.error('Error loading sent requests:', error);
       setSentRequests([]); // Asegurar que siempre sea un array
@@ -115,8 +115,9 @@ export default function Friends() {
     try {
       console.log('🔍 Buscando usuarios con query:', query);
       const response = await api.get(`/friends/search?q=${encodeURIComponent(query)}`);
-      console.log('✅ Usuarios encontrados:', response.data?.length || 0, response.data);
-      setSearchResults(response.data || []);
+      console.log('✅ Respuesta completa:', response);
+      console.log('✅ Usuarios encontrados:', Array.isArray(response) ? response.length : 0);
+      setSearchResults(Array.isArray(response) ? response : []);
     } catch (error: any) {
       console.error('❌ Error searching users:', error);
       setSearchResults([]);
