@@ -71,6 +71,10 @@ export default function Friends() {
       setFriends(response.data);
     } catch (error: any) {
       console.error('Error loading friends:', error);
+      // Si es 404, significa que el endpoint aún no está disponible
+      if (error.response?.status !== 404) {
+        toast.error('Error al cargar amigos');
+      }
     }
   };
 
@@ -80,6 +84,9 @@ export default function Friends() {
       setPendingRequests(response.data);
     } catch (error: any) {
       console.error('Error loading pending requests:', error);
+      if (error.response?.status !== 404) {
+        toast.error('Error al cargar solicitudes');
+      }
     }
   };
 
@@ -89,6 +96,9 @@ export default function Friends() {
       setSentRequests(response.data);
     } catch (error: any) {
       console.error('Error loading sent requests:', error);
+      if (error.response?.status !== 404) {
+        toast.error('Error al cargar solicitudes enviadas');
+      }
     }
   };
 

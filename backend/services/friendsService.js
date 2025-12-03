@@ -1,4 +1,4 @@
-const { ObjectId } = require('mongodb');
+import { ObjectId } from 'mongodb';
 
 class FriendsService {
   constructor(db) {
@@ -381,4 +381,4 @@ class FriendsService {
   }
 }
 
-module.exports = FriendsService;
+export default FriendsService;
