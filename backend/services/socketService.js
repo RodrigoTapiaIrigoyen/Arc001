@@ -464,6 +464,20 @@ class SocketService {
     const userData = this.onlineUsers.get(userId);
     return userData ? userData.status : 'offline';
   }
+
+  /**
+   * Emitir evento a un usuario específico
+   */
+  emitToUser(userId, event, data) {
+    const userData = this.onlineUsers.get(userId);
+    if (userData && userData.socketId) {
+      console.log(`📤 Emitiendo '${event}' a usuario ${userId}`);
+      this.io.to(userData.socketId).emit(event, data);
+      return true;
+    }
+    console.log(`⚠️ Usuario ${userId} no está online para recibir '${event}'`);
+    return false;
+  }
 }
 
 export default SocketService;

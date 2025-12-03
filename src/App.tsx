@@ -19,6 +19,7 @@ const MarketplaceNew = lazy(() => import('./components/MarketplaceNew'));
 const ActivityFeed = lazy(() => import('./components/ActivityFeed'));
 const CommunityHub = lazy(() => import('./components/CommunityHub'));
 const Messages = lazy(() => import('./components/Messages'));
+const Friends = lazy(() => import('./components/Friends'));
 const UserProfile = lazy(() => import('./components/UserProfile'));
 const PlaceholderView = lazy(() => import('./components/PlaceholderView'));
 const HelpGuide = lazy(() => import('./components/HelpGuide'));
@@ -246,6 +247,7 @@ function App() {
         {currentView === 'marketplace' && <MarketplaceNew />}
         {currentView === 'community' && <CommunityHub initialPostId={selectedPostId} onPostClose={() => setSelectedPostId(null)} />}
         {currentView === 'messages' && <Messages />}
+        {currentView === 'friends' && <Friends />}
         {currentView === 'help' && <HelpGuide />}
         {currentView === 'admin' && user?.role === 'admin' && <AdminDashboard />}
         {currentView === 'profile' && user && (

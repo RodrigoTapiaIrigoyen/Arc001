@@ -24,6 +24,7 @@ import ProfileService from './services/profiles.js';
 import WishlistService from './services/wishlist.js';
 import AdminService from './services/admin.js';
 import SocketService from './services/socketService.js';
+import FriendsService from './services/friendsService.js';
 import arcforge from './services/arcforge.js';
 import logger from './utils/logger.js';
 import { errorHandler, notFoundHandler, validateEnv } from './middleware/errorHandler.js';
@@ -185,6 +186,7 @@ async function connectDB() {
     profileService = new ProfileService(db);
     wishlistService = new WishlistService(db);
     adminService = new AdminService(db);
+    friendsService = new FriendsService(db);
     
     // Crear índices
     await messageService.createIndexes();
@@ -3279,6 +3281,164 @@ app.get('/api/users/recent-activity', authenticateToken, async (req, res) => {
 });
 
 // ============ END USER STATS ROUTES ============
+
+// ============ FRIENDS ROUTES ============
+
+let friendsService;
+
+// Enviar solicitud de amistad
+app.post('/api/friends/request/:userId', authenticateToken, async (req, res) => {
+  try {
+    const senderId = req.user.userId;
+    const receiverId = req.params.userId;
+    
+    const friendshipId = await friendsService.sendFriendRequest(senderId, receiverId);
+    
+    // Emitir notificación en tiempo real
+    const sender = req.user;
+    socketService.emitToUser(receiverId, 'new-friend-request', {
+      friendshipId,
+      senderId,
+      senderUsername: sender.username
+    });
+    
+    res.json({ 
+      success: true, 
+      friendshipId,
+      message: 'Solicitud enviada' 
+    });
+  } catch (error) {
+    console.error('Error sending friend request:', error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Responder a solicitud de amistad
+app.post('/api/friends/respond/:friendshipId', authenticateToken, async (req, res) => {
+  try {
+    const { accept } = req.body;
+    const userId = req.user.userId;
+    const friendshipId = req.params.friendshipId;
+    
+    const result = await friendsService.respondToFriendRequest(friendshipId, userId, accept);
+    
+    if (accept) {
+      // Obtener datos de la amistad para notificar
+      const friendship = await db.collection('friendships').findOne({
+        _id: new ObjectId(friendshipId)
+      });
+      
+      socketService.emitToUser(friendship.requesterId.toString(), 'friend-request-accepted', {
+        friendshipId,
+        userId,
+        username: req.user.username
+      });
+    }
+    
+    res.json(result);
+  } catch (error) {
+    console.error('Error responding to friend request:', error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Obtener lista de amigos
+app.get('/api/friends', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const friends = await friendsService.getFriends(userId);
+    res.json(friends);
+  } catch (error) {
+    console.error('Error fetching friends:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Obtener solicitudes pendientes
+app.get('/api/friends/requests/pending', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const requests = await friendsService.getPendingRequests(userId);
+    res.json(requests);
+  } catch (error) {
+    console.error('Error fetching pending requests:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Obtener solicitudes enviadas
+app.get('/api/friends/requests/sent', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const requests = await friendsService.getSentRequests(userId);
+    res.json(requests);
+  } catch (error) {
+    console.error('Error fetching sent requests:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Cancelar solicitud enviada
+app.delete('/api/friends/request/:friendshipId', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const friendshipId = req.params.friendshipId;
+    
+    const result = await friendsService.cancelFriendRequest(friendshipId, userId);
+    res.json(result);
+  } catch (error) {
+    console.error('Error canceling friend request:', error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Eliminar amigo
+app.delete('/api/friends/:friendshipId', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const friendshipId = req.params.friendshipId;
+    
+    const result = await friendsService.removeFriend(friendshipId, userId);
+    res.json(result);
+  } catch (error) {
+    console.error('Error removing friend:', error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Verificar estado de relación con otro usuario
+app.get('/api/friends/status/:userId', authenticateToken, async (req, res) => {
+  try {
+    const userId1 = req.user.userId;
+    const userId2 = req.params.userId;
+    
+    const status = await friendsService.getRelationshipStatus(userId1, userId2);
+    res.json(status);
+  } catch (error) {
+    console.error('Error checking friendship status:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Buscar usuarios para agregar
+app.get('/api/friends/search', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { q, limit } = req.query;
+    
+    if (!q || q.length < 2) {
+      return res.json([]);
+    }
+    
+    const users = await friendsService.searchUsers(userId, q, limit ? parseInt(limit) : 20);
+    res.json(users);
+  } catch (error) {
+    console.error('Error searching users:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============ END FRIENDS ROUTES ============
 
 // ============ ADMIN ROUTES ============
 

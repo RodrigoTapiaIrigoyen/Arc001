@@ -8,6 +8,7 @@ import {
   Package,
   Map,
   Users,
+  UserPlus,
   ScrollText,
   TrendingUp,
   ShoppingCart,
@@ -163,6 +164,7 @@ export default function Layout({ children, currentView, onViewChange, user, onLo
     { id: 'activity', label: 'Activity Feed', icon: TrendingUp },
     { id: 'marketplace', label: 'Marketplace', icon: ShoppingCart },
     { id: 'community', label: 'Community', icon: Users },
+    { id: 'friends', label: 'Friends', icon: UserPlus },
     { id: 'messages', label: 'Messages', icon: MessageSquare },
   ];
 
