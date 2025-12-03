@@ -1,3 +1,225 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Arc Raiders Background Theme - Enhanced */
+body {
+  background: linear-gradient(
+      135deg,
+      rgba(239, 68, 68, 0.05) 0%,
+      transparent 30%
+    ),
+    linear-gradient(225deg, rgba(234, 179, 8, 0.05) 0%, transparent 30%),
+    linear-gradient(to bottom, #0d1117 0%, #050810 50%, #0d1117 100%);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Grid optimizado con perspectiva */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 49px,
+      rgba(239, 68, 68, 0.08) 49px,
+      rgba(239, 68, 68, 0.08) 50px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 49px,
+      rgba(234, 179, 8, 0.06) 49px,
+      rgba(234, 179, 8, 0.06) 50px
+    );
+  transform: perspective(600px) rotateX(60deg) scale(2);
+  transform-origin: center 100%;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.5;
+  will-change: transform;
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    black 20%,
+    black 80%,
+    transparent 100%
+  );
+}
+
+/* Orbs de luz más intensos y visibles */
+body::after {
+  content: "";
+  position: fixed;
+  top: -20%;
+  left: -20%;
+  right: -20%;
+  bottom: -20%;
+  background: radial-gradient(
+      circle at 15% 25%,
+      rgba(239, 68, 68, 0.15) 0%,
+      rgba(239, 68, 68, 0.05) 25%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 85% 75%,
+      rgba(234, 179, 8, 0.15) 0%,
+      rgba(234, 179, 8, 0.05) 25%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 50% 50%,
+      rgba(34, 197, 94, 0.1) 0%,
+      rgba(34, 197, 94, 0.03) 30%,
+      transparent 60%
+    ),
+    radial-gradient(
+      circle at 70% 30%,
+      rgba(59, 130, 246, 0.12) 0%,
+      rgba(59, 130, 246, 0.04) 25%,
+      transparent 55%
+    );
+  animation: ambientPulse 15s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(35px);
+  will-change: transform;
+}
+
+@keyframes ambientPulse {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: translate(-2%, 2%) scale(1.02);
+    opacity: 0.95;
+  }
+}
+
+/* Grain texture optimizado */
+.scanlines::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.1'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.2;
+  mix-blend-mode: overlay;
+}
+
+/* Vignette más pronunciado + borde superior con glow */
+#root::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+      to bottom,
+      rgba(239, 68, 68, 0.1) 0%,
+      transparent 10%
+    ),
+    radial-gradient(
+      circle at center,
+      transparent 0%,
+      transparent 50%,
+      rgba(0, 0, 0, 0.5) 100%
+    );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Barra de acento superior */
+#root::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(239, 68, 68, 0.6) 20%,
+    rgba(234, 179, 8, 0.6) 40%,
+    rgba(34, 197, 94, 0.6) 60%,
+    rgba(59, 130, 246, 0.6) 80%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 100;
+  box-shadow: 0 0 20px rgba(234, 179, 8, 0.5);
+}
+
+/* Mejorar calidad de renderizado de imágenes */
+img {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+/* Leaflet - Alta calidad para imágenes de mapas */
+.leaflet-image-layer {
+  image-rendering: -webkit-optimize-contrast !important;
+  image-rendering: crisp-edges !important;
+}
+
+.leaflet-image-high-quality {
+  image-rendering: -webkit-optimize-contrast !important;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Optimización para canvas de Leaflet */
+.leaflet-zoom-animated {
+  will-change: transform;
+}
+
+/* Smooth zoom en Leaflet */
+.leaflet-container {
+  font-family: inherit;
+}
+
+.leaflet-tile-container img {
+  image-rendering: -webkit-optimize-contrast !important;
+}
+
+/* Mejorar renderizado de ImageOverlay */
+.leaflet-image-layer img {
+  image-rendering: -webkit-optimize-contrast !important;
+  image-rendering: crisp-edges !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+}
+
+.leaflet-overlay-pane img {
+  image-rendering: -webkit-optimize-contrast !important;
+  max-width: none !important;
+}
+
+/* Animación para actividades recientes */
+@keyframes pulse-slow {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

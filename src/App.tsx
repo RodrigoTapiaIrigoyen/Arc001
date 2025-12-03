@@ -1,102 +1,266 @@
-import { useState } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
+import { Toaster } from 'react-hot-toast';
 import Layout from './components/Layout';
-import Dashboard from './components/Dashboard';
-import WeaponsDatabase from './components/WeaponsDatabase';
-import Marketplace from './components/Marketplace';
-import Trackers from './components/Trackers';
-import CommunityHub from './components/CommunityHub';
-import PlaceholderView from './components/PlaceholderView';
-import { Shield, Package, Target, Map, ScrollText } from 'lucide-react';
+import Login from './components/Login';
+import Register from './components/Register';
+import InstallPWA from './components/InstallPWA';
+import InstallPWA from './components/InstallPWA';
+import api from './services/api';
+import socketClient from './services/socket';
+
+// Lazy loading de componentes pesados
+const Dashboard = lazy(() => import('./components/Dashboard'));
+const WeaponsDatabase = lazy(() => import('./components/WeaponsDatabase'));
+const Armor = lazy(() => import('./components/Armor'));
+const Enemies = lazy(() => import('./components/Enemies'));
+const Items = lazy(() => import('./components/Items'));
+const Maps = lazy(() => import('./components/Maps'));
+const MyProfile = lazy(() => import('./components/MyProfile'));
+const MarketplaceNew = lazy(() => import('./components/MarketplaceNew'));
+const ActivityFeed = lazy(() => import('./components/ActivityFeed'));
+const CommunityHub = lazy(() => import('./components/CommunityHub'));
+const Messages = lazy(() => import('./components/Messages'));
+const UserProfile = lazy(() => import('./components/UserProfile'));
+const PlaceholderView = lazy(() => import('./components/PlaceholderView'));
+const HelpGuide = lazy(() => import('./components/HelpGuide'));
+const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
 
 function App() {
   const [currentView, setCurrentView] = useState('dashboard');
+  const [user, setUser] = useState<any>(null);
+  const [authView, setAuthView] = useState<'login' | 'register'>('login');
+  const [loading, setLoading] = useState(true);
+  const [profileUserId, setProfileUserId] = useState<string | null>(null);
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
 
-  const renderView = () => {
-    switch (currentView) {
-      case 'dashboard':
-        return <Dashboard />;
-      case 'weapons':
-        return <WeaponsDatabase />;
-      case 'armor':
-        return (
-          <PlaceholderView
-            title="Armor & Protection"
-            description="Complete armor and equipment database"
-            icon={Shield}
-            stats={[
-              { label: 'Total Armor Pieces', value: '186' },
-              { label: 'Unique Sets', value: '42' },
-              { label: 'Max Defense', value: '850' },
-            ]}
-          />
-        );
-      case 'items':
-        return (
-          <PlaceholderView
-            title="Items & Resources"
-            description="Consumables, materials, and resources database"
-            icon={Package}
-            stats={[
-              { label: 'Total Items', value: '324' },
-              { label: 'Consumables', value: '78' },
-              { label: 'Resources', value: '156' },
-            ]}
-          />
-        );
-      case 'enemies':
-        return (
-          <PlaceholderView
-            title="ARC Enemies"
-            description="Enemy types, stats, and weaknesses"
-            icon={Target}
-            stats={[
-              { label: 'Enemy Types', value: '47' },
-              { label: 'Boss Variants', value: '12' },
-              { label: 'Max Level', value: '50' },
-            ]}
-          />
-        );
-      case 'maps':
-        return (
-          <PlaceholderView
-            title="Maps & Locations"
-            description="Explore regions, zones, and points of interest"
-            icon={Map}
-            stats={[
-              { label: 'Total Regions', value: '8' },
-              { label: 'POIs', value: '124' },
-              { label: 'Raid Zones', value: '15' },
-            ]}
-          />
-        );
-      case 'quests':
-        return (
-          <PlaceholderView
-            title="Quests & Missions"
-            description="Complete quest database and objectives"
-            icon={ScrollText}
-            stats={[
-              { label: 'Total Quests', value: '156' },
-              { label: 'Main Storyline', value: '28' },
-              { label: 'Side Missions', value: '92' },
-            ]}
-          />
-        );
-      case 'trackers':
-        return <Trackers />;
-      case 'marketplace':
-        return <Marketplace />;
-      case 'community':
-        return <CommunityHub />;
-      default:
-        return <Dashboard />;
+  const handleOpenEditProfile = () => {
+    // @ts-ignore - función temporal expuesta desde Layout
+    if (window.__openEditProfile) {
+      window.__openEditProfile();
     }
   };
 
+  // Listener para eventos de navegación desde Activity Feed
+  useEffect(() => {
+    const handleNavigate = (event: any) => {
+      const { view, postId, itemId, userId } = event.detail;
+      
+      if (view === 'community' && postId) {
+        setSelectedPostId(postId);
+        setCurrentView('community');
+      } else if (view === 'marketplace') {
+        setCurrentView('marketplace');
+      } else if (view === 'profile' && userId) {
+        setProfileUserId(userId);
+        setCurrentView('profile');
+      }
+    };
+
+    window.addEventListener('navigate', handleNavigate as EventListener);
+    return () => window.removeEventListener('navigate', handleNavigate as EventListener);
+  }, []);
+
+  useEffect(() => {
+    // Verificar si hay un usuario guardado y validar token
+    const verifyAuth = async () => {
+      const storedUser = localStorage.getItem('user');
+      const storedToken = localStorage.getItem('token');
+      const tokenExpiration = localStorage.getItem('tokenExpiration');
+      
+      if (storedUser && storedToken) {
+        try {
+          // Verificar expiración local primero
+          if (tokenExpiration) {
+            const expirationDate = new Date(tokenExpiration);
+            const now = new Date();
+            
+            if (now > expirationDate) {
+              // Token expirado localmente
+              console.log('Token expirado localmente, limpiando sesión');
+              throw new Error('Token expirado');
+            }
+          }
+          
+          // Parsear usuario guardado
+          const parsedUser = JSON.parse(storedUser);
+          
+          // Verificar token con el servidor
+          try {
+            const userData = await api.verifyToken();
+            // Token válido, actualizar con datos frescos del servidor
+            setUser(userData.user);
+            
+            // Conectar WebSocket con token válido
+            if (storedToken && !socketClient.isConnected()) {
+              socketClient.connect(storedToken);
+            }
+          } catch (verifyError: any) {
+            // Si es 403 (Forbidden) o 401 (Unauthorized), token inválido
+            if (verifyError.message?.includes('permisos') || 
+                verifyError.message?.includes('Token') ||
+                verifyError.message?.includes('Sesión') ||
+                verifyError.message?.includes('403') ||
+                verifyError.message?.includes('401')) {
+              console.log('Token inválido en servidor, limpiando sesión');
+              throw new Error('Token inválido');
+            }
+            // Si es error de red, usar datos locales temporalmente
+            console.warn('Error de red al verificar token, usando sesión local');
+            setUser(parsedUser);
+          }
+        } catch (error: any) {
+          // Limpiar sesión si el token es inválido o expirado
+          console.log('Limpiando sesión por:', error.message);
+          localStorage.removeItem('user');
+          localStorage.removeItem('token');
+          localStorage.removeItem('tokenExpiration');
+          setUser(null);
+        }
+      }
+      setLoading(false);
+    };
+
+    verifyAuth();
+  }, []);
+
+  const handleLogin = (userData: any) => {
+    setUser(userData);
+    
+    // Conectar WebSocket después del login
+    const token = localStorage.getItem('token');
+    if (token && !socketClient.isConnected()) {
+      socketClient.connect(token);
+    }
+  };
+
+  const handleRegister = (userData: any) => {
+    setUser(userData);
+    
+    // Conectar WebSocket después del registro
+    const token = localStorage.getItem('token');
+    if (token && !socketClient.isConnected()) {
+      socketClient.connect(token);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await api.logout();
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+    }
+    
+    // Desconectar WebSocket
+    socketClient.disconnect();
+    
+    setUser(null);
+    setCurrentView('dashboard');
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0a0e1a] via-[#0f1420] to-[#1a1f2e]">
+        <div className="text-center space-y-4">
+          <div className="w-16 h-16 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin mx-auto"></div>
+          <p className="text-gray-400">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Si no hay usuario, mostrar login/register
+  if (!user) {
+    if (authView === 'login') {
+      return (
+        <Login 
+          onLogin={handleLogin} 
+          onSwitchToRegister={() => setAuthView('register')} 
+        />
+      );
+    } else {
+      return (
+        <Register 
+          onRegister={handleRegister} 
+          onSwitchToLogin={() => setAuthView('login')} 
+        />
+      );
+    }
+  }
+
+  const renderView = () => {
+    const LoadingFallback = () => (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="w-12 h-12 border-4 border-red-500/30 border-t-red-500 rounded-full animate-spin"></div>
+      </div>
+    );
+
+    return (
+      <Suspense fallback={<LoadingFallback />}>
+        {currentView === 'dashboard' && <Dashboard onNavigate={setCurrentView} />}
+        {currentView === 'weapons' && <WeaponsDatabase />}
+        {currentView === 'armor' && <Armor />}
+        {currentView === 'items' && <Items />}
+        {currentView === 'enemies' && <Enemies />}
+        {currentView === 'maps' && <Maps />}
+        {currentView === 'profile' && <MyProfile user={user} />}
+        {currentView === 'activity' && <ActivityFeed />}
+        {currentView === 'marketplace' && <MarketplaceNew />}
+        {currentView === 'community' && <CommunityHub initialPostId={selectedPostId} onPostClose={() => setSelectedPostId(null)} />}
+        {currentView === 'messages' && <Messages />}
+        {currentView === 'help' && <HelpGuide />}
+        {currentView === 'admin' && user?.role === 'admin' && <AdminDashboard />}
+        {currentView === 'profile' && user && (
+          <UserProfile 
+            userId={profileUserId || user.userId} 
+            currentUserId={user.userId}
+            onBack={() => setCurrentView('dashboard')}
+            onEdit={handleOpenEditProfile}
+            onMessage={(userId) => {
+              setProfileUserId(userId);
+              setCurrentView('messages');
+            }}
+          />
+        )}
+      </Suspense>
+    );
+  };
+
   return (
-    <Layout currentView={currentView} onViewChange={setCurrentView}>
-      {renderView()}
-    </Layout>
+    <div className="scanlines">
+      <InstallPWA />
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#1a1f2e',
+            color: '#fff',
+            border: '1px solid rgba(234, 179, 8, 0.3)',
+          },
+          success: {
+            iconTheme: {
+              primary: '#22c55e',
+              secondary: '#fff',
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#fff',
+            },
+          },
+        }}
+      />
+      <Layout 
+        currentView={currentView}
+        onViewChange={setCurrentView}
+        user={user}
+        onLogout={handleLogout}
+        onEditProfile={handleOpenEditProfile}
+      >
+        {renderView()}
+      </Layout>
+    </div>
   );
 }
 

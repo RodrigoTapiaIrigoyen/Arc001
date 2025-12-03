@@ -1,6 +1,21 @@
-import { createClient } from '@supabase/supabase-js';
+import { MongoClient } from 'mongodb';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const uri = import.meta.env.VITE_MONGODB_URI || 'mongodb://localhost:27017';
+const dbName = import.meta.env.VITE_MONGODB_DB || 'arc_raiders';
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+let client: MongoClient | null = null;
+
+export const connectDB = async () => {
+  if (!client) {
+    client = new MongoClient(uri);
+    await client.connect();
+  }
+  return client.db(dbName);
+};
+
+export const getDB = () => {
+  if (!client) {
+    throw new Error('Database not connected. Call connectDB() first.');
+  }
+  return client.db(dbName);
+};
