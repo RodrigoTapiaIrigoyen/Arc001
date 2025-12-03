@@ -204,10 +204,9 @@ export default function Layout({ children, currentView, onViewChange, user, onLo
                 className="h-10 w-auto object-contain"
               />
               <div>
-                <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-red-500 via-yellow-400 to-green-500 bg-clip-text text-transparent">
-                  ARC RAIDERS
+                <h1 className="text-lg sm:text-xl font-bold tracking-tight bg-gradient-to-r from-red-500 via-yellow-400 to-green-500 bg-clip-text text-transparent">
+                  ARK MARKET
                 </h1>
-                <p className="text-xs text-gray-500 uppercase tracking-wider">Tactical Database</p>
               </div>
             </div>
           </div>
