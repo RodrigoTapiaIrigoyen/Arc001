@@ -607,9 +607,9 @@ export default function Messages() {
         )}
 
         {/* Main Content */}
-        <div className="grid grid-cols-1 md:grid-cols-3 h-[600px]">
+        <div className="grid grid-cols-1 md:grid-cols-3 min-h-[400px] md:h-[600px]">
           {/* Conversations List */}
-          <div className="md:col-span-1 border-r border-red-500/20 overflow-y-auto">
+          <div className="md:col-span-1 border-r border-red-500/20 overflow-y-auto max-h-[400px] md:max-h-none">
             {(() => {
               console.log('🎨 Renderizando conversaciones:', conversations.length);
               return null;

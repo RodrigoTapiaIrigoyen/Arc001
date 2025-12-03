@@ -220,7 +220,7 @@ export default function MyProfile({ user }: { user: any }) {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-yellow-500/20">
+      <div className="flex gap-2 border-b border-yellow-500/20 overflow-x-auto pb-2 scrollbar-hide">
         <button
           onClick={() => setActiveTab('stats')}
           className={`px-6 py-3 font-medium transition-all ${

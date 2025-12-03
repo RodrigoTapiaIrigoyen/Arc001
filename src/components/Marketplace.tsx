@@ -278,7 +278,7 @@ export default function Marketplace() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-red-500/20">
+      <div className="flex gap-2 border-b border-red-500/20 overflow-x-auto pb-2 scrollbar-hide">
         <button
           onClick={() => setActiveTab('trading')}
           className={`px-6 py-3 font-medium transition-colors relative ${
@@ -587,7 +587,7 @@ export default function Marketplace() {
               className="bg-gradient-to-br from-[#1a1f2e] to-[#0a0e1a] border border-cyan-500/20 rounded-lg p-6 hover:border-cyan-500/50 transition-all cursor-pointer"
             >
               <div className="flex items-start gap-4">
-                <div className="flex flex-col items-center gap-1 min-w-[60px]">
+                <div className="flex flex-col items-center gap-1 min-w-[50px] sm:min-w-[60px]">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();

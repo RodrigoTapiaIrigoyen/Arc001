@@ -247,8 +247,8 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           </div>
 
           {/* Giant Title - Arc Raiders Style */}
-          <div className="space-y-4">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-tight">
+          <div className="space-y-4 px-4">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-tight">
               <span className="block text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-yellow-400 via-green-400 to-blue-500 animate-gradient animate-slide-up relative"
                 style={{
                   textShadow: '0 0 30px rgba(239, 68, 68, 0.3), 0 0 60px rgba(34, 197, 94, 0.2), 0 4px 12px rgba(0, 0, 0, 0.8)',
@@ -257,7 +257,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                 Don't shoot!
               </span>
             </h1>
-            <p className="text-base md:text-lg text-gray-300 max-w-2xl mx-auto leading-relaxed animate-fade-in-up" style={{ animationDelay: '0.3s', textShadow: '0 2px 8px rgba(0, 0, 0, 0.8)' }}>
+            <p className="text-sm sm:text-base md:text-lg text-gray-300 max-w-2xl mx-auto leading-relaxed animate-fade-in-up" style={{ animationDelay: '0.3s', textShadow: '0 2px 8px rgba(0, 0, 0, 0.8)' }}>
               La plataforma <span className="text-yellow-400 font-bold">definitiva</span> para comerciar tus productos de forma{' '}
               <span className="text-yellow-400 font-bold">
                 segura
@@ -266,12 +266,12 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           </div>
 
           {/* CTA Buttons - Arc Raiders Style */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4 animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4 animate-fade-in-up w-full px-4 sm:px-0" style={{ animationDelay: '0.5s' }}>
             <button 
               onClick={() => handleNavigate('weapons')}
-              className="group relative px-6 py-3 bg-gradient-to-r from-red-600 via-yellow-500 to-red-600 text-white font-bold text-sm rounded-lg overflow-hidden transition-all duration-500 hover:scale-105 hover:shadow-[0_0_30px_rgba(239,68,68,0.6)] shimmer-effect"
+              className="group relative w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-red-600 via-yellow-500 to-red-600 text-white font-bold text-sm rounded-lg overflow-hidden transition-all duration-500 hover:scale-105 hover:shadow-[0_0_30px_rgba(239,68,68,0.6)] shimmer-effect"
             >
-              <span className="relative z-10 flex items-center gap-2">
+              <span className="relative z-10 flex items-center justify-center gap-2">
                 <Zap className="animate-pulse" size={18} />
                 Explorar Ahora
                 <ArrowRight className="group-hover:translate-x-1 transition-transform duration-300" size={18} />
@@ -281,9 +281,9 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
             </button>
             <button 
               onClick={() => handleNavigate('maps')}
-              className="group px-6 py-3 bg-white/5 backdrop-blur-md border border-green-500/30 text-white font-bold text-sm rounded-lg hover:bg-green-500/10 hover:border-green-500/60 transition-all duration-300 hover:scale-105"
+              className="group w-full sm:w-auto px-6 py-3 bg-white/5 backdrop-blur-md border border-green-500/30 text-white font-bold text-sm rounded-lg hover:bg-green-500/10 hover:border-green-500/60 transition-all duration-300 hover:scale-105"
             >
-              <span className="flex items-center gap-2">
+              <span className="flex items-center justify-center gap-2">
                 <Map className="text-green-400" size={18} />
                 Ver Mapas
               </span>
@@ -291,7 +291,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           </div>
 
           {/* Floating Stats with Smooth Transitions */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-4xl mx-auto pt-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 max-w-4xl mx-auto pt-6 px-4">
             {statsDisplay.map((stat, idx) => (
               <div
                 key={idx}
@@ -310,19 +310,19 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                   idx === 2 ? 'border border-green-500/30 hover:border-green-500/60 hover:shadow-[0_0_20px_rgba(34,197,94,0.4)]' :
                   'border border-blue-500/30 hover:border-blue-500/60 hover:shadow-[0_0_20px_rgba(59,130,246,0.4)]'
                 }`}>
-                  <stat.icon className={`mx-auto mb-2 group-hover:scale-110 transition-transform duration-300 ${
+                  <stat.icon className={`mx-auto mb-1 sm:mb-2 group-hover:scale-110 transition-transform duration-300 ${
                     idx === 0 ? 'text-red-400' :
                     idx === 1 ? 'text-yellow-400' :
                     idx === 2 ? 'text-green-400' :
                     'text-blue-400'
-                  }`} size={20} />
-                  <p className={`text-xl font-bold mb-1 ${
+                  }`} size={18} />
+                  <p className={`text-lg sm:text-xl font-bold mb-1 ${
                     idx === 0 ? 'text-red-400' :
                     idx === 1 ? 'text-yellow-400' :
                     idx === 2 ? 'text-green-400' :
                     'text-blue-400'
                   }`}>{stat.value}</p>
-                  <p className="text-[10px] text-gray-500 uppercase tracking-wider">{stat.label}</p>
+                  <p className="text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-wider">{stat.label}</p>
                 </div>
               </div>
             ))}

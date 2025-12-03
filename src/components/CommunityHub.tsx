@@ -328,7 +328,7 @@ export default function CommunityHub({ initialPostId, onPostClose }: CommunityHu
               >
                 <div className="flex items-start gap-4">
                   {/* Vote Section */}
-                  <div className="flex flex-col items-center gap-1 min-w-[60px]">
+                  <div className="flex flex-col items-center gap-1 min-w-[50px] sm:min-w-[60px]">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();

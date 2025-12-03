@@ -23,6 +23,54 @@ body {
     linear-gradient(to bottom, #0d1117 0%, #050810 50%, #0d1117 100%);
   position: relative;
   overflow-x: hidden;
+  /* Forzar que todo el contenido se ajuste al viewport */
+  max-width: 100vw;
+}
+
+/* Prevenir overflow horizontal en todos los elementos */
+* {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Contenedores principales responsivos */
+.container {
+  padding-left: 1rem;
+  padding-right: 1rem;
+  max-width: 100%;
+}
+
+@media (max-width: 640px) {
+  /* Reducir padding en móvil */
+  .container {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  /* Hacer títulos más pequeños en móvil */
+  h1 {
+    font-size: 2rem !important;
+  }
+
+  h2 {
+    font-size: 1.5rem !important;
+  }
+}
+
+/* Ocultar scrollbar pero mantener funcionalidad */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Mejorar touch scrolling en iOS */
+.overflow-x-auto,
+.overflow-y-auto {
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Grid optimizado con perspectiva */
