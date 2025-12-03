@@ -68,11 +68,12 @@ export default function Friends() {
   const loadFriends = async () => {
     try {
       const response = await api.get('/friends');
-      setFriends(response.data);
+      setFriends(response.data || []);
     } catch (error: any) {
       console.error('Error loading friends:', error);
+      setFriends([]); // Asegurar que siempre sea un array
       // Si es 404, significa que el endpoint aún no está disponible
-      if (error.response?.status !== 404) {
+      if (error.response?.status !== 404 && error.message !== 'Failed to fetch') {
         toast.error('Error al cargar amigos');
       }
     }
@@ -81,10 +82,11 @@ export default function Friends() {
   const loadPendingRequests = async () => {
     try {
       const response = await api.get('/friends/requests/pending');
-      setPendingRequests(response.data);
+      setPendingRequests(response.data || []);
     } catch (error: any) {
       console.error('Error loading pending requests:', error);
-      if (error.response?.status !== 404) {
+      setPendingRequests([]); // Asegurar que siempre sea un array
+      if (error.response?.status !== 404 && error.message !== 'Failed to fetch') {
         toast.error('Error al cargar solicitudes');
       }
     }
@@ -93,10 +95,11 @@ export default function Friends() {
   const loadSentRequests = async () => {
     try {
       const response = await api.get('/friends/requests/sent');
-      setSentRequests(response.data);
+      setSentRequests(response.data || []);
     } catch (error: any) {
       console.error('Error loading sent requests:', error);
-      if (error.response?.status !== 404) {
+      setSentRequests([]); // Asegurar que siempre sea un array
+      if (error.response?.status !== 404 && error.message !== 'Failed to fetch') {
         toast.error('Error al cargar solicitudes enviadas');
       }
     }
@@ -210,7 +213,7 @@ export default function Friends() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2">
               <Users className="w-4 h-4" />
               <span className="hidden sm:inline">Amigos</span>
-              <span className="text-xs">({friends.length})</span>
+              <span className="text-xs">({friends?.length || 0})</span>
             </div>
           </button>
 
@@ -226,8 +229,8 @@ export default function Friends() {
               <Clock className="w-4 h-4" />
               <span className="hidden sm:inline">Solicitudes</span>
               <span className="sm:hidden">Recibidas</span>
-              <span className="text-xs">({pendingRequests.length})</span>
-              {pendingRequests.length > 0 && (
+              <span className="text-xs">({pendingRequests?.length || 0})</span>
+              {(pendingRequests?.length || 0) > 0 && (
                 <span className="absolute top-1 right-1 sm:top-2 sm:right-2 w-2 h-2 bg-red-500 rounded-full"></span>
               )}
             </div>
@@ -244,7 +247,7 @@ export default function Friends() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2">
               <Clock className="w-4 h-4" />
               <span className="hidden sm:inline">Enviadas</span>
-              <span className="text-xs">({sentRequests.length})</span>
+              <span className="text-xs">({sentRequests?.length || 0})</span>
             </div>
           </button>
 
@@ -268,7 +271,7 @@ export default function Friends() {
           {/* Friends List */}
           {activeTab === 'friends' && (
             <div className="space-y-2 sm:space-y-3">
-              {friends.length === 0 ? (
+              {!friends || friends.length === 0 ? (
                 <div className="text-center py-8 sm:py-12">
                   <Users className="w-12 h-12 sm:w-16 sm:h-16 text-gray-600 mx-auto mb-3 sm:mb-4" />
                   <p className="text-sm sm:text-base text-gray-400">No tienes amigos agregados</p>
@@ -280,7 +283,7 @@ export default function Friends() {
                   </button>
                 </div>
               ) : (
-                friends.map((friend) => (
+                (friends || []).map((friend) => (
                   <div
                     key={friend.friendshipId}
                     className="flex items-center justify-between p-3 sm:p-4 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors"
@@ -315,13 +318,13 @@ export default function Friends() {
           {/* Pending Requests */}
           {activeTab === 'requests' && (
             <div className="space-y-2 sm:space-y-3">
-              {pendingRequests.length === 0 ? (
+              {!pendingRequests || pendingRequests.length === 0 ? (
                 <div className="text-center py-8 sm:py-12">
                   <Clock className="w-12 h-12 sm:w-16 sm:h-16 text-gray-600 mx-auto mb-3 sm:mb-4" />
                   <p className="text-sm sm:text-base text-gray-400">No tienes solicitudes pendientes</p>
                 </div>
               ) : (
-                pendingRequests.map((request) => (
+                (pendingRequests || []).map((request) => (
                   <div
                     key={request.friendshipId}
                     className="flex items-center justify-between p-3 sm:p-4 bg-gray-700 rounded-lg"
@@ -366,13 +369,13 @@ export default function Friends() {
           {/* Sent Requests */}
           {activeTab === 'sent' && (
             <div className="space-y-2 sm:space-y-3">
-              {sentRequests.length === 0 ? (
+              {!sentRequests || sentRequests.length === 0 ? (
                 <div className="text-center py-8 sm:py-12">
                   <Clock className="w-12 h-12 sm:w-16 sm:h-16 text-gray-600 mx-auto mb-3 sm:mb-4" />
                   <p className="text-sm sm:text-base text-gray-400">No has enviado solicitudes</p>
                 </div>
               ) : (
-                sentRequests.map((request) => (
+                (sentRequests || []).map((request) => (
                   <div
                     key={request.friendshipId}
                     className="flex items-center justify-between p-3 sm:p-4 bg-gray-700 rounded-lg"
@@ -426,12 +429,12 @@ export default function Friends() {
                     <Search className="w-12 h-12 sm:w-16 sm:h-16 text-gray-600 mx-auto mb-3 sm:mb-4" />
                     <p className="text-sm sm:text-base text-gray-400 px-4">Escribe al menos 2 caracteres para buscar</p>
                   </div>
-                ) : searchResults.length === 0 && !searchLoading ? (
+                ) : (!searchResults || searchResults.length === 0) && !searchLoading ? (
                   <div className="text-center py-8 sm:py-12">
                     <p className="text-sm sm:text-base text-gray-400">No se encontraron usuarios</p>
                   </div>
                 ) : (
-                  searchResults.map((user) => (
+                  (searchResults || []).map((user) => (
                     <div
                       key={user._id}
                       className="flex items-center justify-between p-3 sm:p-4 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors"
