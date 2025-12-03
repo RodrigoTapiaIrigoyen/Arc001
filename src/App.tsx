@@ -28,7 +28,7 @@ function App() {
   const [currentView, setCurrentView] = useState('dashboard');
   const [user, setUser] = useState<any>(null);
   const [authView, setAuthView] = useState<'login' | 'register'>('login');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // FALSE por defecto - iOS no puede actualizar estado
   const [profileUserId, setProfileUserId] = useState<string | null>(null);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
 
@@ -60,15 +60,9 @@ function App() {
   }, []);
 
   useEffect(() => {
-    console.log('🔄 App useEffect iniciado');
+    console.log('🔄 App useEffect - verificando auth en background (sin loading)');
     
-    // TIMEOUT AGRESIVO: forzar loading=false después de 1 segundo SIEMPRE
-    const aggressiveTimeout = setTimeout(() => {
-      console.warn('⚠️ TIMEOUT AGRESIVO: forzando loading=false');
-      setLoading(false);
-    }, 1000);
-
-    // Verificar si hay un usuario guardado y validar token
+    // Verificar si hay un usuario guardado y validar token EN BACKGROUND
     const verifyAuth = async () => {
       try {
         const storedUser = localStorage.getItem('user');
@@ -98,6 +92,7 @@ function App() {
                 new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 2000))
               ]);
               setUser((userData as any).user);
+              console.log('✅ Token verificado, usuario autenticado');
               
               // Conectar WebSocket con token válido
               if (storedToken && !socketClient.isConnected()) {
@@ -124,16 +119,15 @@ function App() {
             localStorage.removeItem('tokenExpiration');
             setUser(null);
           }
+        } else {
+          console.log('No hay sesión guardada');
         }
       } catch (error) {
         console.error('Error en verifyAuth:', error);
-      } finally {
-        console.log('✅ verifyAuth completado, clearing timeout');
-        clearTimeout(aggressiveTimeout);
-        setLoading(false);
       }
     };
 
+    // Ejecutar verificación sin bloquear UI
     verifyAuth();
   }, []);
 
