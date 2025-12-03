@@ -1389,10 +1389,16 @@ app.post('/api/marketplace/trades/:id/offers', authenticateToken, tradeLimiter, 
       return res.status(503).json({ error: 'Database not available' });
     }
 
+    console.log('Creating offer for listing:', req.params.id);
+    console.log('Offer data:', req.body);
+    console.log('User ID:', req.user.userId);
+
     const offer = await marketplaceService.createTradeOffer({
       ...req.body,
       listing_id: req.params.id
     });
+    
+    console.log('Offer created:', offer);
     
     // Generar notificación al dueño del trade
     try {
@@ -1441,8 +1447,10 @@ app.get('/api/marketplace/trades/:id/offers', async (req, res) => {
       return res.status(503).json({ error: 'Database not available' });
     }
 
+    console.log('Getting offers for listing:', req.params.id);
     const { status } = req.query;
     const offers = await marketplaceService.getOffersByListingId(req.params.id, status);
+    console.log('Found offers:', offers.length);
     res.json(offers);
   } catch (error) {
     console.error('Error fetching offers:', error);
