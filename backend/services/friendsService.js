@@ -369,14 +369,16 @@ class FriendsService {
     ];
 
     // Buscar usuarios
-    const users = await this.usersCollection.find({
-      _id: { $nin: excludeIds },
-      username: { $regex: query, $options: 'i' }
-    }, {
-      projection: { password: 0 },
-      limit: limit
-    }).toArray();
+    const users = await this.usersCollection
+      .find({
+        _id: { $nin: excludeIds },
+        username: { $regex: query, $options: 'i' }
+      })
+      .project({ password: 0 })
+      .limit(limit)
+      .toArray();
 
+    console.log(`🔍 Búsqueda de "${query}": ${users.length} usuarios encontrados`);
     return users;
   }
 }

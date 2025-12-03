@@ -3289,6 +3289,10 @@ let friendsService;
 // Enviar solicitud de amistad
 app.post('/api/friends/request/:userId', authenticateToken, async (req, res) => {
   try {
+    if (!friendsService) {
+      return res.status(503).json({ error: 'Friends service not available' });
+    }
+    
     const senderId = req.user.userId;
     const receiverId = req.params.userId;
     
@@ -3426,14 +3430,22 @@ app.get('/api/friends/search', authenticateToken, async (req, res) => {
     const userId = req.user.userId;
     const { q, limit } = req.query;
     
+    console.log('🔍 Búsqueda de usuarios:', { userId, query: q, friendsService: !!friendsService });
+    
     if (!q || q.length < 2) {
       return res.json([]);
     }
     
+    if (!friendsService) {
+      console.error('❌ FriendsService no está inicializado');
+      return res.status(503).json({ error: 'Service not available' });
+    }
+    
     const users = await friendsService.searchUsers(userId, q, limit ? parseInt(limit) : 20);
-    res.json(users);
+    console.log('✅ Usuarios encontrados:', users?.length || 0);
+    res.json(users || []);
   } catch (error) {
-    console.error('Error searching users:', error);
+    console.error('❌ Error searching users:', error);
     res.status(500).json({ error: error.message });
   }
 });
