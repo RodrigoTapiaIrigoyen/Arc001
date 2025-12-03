@@ -182,24 +182,21 @@ export default function MarketplaceNew() {
     }
 
     try {
-      const response = await fetch(`${API_URL}/trades/${listingId}/offers`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          offer_user: currentUser.username,
-          offer_text: newOfferText,
-          offer_items: newOfferItems.split(',').map(i => i.trim()).filter(Boolean)
-        }),
+      await api.post(`/marketplace/trades/${listingId}/offers`, {
+        trader_name: currentUser.username,
+        offer_user: currentUser.username,
+        offer_text: newOfferText,
+        offer_items: newOfferItems.split(',').map(i => i.trim()).filter(Boolean)
       });
 
-      if (response.ok) {
-        setNewOfferText('');
-        setNewOfferItems('');
-        loadOffers(listingId);
-        loadListings();
-      }
-    } catch (error) {
+      toast.success('Oferta enviada exitosamente');
+      setNewOfferText('');
+      setNewOfferItems('');
+      loadOffers(listingId);
+      loadListings();
+    } catch (error: any) {
       console.error('Error creating offer:', error);
+      toast.error(error.message || 'Error al enviar oferta');
     }
   };
 

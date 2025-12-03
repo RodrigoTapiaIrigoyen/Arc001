@@ -1396,14 +1396,32 @@ app.post('/api/marketplace/trades/:id/offers', authenticateToken, tradeLimiter, 
     
     // Generar notificación al dueño del trade
     try {
-      const listing = await marketplaceService.getListingById(req.params.id);
-      if (listing && listing.user_id?.toString() !== req.user.userId) {
-        await notificationService.notifyTrade(
-          listing.user_id,
-          offer._id,
-          req.user.userId,
-          listing.item_name || 'un item'
-        );
+      const listing = await marketplaceService.getTradeListingById(req.params.id);
+      if (listing && listing.username) {
+        // Obtener el usuario dueño del listing
+        const ownerUser = await db.collection('users').findOne({ username: listing.username });
+        
+        if (ownerUser && ownerUser._id.toString() !== req.user.userId) {
+          // Obtener username del que hace la oferta
+          const offerUser = await db.collection('users').findOne({ _id: new ObjectId(req.user.userId) });
+          
+          // Crear notificación
+          const notification = await notificationService.createNotification({
+            userId: ownerUser._id.toString(),
+            type: 'trade',
+            title: 'Nueva oferta de intercambio',
+            message: `${offerUser?.username || 'Alguien'} hizo una oferta por "${listing.offering?.item_name || 'tu item'}"`,
+            link: '/marketplace',
+            relatedId: offer._id.toString(),
+            senderId: req.user.userId
+          });
+          
+          // Emitir notificación por WebSocket
+          socketService.emitToUser(ownerUser._id.toString(), 'notification', {
+            ...notification,
+            _id: notification._id.toString()
+          });
+        }
       }
     } catch (notifError) {
       console.error('Error creating notification:', notifError);
@@ -1632,28 +1650,7 @@ app.get('/api/marketplace/stats', async (req, res) => {
 
 // ===== OFERTAS Y COMENTARIOS MEJORADOS =====
 
-// Crear oferta con comentario
-app.post('/api/marketplace/trades/:listingId/offers', async (req, res) => {
-  try {
-    if (useMockData) {
-      return res.status(503).json({ error: 'Database not available' });
-    }
-
-    const { listingId } = req.params;
-    const offerData = {
-      ...req.body,
-      listing_id: listingId
-    };
-
-    const offer = await marketplaceService.addOfferComment(offerData);
-    res.status(201).json(offer);
-  } catch (error) {
-    console.error('Error creating offer:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Obtener ofertas de un listing
+// Obtener ofertas de un listing (endpoint alternativo)
 app.get('/api/marketplace/trades/:listingId/offers', async (req, res) => {
   try {
     if (useMockData) {
