@@ -177,90 +177,94 @@ export default function Friends() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-4xl mx-auto p-3 sm:p-6">
       <div className="bg-gray-800 rounded-lg shadow-xl border border-gray-700">
         {/* Header */}
-        <div className="p-6 border-b border-gray-700">
-          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-            <Users className="w-6 h-6" />
+        <div className="p-4 sm:p-6 border-b border-gray-700">
+          <h2 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
+            <Users className="w-5 h-5 sm:w-6 sm:h-6" />
             Amigos
           </h2>
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-gray-700">
+        <div className="flex border-b border-gray-700 overflow-x-auto">
           <button
             onClick={() => setActiveTab('friends')}
-            className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+            className={`flex-1 min-w-[80px] px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium transition-colors ${
               activeTab === 'friends'
                 ? 'bg-purple-600 text-white'
                 : 'text-gray-400 hover:text-white hover:bg-gray-700'
             }`}
           >
-            <div className="flex items-center justify-center gap-2">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2">
               <Users className="w-4 h-4" />
-              Amigos ({friends.length})
+              <span className="hidden sm:inline">Amigos</span>
+              <span className="text-xs">({friends.length})</span>
             </div>
           </button>
 
           <button
             onClick={() => setActiveTab('requests')}
-            className={`flex-1 px-4 py-3 text-sm font-medium transition-colors relative ${
+            className={`flex-1 min-w-[80px] px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium transition-colors relative ${
               activeTab === 'requests'
                 ? 'bg-purple-600 text-white'
                 : 'text-gray-400 hover:text-white hover:bg-gray-700'
             }`}
           >
-            <div className="flex items-center justify-center gap-2">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2">
               <Clock className="w-4 h-4" />
-              Solicitudes ({pendingRequests.length})
+              <span className="hidden sm:inline">Solicitudes</span>
+              <span className="sm:hidden">Recibidas</span>
+              <span className="text-xs">({pendingRequests.length})</span>
               {pendingRequests.length > 0 && (
-                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+                <span className="absolute top-1 right-1 sm:top-2 sm:right-2 w-2 h-2 bg-red-500 rounded-full"></span>
               )}
             </div>
           </button>
 
           <button
             onClick={() => setActiveTab('sent')}
-            className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+            className={`flex-1 min-w-[80px] px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium transition-colors ${
               activeTab === 'sent'
                 ? 'bg-purple-600 text-white'
                 : 'text-gray-400 hover:text-white hover:bg-gray-700'
             }`}
           >
-            <div className="flex items-center justify-center gap-2">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2">
               <Clock className="w-4 h-4" />
-              Enviadas ({sentRequests.length})
+              <span className="hidden sm:inline">Enviadas</span>
+              <span className="text-xs">({sentRequests.length})</span>
             </div>
           </button>
 
           <button
             onClick={() => setActiveTab('search')}
-            className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+            className={`flex-1 min-w-[80px] px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium transition-colors ${
               activeTab === 'search'
                 ? 'bg-purple-600 text-white'
                 : 'text-gray-400 hover:text-white hover:bg-gray-700'
             }`}
           >
-            <div className="flex items-center justify-center gap-2">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2">
               <Search className="w-4 h-4" />
-              Buscar
+              <span className="hidden sm:inline">Buscar</span>
             </div>
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-3 sm:p-6">
           {/* Friends List */}
           {activeTab === 'friends' && (
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               {friends.length === 0 ? (
-                <div className="text-center py-12">
-                  <Users className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                  <p className="text-gray-400">No tienes amigos agregados</p>
+                <div className="text-center py-8 sm:py-12">
+                  <Users className="w-12 h-12 sm:w-16 sm:h-16 text-gray-600 mx-auto mb-3 sm:mb-4" />
+                  <p className="text-sm sm:text-base text-gray-400">No tienes amigos agregados</p>
                   <button
                     onClick={() => setActiveTab('search')}
-                    className="mt-4 text-purple-400 hover:text-purple-300"
+                    className="mt-3 sm:mt-4 text-sm sm:text-base text-purple-400 hover:text-purple-300"
                   >
                     Buscar usuarios
                   </button>
@@ -269,17 +273,17 @@ export default function Friends() {
                 friends.map((friend) => (
                   <div
                     key={friend.friendshipId}
-                    className="flex items-center justify-between p-4 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors"
+                    className="flex items-center justify-between p-3 sm:p-4 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center">
-                        <span className="text-white font-bold">
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span className="text-sm sm:text-base text-white font-bold">
                           {friend.username[0].toUpperCase()}
                         </span>
                       </div>
-                      <div>
-                        <h4 className="text-white font-medium">{friend.username}</h4>
-                        <p className="text-xs text-gray-400">
+                      <div className="min-w-0 flex-1">
+                        <h4 className="text-sm sm:text-base text-white font-medium truncate">{friend.username}</h4>
+                        <p className="text-xs text-gray-400 truncate">
                           Amigos desde {new Date(friend.since!).toLocaleDateString()}
                         </p>
                       </div>
@@ -287,10 +291,10 @@ export default function Friends() {
                     <button
                       onClick={() => removeFriend(friend.friendshipId)}
                       disabled={loading}
-                      className="p-2 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50"
+                      className="p-2 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50 flex-shrink-0"
                       title="Eliminar amigo"
                     >
-                      <UserMinus className="w-5 h-5" />
+                      <UserMinus className="w-4 h-4 sm:w-5 sm:h-5" />
                     </button>
                   </div>
                 ))
@@ -300,47 +304,47 @@ export default function Friends() {
 
           {/* Pending Requests */}
           {activeTab === 'requests' && (
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               {pendingRequests.length === 0 ? (
-                <div className="text-center py-12">
-                  <Clock className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                  <p className="text-gray-400">No tienes solicitudes pendientes</p>
+                <div className="text-center py-8 sm:py-12">
+                  <Clock className="w-12 h-12 sm:w-16 sm:h-16 text-gray-600 mx-auto mb-3 sm:mb-4" />
+                  <p className="text-sm sm:text-base text-gray-400">No tienes solicitudes pendientes</p>
                 </div>
               ) : (
                 pendingRequests.map((request) => (
                   <div
                     key={request.friendshipId}
-                    className="flex items-center justify-between p-4 bg-gray-700 rounded-lg"
+                    className="flex items-center justify-between p-3 sm:p-4 bg-gray-700 rounded-lg"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center">
-                        <span className="text-white font-bold">
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span className="text-sm sm:text-base text-white font-bold">
                           {request.username[0].toUpperCase()}
                         </span>
                       </div>
-                      <div>
-                        <h4 className="text-white font-medium">{request.username}</h4>
-                        <p className="text-xs text-gray-400">
+                      <div className="min-w-0 flex-1">
+                        <h4 className="text-sm sm:text-base text-white font-medium truncate">{request.username}</h4>
+                        <p className="text-xs text-gray-400 truncate">
                           {new Date(request.requestedAt!).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-1 sm:gap-2 flex-shrink-0">
                       <button
                         onClick={() => respondToRequest(request.friendshipId, true)}
                         disabled={loading}
-                        className="p-2 text-green-400 hover:text-green-300 hover:bg-green-900/20 rounded-lg transition-colors disabled:opacity-50"
+                        className="p-1.5 sm:p-2 text-green-400 hover:text-green-300 hover:bg-green-900/20 rounded-lg transition-colors disabled:opacity-50"
                         title="Aceptar"
                       >
-                        <Check className="w-5 h-5" />
+                        <Check className="w-4 h-4 sm:w-5 sm:h-5" />
                       </button>
                       <button
                         onClick={() => respondToRequest(request.friendshipId, false)}
                         disabled={loading}
-                        className="p-2 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50"
+                        className="p-1.5 sm:p-2 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50"
                         title="Rechazar"
                       >
-                        <X className="w-5 h-5" />
+                        <X className="w-4 h-4 sm:w-5 sm:h-5" />
                       </button>
                     </div>
                   </div>
@@ -351,27 +355,27 @@ export default function Friends() {
 
           {/* Sent Requests */}
           {activeTab === 'sent' && (
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               {sentRequests.length === 0 ? (
-                <div className="text-center py-12">
-                  <Clock className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                  <p className="text-gray-400">No has enviado solicitudes</p>
+                <div className="text-center py-8 sm:py-12">
+                  <Clock className="w-12 h-12 sm:w-16 sm:h-16 text-gray-600 mx-auto mb-3 sm:mb-4" />
+                  <p className="text-sm sm:text-base text-gray-400">No has enviado solicitudes</p>
                 </div>
               ) : (
                 sentRequests.map((request) => (
                   <div
                     key={request.friendshipId}
-                    className="flex items-center justify-between p-4 bg-gray-700 rounded-lg"
+                    className="flex items-center justify-between p-3 sm:p-4 bg-gray-700 rounded-lg"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center">
-                        <span className="text-white font-bold">
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span className="text-sm sm:text-base text-white font-bold">
                           {request.username[0].toUpperCase()}
                         </span>
                       </div>
-                      <div>
-                        <h4 className="text-white font-medium">{request.username}</h4>
-                        <p className="text-xs text-gray-400">
+                      <div className="min-w-0 flex-1">
+                        <h4 className="text-sm sm:text-base text-white font-medium truncate">{request.username}</h4>
+                        <p className="text-xs text-gray-400 truncate">
                           Enviada {new Date(request.sentAt!).toLocaleDateString()}
                         </p>
                       </div>
@@ -379,7 +383,7 @@ export default function Friends() {
                     <button
                       onClick={() => cancelRequest(request.friendshipId)}
                       disabled={loading}
-                      className="px-3 py-1.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50"
+                      className="px-2 py-1 sm:px-3 sm:py-1.5 text-xs sm:text-sm text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50 flex-shrink-0"
                     >
                       Cancelar
                     </button>
@@ -391,55 +395,56 @@ export default function Friends() {
 
           {/* Search Users */}
           {activeTab === 'search' && (
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={handleSearchChange}
                   placeholder="Buscar usuarios..."
-                  className="w-full pl-10 pr-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-purple-500 focus:outline-none"
+                  className="w-full pl-9 sm:pl-10 pr-4 py-2.5 sm:py-3 text-sm sm:text-base bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-purple-500 focus:outline-none"
                 />
                 {searchLoading && (
-                  <Loader className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-purple-400 animate-spin" />
+                  <Loader className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-purple-400 animate-spin" />
                 )}
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 {searchQuery.length < 2 ? (
-                  <div className="text-center py-12">
-                    <Search className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                    <p className="text-gray-400">Escribe al menos 2 caracteres para buscar</p>
+                  <div className="text-center py-8 sm:py-12">
+                    <Search className="w-12 h-12 sm:w-16 sm:h-16 text-gray-600 mx-auto mb-3 sm:mb-4" />
+                    <p className="text-sm sm:text-base text-gray-400 px-4">Escribe al menos 2 caracteres para buscar</p>
                   </div>
                 ) : searchResults.length === 0 && !searchLoading ? (
-                  <div className="text-center py-12">
-                    <p className="text-gray-400">No se encontraron usuarios</p>
+                  <div className="text-center py-8 sm:py-12">
+                    <p className="text-sm sm:text-base text-gray-400">No se encontraron usuarios</p>
                   </div>
                 ) : (
                   searchResults.map((user) => (
                     <div
                       key={user._id}
-                      className="flex items-center justify-between p-4 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors"
+                      className="flex items-center justify-between p-3 sm:p-4 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center">
-                          <span className="text-white font-bold">
+                      <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                          <span className="text-sm sm:text-base text-white font-bold">
                             {user.username[0].toUpperCase()}
                           </span>
                         </div>
-                        <div>
-                          <h4 className="text-white font-medium">{user.username}</h4>
-                          <p className="text-xs text-gray-400">{user.email}</p>
+                        <div className="min-w-0 flex-1">
+                          <h4 className="text-sm sm:text-base text-white font-medium truncate">{user.username}</h4>
+                          <p className="text-xs text-gray-400 truncate">{user.email}</p>
                         </div>
                       </div>
                       <button
                         onClick={() => sendFriendRequest(user._id)}
                         disabled={loading}
-                        className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors disabled:opacity-50"
+                        className="flex items-center gap-1 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors disabled:opacity-50 flex-shrink-0"
                       >
-                        <UserPlus className="w-4 h-4" />
-                        Agregar
+                        <UserPlus className="w-3 h-3 sm:w-4 sm:h-4" />
+                        <span className="hidden sm:inline">Agregar</span>
+                        <span className="sm:hidden">+</span>
                       </button>
                     </div>
                   ))
