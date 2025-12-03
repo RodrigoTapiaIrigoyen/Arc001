@@ -78,9 +78,11 @@ class FriendsService {
       title: 'Nueva solicitud de amistad',
       message: `${sender.username} te ha enviado una solicitud de amistad`,
       data: {
-        friendshipId: result.insertedId,
+        friendshipId: result.insertedId.toString(),
         senderId: senderId,
-        senderUsername: sender.username
+        senderUsername: sender.username,
+        view: 'friends',
+        tab: 'requests'
       },
       read: false,
       createdAt: new Date()
@@ -160,7 +162,9 @@ class FriendsService {
         data: {
           friendshipId: friendshipId,
           userId: userId,
-          username: responder.username
+          username: responder.username,
+          view: 'friends',
+          tab: 'friends'
         },
         read: false,
         createdAt: new Date()
