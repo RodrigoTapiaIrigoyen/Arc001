@@ -35,6 +35,13 @@ export default function Friends() {
   const [searchLoading, setSearchLoading] = useState(false);
 
   useEffect(() => {
+    // Verificar si hay un tab guardado en sessionStorage (desde notificación)
+    const savedTab = sessionStorage.getItem('friendsActiveTab');
+    if (savedTab && ['friends', 'requests', 'sent', 'search'].includes(savedTab)) {
+      setActiveTab(savedTab as Tab);
+      sessionStorage.removeItem('friendsActiveTab'); // Limpiar después de usar
+    }
+    
     loadFriends();
     loadPendingRequests();
     loadSentRequests();

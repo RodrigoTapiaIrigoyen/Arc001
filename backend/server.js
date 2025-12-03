@@ -3298,12 +3298,28 @@ app.post('/api/friends/request/:userId', authenticateToken, async (req, res) => 
     
     const friendshipId = await friendsService.sendFriendRequest(senderId, receiverId);
     
-    // Emitir notificación en tiempo real
+    // Emitir notificación en tiempo real para Friends component
     const sender = req.user;
     socketService.emitToUser(receiverId, 'new-friend-request', {
       friendshipId,
       senderId,
       senderUsername: sender.username
+    });
+    
+    // Emitir notificación general para NotificationCenter
+    socketService.emitToUser(receiverId, 'new-notification', {
+      type: 'friend_request',
+      title: 'Nueva solicitud de amistad',
+      message: `${sender.username} te ha enviado una solicitud de amistad`,
+      data: {
+        friendshipId,
+        senderId,
+        senderUsername: sender.username,
+        view: 'friends',
+        tab: 'requests'
+      },
+      read: false,
+      createdAt: new Date()
     });
     
     res.json({ 
@@ -3332,10 +3348,27 @@ app.post('/api/friends/respond/:friendshipId', authenticateToken, async (req, re
         _id: new ObjectId(friendshipId)
       });
       
+      // Emitir para Friends component
       socketService.emitToUser(friendship.requesterId.toString(), 'friend-request-accepted', {
         friendshipId,
         userId,
         username: req.user.username
+      });
+      
+      // Emitir notificación general
+      socketService.emitToUser(friendship.requesterId.toString(), 'new-notification', {
+        type: 'friend_request_accepted',
+        title: 'Solicitud aceptada',
+        message: `${req.user.username} aceptó tu solicitud de amistad`,
+        data: {
+          friendshipId,
+          userId,
+          username: req.user.username,
+          view: 'friends',
+          tab: 'friends'
+        },
+        read: false,
+        createdAt: new Date()
       });
     }
     

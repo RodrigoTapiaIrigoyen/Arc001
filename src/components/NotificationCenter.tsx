@@ -11,7 +11,8 @@ import {
   ThumbsUp, 
   AtSign, 
   AlertCircle,
-  Clock
+  Clock,
+  UserPlus
 } from 'lucide-react';
 import api from '../services/api';
 import toast from 'react-hot-toast';
@@ -113,9 +114,27 @@ export default function NotificationCenter({ isOpen, onClose, onNavigate }: Noti
       markAsRead(notification._id);
     }
     
+    // Manejar navegación por link directo
     if (notification.link && onNavigate) {
       onNavigate(notification.link);
       onClose();
+      return;
+    }
+    
+    // Manejar navegación por data (para friends, etc)
+    if (notification.data && onNavigate) {
+      const data = typeof notification.data === 'string' 
+        ? JSON.parse(notification.data) 
+        : notification.data;
+      
+      if (data.view) {
+        // Si hay un tab específico, usar sessionStorage para que Friends lo detecte
+        if (data.tab) {
+          sessionStorage.setItem('friendsActiveTab', data.tab);
+        }
+        onNavigate(data.view);
+        onClose();
+      }
     }
   };
 
@@ -128,6 +147,9 @@ export default function NotificationCenter({ isOpen, onClose, onNavigate }: Noti
       case 'trade':
       case 'trade_accepted':
         return <ShoppingBag size={18} className="text-green-400" />;
+      case 'friend_request':
+      case 'friend_request_accepted':
+        return <UserPlus size={18} className="text-purple-400" />;
       case 'vote':
         return <ThumbsUp size={18} className="text-yellow-400" />;
       case 'mention':
