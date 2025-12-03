@@ -1692,6 +1692,35 @@ app.post('/api/marketplace/offers/:offerId/accept', authenticateToken, async (re
 
     const { listing_owner } = req.body;
     const result = await marketplaceService.acceptOffer(req.params.offerId, listing_owner);
+    
+    // Enviar notificación al comprador
+    if (result.transaction && result.transaction.buyer) {
+      try {
+        const buyerUser = await db.collection('users').findOne({ username: result.transaction.buyer });
+        if (buyerUser) {
+          await notificationService.createNotification(
+            buyerUser._id.toString(),
+            'trade_accepted',
+            `¡Tu oferta fue aceptada! Puedes calificar al vendedor.`,
+            {
+              transaction_id: result.transaction._id.toString(),
+              seller: listing_owner
+            },
+            '/marketplace'
+          );
+          
+          // Emitir por WebSocket
+          socketService.emitToUser(buyerUser._id.toString(), 'notification', {
+            type: 'trade_accepted',
+            message: `¡Tu oferta fue aceptada!`,
+            data: result.transaction
+          });
+        }
+      } catch (notifError) {
+        console.error('Error enviando notificación:', notifError);
+      }
+    }
+    
     res.json(result);
   } catch (error) {
     console.error('Error accepting offer:', error);

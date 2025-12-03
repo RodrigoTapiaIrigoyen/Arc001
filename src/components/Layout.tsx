@@ -418,8 +418,12 @@ export default function Layout({ children, currentView, onViewChange, user, onLo
           loadUnreadCount(); // Actualizar contador al cerrar
         }}
         onNavigate={(link) => {
-          // Aquí puedes manejar la navegación según el link
-          console.log('Navigate to:', link);
+          // Navegar a la vista indicada
+          if (link.startsWith('/')) {
+            const view = link.substring(1); // Quitar el /
+            onNavigate(view);
+          }
+          setNotificationsOpen(false);
         }}
       />
     </div>

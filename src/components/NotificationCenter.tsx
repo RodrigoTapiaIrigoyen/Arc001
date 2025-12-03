@@ -126,6 +126,7 @@ export default function NotificationCenter({ isOpen, onClose, onNavigate }: Noti
       case 'reply':
         return <Reply size={18} className="text-purple-400" />;
       case 'trade':
+      case 'trade_accepted':
         return <ShoppingBag size={18} className="text-green-400" />;
       case 'vote':
         return <ThumbsUp size={18} className="text-yellow-400" />;

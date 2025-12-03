@@ -208,7 +208,7 @@ export default function MarketplaceNew() {
     if (!currentUser) return;
 
     try {
-      const response = await fetch(`${API_URL}/offers/${offerId}/reply`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/marketplace/offers/${offerId}/reply`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -236,7 +236,7 @@ export default function MarketplaceNew() {
     if (!confirmed) return;
 
     try {
-      const response = await fetch(`${API_URL}/offers/${offerId}/accept`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/marketplace/offers/${offerId}/accept`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -269,7 +269,7 @@ export default function MarketplaceNew() {
     if (!currentUser) return;
 
     try {
-      const response = await fetch(`${API_URL}/ratings`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/marketplace/ratings`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
