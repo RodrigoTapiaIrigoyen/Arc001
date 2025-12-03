@@ -85,7 +85,12 @@ export default function Messages() {
   useEffect(() => {
     // Conectar al WebSocket
     const token = localStorage.getItem('token');
+    console.log('🔌 Verificando conexión WebSocket...');
+    console.log('🔌 Token existe:', !!token);
+    console.log('🔌 Socket conectado:', socketClient.isConnected());
+    
     if (token && !socketClient.isConnected()) {
+      console.log('🔌 Conectando socket...');
       socketClient.connect(token);
     }
 
