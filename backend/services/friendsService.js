@@ -282,8 +282,12 @@ class FriendsService {
       throw new Error('Solicitud no encontrada');
     }
 
+    // Convertir a strings para comparación
+    const userIdStr = userId.toString();
+    const user1IdStr = friendship.user1Id.toString();
+
     // Verificar que el usuario sea el solicitante
-    if (friendship.user1Id.toString() !== userId) {
+    if (user1IdStr !== userIdStr) {
       throw new Error('No tienes permiso para cancelar esta solicitud');
     }
 
@@ -310,9 +314,13 @@ class FriendsService {
       throw new Error('Amistad no encontrada');
     }
 
+    // Convertir a strings para comparación
+    const userIdStr = userId.toString();
+    const user1IdStr = friendship.user1Id.toString();
+    const user2IdStr = friendship.user2Id.toString();
+
     // Verificar que el usuario sea parte de la amistad
-    const isParticipant = friendship.user1Id.toString() === userId || 
-                          friendship.user2Id.toString() === userId;
+    const isParticipant = user1IdStr === userIdStr || user2IdStr === userIdStr;
     
     if (!isParticipant) {
       throw new Error('No tienes permiso para eliminar esta amistad');
