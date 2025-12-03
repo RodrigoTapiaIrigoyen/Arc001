@@ -62,64 +62,79 @@ function App() {
   useEffect(() => {
     // Verificar si hay un usuario guardado y validar token
     const verifyAuth = async () => {
-      const storedUser = localStorage.getItem('user');
-      const storedToken = localStorage.getItem('token');
-      const tokenExpiration = localStorage.getItem('tokenExpiration');
-      
-      if (storedUser && storedToken) {
-        try {
-          // Verificar expiración local primero
-          if (tokenExpiration) {
-            const expirationDate = new Date(tokenExpiration);
-            const now = new Date();
-            
-            if (now > expirationDate) {
-              // Token expirado localmente
-              console.log('Token expirado localmente, limpiando sesión');
-              throw new Error('Token expirado');
-            }
-          }
-          
-          // Parsear usuario guardado
-          const parsedUser = JSON.parse(storedUser);
-          
-          // Verificar token con el servidor
+      try {
+        const storedUser = localStorage.getItem('user');
+        const storedToken = localStorage.getItem('token');
+        const tokenExpiration = localStorage.getItem('tokenExpiration');
+        
+        if (storedUser && storedToken) {
           try {
-            const userData = await api.verifyToken();
-            // Token válido, actualizar con datos frescos del servidor
-            setUser(userData.user);
+            // Verificar expiración local primero
+            if (tokenExpiration) {
+              const expirationDate = new Date(tokenExpiration);
+              const now = new Date();
+              
+              if (now > expirationDate) {
+                // Token expirado localmente
+                console.log('Token expirado localmente, limpiando sesión');
+                throw new Error('Token expirado');
+              }
+            }
             
-            // Conectar WebSocket con token válido
-            if (storedToken && !socketClient.isConnected()) {
-              socketClient.connect(storedToken);
+            // Parsear usuario guardado
+            const parsedUser = JSON.parse(storedUser);
+            
+            // Verificar token con el servidor (con timeout)
+            try {
+              const userData = await Promise.race([
+                api.verifyToken(),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000))
+              ]);
+              // Token válido, actualizar con datos frescos del servidor
+              setUser((userData as any).user);
+              
+              // Conectar WebSocket con token válido
+              if (storedToken && !socketClient.isConnected()) {
+                socketClient.connect(storedToken);
+              }
+            } catch (verifyError: any) {
+              // Si es 403 (Forbidden) o 401 (Unauthorized), token inválido
+              if (verifyError.message?.includes('permisos') || 
+                  verifyError.message?.includes('Token') ||
+                  verifyError.message?.includes('Sesión') ||
+                  verifyError.message?.includes('403') ||
+                  verifyError.message?.includes('401')) {
+                console.log('Token inválido en servidor, limpiando sesión');
+                throw new Error('Token inválido');
+              }
+              // Si es error de red o timeout, usar datos locales temporalmente
+              console.warn('Error de red al verificar token, usando sesión local');
+              setUser(parsedUser);
             }
-          } catch (verifyError: any) {
-            // Si es 403 (Forbidden) o 401 (Unauthorized), token inválido
-            if (verifyError.message?.includes('permisos') || 
-                verifyError.message?.includes('Token') ||
-                verifyError.message?.includes('Sesión') ||
-                verifyError.message?.includes('403') ||
-                verifyError.message?.includes('401')) {
-              console.log('Token inválido en servidor, limpiando sesión');
-              throw new Error('Token inválido');
-            }
-            // Si es error de red, usar datos locales temporalmente
-            console.warn('Error de red al verificar token, usando sesión local');
-            setUser(parsedUser);
+          } catch (error: any) {
+            // Limpiar sesión si el token es inválido o expirado
+            console.log('Limpiando sesión por:', error.message);
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+            localStorage.removeItem('tokenExpiration');
+            setUser(null);
           }
-        } catch (error: any) {
-          // Limpiar sesión si el token es inválido o expirado
-          console.log('Limpiando sesión por:', error.message);
-          localStorage.removeItem('user');
-          localStorage.removeItem('token');
-          localStorage.removeItem('tokenExpiration');
-          setUser(null);
         }
+      } catch (error) {
+        console.error('Error en verifyAuth:', error);
+      } finally {
+        // SIEMPRE terminar loading
+        setLoading(false);
       }
-      setLoading(false);
     };
 
-    verifyAuth();
+    // Timeout de seguridad: si después de 3 segundos sigue loading, forzar false
+    const safetyTimeout = setTimeout(() => {
+      console.warn('Safety timeout: forzando fin de loading');
+      setLoading(false);
+    }, 3000);
+
+    verifyAuth().finally(() => clearTimeout(safetyTimeout));
   }, []);
 
   const handleLogin = (userData: any) => {
