@@ -3,25 +3,36 @@ import App from './App.tsx';
 import './index.css';
 import 'leaflet/dist/leaflet.css';
 
+console.log('🟡 main.tsx cargado - iniciando React');
+
 // Error boundary simple
 const rootElement = document.getElementById('root');
 
 if (!rootElement) {
+  console.error('❌ Root element no encontrado');
   throw new Error('Root element not found');
 }
 
+console.log('🟢 Root element encontrado, creando React app...');
+
 try {
-  createRoot(rootElement).render(<App />);
+  const root = createRoot(rootElement);
+  console.log('🟢 Root creado, renderizando App...');
+  root.render(<App />);
+  console.log('✅ App renderizada exitosamente');
 } catch (error) {
-  console.error('Error rendering app:', error);
+  console.error('❌ Error rendering app:', error);
   rootElement.innerHTML = `
-    <div style="color: #ef4444; padding: 20px; text-align: center; font-family: sans-serif;">
-      <h1>Error loading application</h1>
-      <p>${error instanceof Error ? error.message : 'Unknown error'}</p>
-      <p style="font-size: 12px; color: #666; margin-top: 10px;">Try clearing your browser cache or using a different browser.</p>
-      <button onclick="window.location.reload()" style="margin-top: 20px; padding: 10px 20px; background: #eab308; color: black; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
-        Reload Page
-      </button>
+    <div style="color: #ef4444; padding: 20px; text-align: center; font-family: sans-serif; background: #0a0e1a; min-height: 100vh; display: flex; align-items: center; justify-content: center;">
+      <div>
+        <h1 style="color: #eab308;">Error al cargar la aplicación</h1>
+        <p style="color: #f3f4f6;">${error instanceof Error ? error.message : 'Unknown error'}</p>
+        <p style="font-size: 12px; color: #9ca3af; margin-top: 10px;">Intenta limpiar el caché del navegador o usa otro navegador.</p>
+        <pre style="font-size: 10px; color: #6b7280; text-align: left; overflow: auto; max-width: 90vw; margin: 20px auto;">${error instanceof Error ? error.stack : ''}</pre>
+        <button onclick="window.location.reload()" style="margin-top: 20px; padding: 10px 20px; background: #eab308; color: black; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+          Recargar Página
+        </button>
+      </div>
     </div>
   `;
 }

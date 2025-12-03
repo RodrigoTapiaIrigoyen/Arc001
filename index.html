@@ -80,32 +80,46 @@
       select {
         font-size: 16px;
       }
-
-      /* Loading spinner mientras carga React */
-      #root:empty::after {
-        content: "";
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        width: 40px;
-        height: 40px;
-        margin: -20px 0 0 -20px;
-        border: 3px solid rgba(234, 179, 8, 0.3);
-        border-top-color: #eab308;
-        border-radius: 50%;
-        animation: spin 0.8s linear infinite;
-      }
-
-      @keyframes spin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
     </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Mensaje temporal mientras carga JavaScript -->
+      <div
+        style="
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #0a0e1a;
+        "
+      >
+        <div style="text-align: center; color: #f3f4f6">
+          <p style="font-size: 16px; margin-bottom: 10px">
+            Cargando aplicación...
+          </p>
+          <p style="font-size: 12px; color: #6b7280">
+            Si esto no desaparece, revisa la consola del navegador
+          </p>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
+
+    <!-- Debug script para iOS -->
+    <script>
+      console.log("🟢 HTML cargado");
+      window.addEventListener("error", function (e) {
+        console.error("❌ Error global:", e.error);
+        document.getElementById("root").innerHTML =
+          '<div style="padding: 20px; color: red; text-align: center;"><h2>Error: ' +
+          e.message +
+          "</h2><p>Check console for details</p></div>";
+      });
+      window.addEventListener("unhandledrejection", function (e) {
+        console.error("❌ Promise rechazada:", e.reason);
+      });
+    </script>
 
     <!-- Service Worker temporalmente deshabilitado para debug en iOS -->
     <!--
