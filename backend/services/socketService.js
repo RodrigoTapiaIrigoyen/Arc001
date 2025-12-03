@@ -104,6 +104,11 @@ class SocketService {
         this.handleChangeStatus(socket, status);
       });
 
+      // Event: Solicitar lista de usuarios online
+      socket.on('get-online-users', () => {
+        this.handleGetOnlineUsers(socket);
+      });
+
       // Event: Marcar mensaje como leído
       socket.on('mark-read', async (data) => {
         await this.handleMarkRead(socket, data);
@@ -178,6 +183,20 @@ class SocketService {
         this.onlineUsers.delete(socket.userId);
       }, 5 * 60 * 1000);
     }
+  }
+
+  /**
+   * Enviar lista de usuarios online a solicitud
+   */
+  handleGetOnlineUsers(socket) {
+    const onlineUsersList = Array.from(this.onlineUsers.entries()).map(([userId, data]) => ({
+      userId,
+      username: data.username,
+      status: data.status
+    }));
+
+    console.log(`📤 Enviando lista actualizada de ${onlineUsersList.length} usuarios online a ${socket.username}`);
+    socket.emit('online-users', onlineUsersList);
   }
 
   /**

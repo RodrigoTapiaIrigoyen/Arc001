@@ -231,6 +231,14 @@ class SocketClient {
   }
 
   /**
+   * Solicitar lista de usuarios online
+   */
+  requestOnlineUsers() {
+    console.log('📞 Solicitando lista de usuarios online...');
+    this.socket?.emit('get-online-users');
+  }
+
+  /**
    * Marcar mensaje como leído
    */
   markMessageAsRead(messageId: string, senderId: string) {

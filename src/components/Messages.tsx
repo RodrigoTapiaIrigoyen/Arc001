@@ -97,6 +97,12 @@ export default function Messages() {
       socketClient.connect(token);
     }
 
+    // Solicitar lista de usuarios online si ya está conectado
+    if (socketClient.isConnected()) {
+      console.log('📞 Socket ya conectado, solicitando usuarios online...');
+      socketClient.requestOnlineUsers();
+    }
+
     loadConversations();
     loadUnreadCount();
 
@@ -144,6 +150,8 @@ export default function Messages() {
       console.log('🔌 Estado de conexión:', data.connected);
       setIsConnected(data.connected);
       if (data.connected) {
+        console.log('📞 Socket conectado, solicitando usuarios online...');
+        socketClient.requestOnlineUsers();
         // toast.success('Conectado al chat en tiempo real');
       }
     });
