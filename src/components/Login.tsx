@@ -51,13 +51,18 @@ export default function Login({ onLogin, onSwitchToRegister }: LoginProps) {
       <div className="w-full max-w-md">
         {/* Logo & Title */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 rounded-2xl mb-4">
-            <Shield className="text-cyan-400" size={40} />
+          <div className="inline-flex items-center justify-center mb-4">
+            <img 
+              src="/arc-raiders-logo.png" 
+              alt="Arc Raiders Logo" 
+              className="w-32 h-32 object-contain"
+            />
           </div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent mb-2">
-            ARC Raiders DB
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-red-500 via-yellow-400 to-green-500 bg-clip-text text-transparent mb-2">
+            DON'T SHOOT
           </h1>
-          <p className="text-gray-400">Sign in to access the database</p>
+          <p className="text-gray-300 text-lg mb-2">¡Únete a la comunidad!</p>
+          <p className="text-gray-400 text-sm">Comercia, planea estrategias y domina el campo de batalla</p>
         </div>
 
         {/* Login Form */}
@@ -76,7 +81,7 @@ export default function Login({ onLogin, onSwitchToRegister }: LoginProps) {
             {/* Username/Email */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                Username or Email
+                Usuario o Email
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
@@ -84,9 +89,9 @@ export default function Login({ onLogin, onSwitchToRegister }: LoginProps) {
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Enter your username or email"
+                  placeholder="Ingresa tu usuario o email"
                   required
-                  className="w-full pl-10 pr-4 py-3 bg-[#0a0e1a] border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500 transition-colors"
+                  className="w-full pl-10 pr-4 py-3 bg-[#0a0e1a] border border-gray-700 rounded-lg text-white focus:outline-none focus:border-yellow-500 transition-colors"
                 />
               </div>
             </div>
@@ -94,7 +99,7 @@ export default function Login({ onLogin, onSwitchToRegister }: LoginProps) {
             {/* Password */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                Password
+                Contraseña
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
@@ -102,10 +107,10 @@ export default function Login({ onLogin, onSwitchToRegister }: LoginProps) {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
+                  placeholder="Ingresa tu contraseña"
                   required
                   minLength={6}
-                  className="w-full pl-10 pr-4 py-3 bg-[#0a0e1a] border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500 transition-colors"
+                  className="w-full pl-10 pr-4 py-3 bg-[#0a0e1a] border border-gray-700 rounded-lg text-white focus:outline-none focus:border-yellow-500 transition-colors"
                 />
               </div>
             </div>
@@ -114,17 +119,17 @@ export default function Login({ onLogin, onSwitchToRegister }: LoginProps) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-gradient-to-r from-red-600 via-yellow-600 to-green-600 hover:from-red-700 hover:via-yellow-700 hover:to-green-700 text-white font-medium py-3 px-4 rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
             >
               {loading ? (
                 <>
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Signing in...
+                  Iniciando sesión...
                 </>
               ) : (
                 <>
                   <LogIn size={18} />
-                  Sign In
+                  Iniciar Sesión
                 </>
               )}
             </button>
@@ -133,12 +138,12 @@ export default function Login({ onLogin, onSwitchToRegister }: LoginProps) {
           {/* Register Link */}
           <div className="mt-6 pt-6 border-t border-gray-700">
             <p className="text-center text-sm text-gray-400">
-              Don't have an account?{' '}
+              ¿No tienes cuenta?{' '}
               <button
                 onClick={onSwitchToRegister}
-                className="text-cyan-400 hover:text-cyan-300 font-medium transition-colors"
+                className="text-yellow-400 hover:text-yellow-300 font-medium transition-colors"
               >
-                Create one
+                Regístrate aquí
               </button>
             </p>
           </div>
@@ -146,7 +151,7 @@ export default function Login({ onLogin, onSwitchToRegister }: LoginProps) {
 
         {/* Footer */}
         <p className="text-center text-xs text-gray-500 mt-6">
-          Secure access to ARC Raiders community database
+          Acceso seguro a la plataforma de Arc Raiders
         </p>
       </div>
     </div>
