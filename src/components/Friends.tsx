@@ -144,7 +144,8 @@ export default function Friends() {
       setSearchResults(prev => prev.filter(u => u._id !== userId));
       loadSentRequests();
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Error al enviar solicitud');
+      console.error('Error enviando solicitud:', error);
+      toast.error(error.message || 'Error al enviar solicitud');
     } finally {
       setLoading(false);
     }
@@ -160,7 +161,8 @@ export default function Friends() {
         loadFriends();
       }
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Error al responder solicitud');
+      console.error('Error respondiendo solicitud:', error);
+      toast.error(error.message || 'Error al responder solicitud');
     } finally {
       setLoading(false);
     }
@@ -175,7 +177,8 @@ export default function Friends() {
       toast.success('Solicitud cancelada');
       loadSentRequests();
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Error al cancelar solicitud');
+      console.error('Error cancelando solicitud:', error);
+      toast.error(error.message || 'Error al cancelar solicitud');
     } finally {
       setLoading(false);
     }
@@ -190,7 +193,8 @@ export default function Friends() {
       toast.success('Amigo eliminado');
       loadFriends();
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Error al eliminar amigo');
+      console.error('Error eliminando amigo:', error);
+      toast.error(error.message || 'Error al eliminar amigo');
     } finally {
       setLoading(false);
     }
