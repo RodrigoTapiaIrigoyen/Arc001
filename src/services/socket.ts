@@ -37,6 +37,7 @@ class SocketClient {
     const serverUrl = apiUrl.replace('/api', '');
 
     console.log('🔌 Conectando WebSocket a:', serverUrl);
+    console.log('🔑 Token recibido:', token ? 'SÍ (length: ' + token.length + ')' : 'NO');
 
     this.socket = io(serverUrl, {
       auth: { token },
@@ -62,6 +63,8 @@ class SocketClient {
 
     this.socket.on('connect', () => {
       console.log('✅ Conectado a WebSocket');
+      console.log('🌐 Socket ID:', this.socket?.id);
+      console.log('🔗 URL del socket:', this.socket?.io.uri);
       this.reconnectAttempts = 0;
       this.emit('connection-status', { connected: true });
     });
@@ -84,14 +87,17 @@ class SocketClient {
 
     // Listeners de eventos del servidor
     this.socket.on('user-online', (data) => {
+      console.log('👤 Socket recibió user-online:', data);
       this.emit('user-online', data);
     });
 
     this.socket.on('user-offline', (data) => {
+      console.log('👤 Socket recibió user-offline:', data);
       this.emit('user-offline', data);
     });
 
     this.socket.on('online-users', (data) => {
+      console.log('👥 Socket recibió online-users, cantidad:', data?.length || 0);
       this.emit('online-users', data);
     });
 
