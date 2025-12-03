@@ -60,6 +60,14 @@ function App() {
   }, []);
 
   useEffect(() => {
+    console.log('🔄 App useEffect iniciado');
+    
+    // TIMEOUT AGRESIVO: forzar loading=false después de 1 segundo SIEMPRE
+    const aggressiveTimeout = setTimeout(() => {
+      console.warn('⚠️ TIMEOUT AGRESIVO: forzando loading=false');
+      setLoading(false);
+    }, 1000);
+
     // Verificar si hay un usuario guardado y validar token
     const verifyAuth = async () => {
       try {
@@ -75,7 +83,6 @@ function App() {
               const now = new Date();
               
               if (now > expirationDate) {
-                // Token expirado localmente
                 console.log('Token expirado localmente, limpiando sesión');
                 throw new Error('Token expirado');
               }
@@ -84,13 +91,12 @@ function App() {
             // Parsear usuario guardado
             const parsedUser = JSON.parse(storedUser);
             
-            // Verificar token con el servidor (con timeout)
+            // Verificar token con el servidor (con timeout de 2 segundos)
             try {
               const userData = await Promise.race([
                 api.verifyToken(),
-                new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000))
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 2000))
               ]);
-              // Token válido, actualizar con datos frescos del servidor
               setUser((userData as any).user);
               
               // Conectar WebSocket con token válido
@@ -98,7 +104,7 @@ function App() {
                 socketClient.connect(storedToken);
               }
             } catch (verifyError: any) {
-              // Si es 403 (Forbidden) o 401 (Unauthorized), token inválido
+              // Si es error de autenticación, limpiar sesión
               if (verifyError.message?.includes('permisos') || 
                   verifyError.message?.includes('Token') ||
                   verifyError.message?.includes('Sesión') ||
@@ -107,12 +113,11 @@ function App() {
                 console.log('Token inválido en servidor, limpiando sesión');
                 throw new Error('Token inválido');
               }
-              // Si es error de red o timeout, usar datos locales temporalmente
-              console.warn('Error de red al verificar token, usando sesión local');
+              // Si es timeout o error de red, usar datos locales
+              console.warn('Error de red, usando sesión local');
               setUser(parsedUser);
             }
           } catch (error: any) {
-            // Limpiar sesión si el token es inválido o expirado
             console.log('Limpiando sesión por:', error.message);
             localStorage.removeItem('user');
             localStorage.removeItem('token');
@@ -123,18 +128,13 @@ function App() {
       } catch (error) {
         console.error('Error en verifyAuth:', error);
       } finally {
-        // SIEMPRE terminar loading
+        console.log('✅ verifyAuth completado, clearing timeout');
+        clearTimeout(aggressiveTimeout);
         setLoading(false);
       }
     };
 
-    // Timeout de seguridad: si después de 3 segundos sigue loading, forzar false
-    const safetyTimeout = setTimeout(() => {
-      console.warn('Safety timeout: forzando fin de loading');
-      setLoading(false);
-    }, 3000);
-
-    verifyAuth().finally(() => clearTimeout(safetyTimeout));
+    verifyAuth();
   }, []);
 
   const handleLogin = (userData: any) => {
@@ -172,15 +172,19 @@ function App() {
   };
 
   if (loading) {
+    console.log('🔄 Renderizando loading screen...');
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0a0e1a] via-[#0f1420] to-[#1a1f2e]">
         <div className="text-center space-y-4">
-          <div className="w-16 h-16 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin mx-auto"></div>
-          <p className="text-gray-400">Loading...</p>
+          <div className="w-16 h-16 border-4 border-yellow-500/30 border-t-yellow-500 rounded-full animate-spin mx-auto"></div>
+          <p className="text-gray-400">Loading... (max 1s)</p>
+          <p className="text-xs text-gray-500">Si no carga, hay un problema con iOS</p>
         </div>
       </div>
     );
   }
+  
+  console.log('✅ Loading completado, renderizando app');
 
   // Si no hay usuario, mostrar login/register
   if (!user) {
