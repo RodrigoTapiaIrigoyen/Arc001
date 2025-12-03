@@ -4,7 +4,6 @@ import Layout from './components/Layout';
 import Login from './components/Login';
 import Register from './components/Register';
 import InstallPWA from './components/InstallPWA';
-import InstallPWA from './components/InstallPWA';
 import api from './services/api';
 import socketClient from './services/socket';
 
