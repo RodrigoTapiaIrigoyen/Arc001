@@ -339,7 +339,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
               </span>
             </h2>
             <p className="text-sm text-gray-400 max-w-2xl mx-auto">
-              Arsenal completo para <span className="text-yellow-400 font-bold">dominar</span> Arc Raiders
+              Arsenal completo para <span className="text-yellow-400 font-bold">dominar</span> Ark Market
             </p>
           </div>
 

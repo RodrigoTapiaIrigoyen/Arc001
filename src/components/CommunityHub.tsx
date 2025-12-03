@@ -324,9 +324,9 @@ export default function CommunityHub({ initialPostId, onPostClose }: CommunityHu
                   setSelectedPost(post);
                   loadComments(post._id);
                 }}
-                className="bg-gradient-to-br from-[#1a1f2e] to-[#0a0e1a] border border-red-500/20 rounded-lg p-6 hover:border-yellow-500/50 transition-all cursor-pointer"
+                className="bg-gradient-to-br from-[#1a1f2e] to-[#0a0e1a] border border-red-500/20 rounded-lg p-4 sm:p-6 hover:border-yellow-500/50 transition-all cursor-pointer overflow-hidden"
               >
-                <div className="flex items-start gap-4">
+                <div className="flex items-start gap-2 sm:gap-4">
                   {/* Vote Section */}
                   <div className="flex flex-col items-center gap-1 min-w-[50px] sm:min-w-[60px]">
                     <button
@@ -353,7 +353,7 @@ export default function CommunityHub({ initialPostId, onPostClose }: CommunityHu
                   </div>
 
                   {/* Content */}
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 mb-2">
                       {post.pinned && <Pin className="text-yellow-400" size={16} />}
                       {post.locked && <Lock className="text-red-400" size={16} />}
@@ -362,11 +362,11 @@ export default function CommunityHub({ initialPostId, onPostClose }: CommunityHu
                       </span>
                     </div>
 
-                    <h3 className="text-xl font-bold text-white mb-2 hover:text-yellow-400 transition-colors">
+                    <h3 className="text-base sm:text-xl font-bold text-white mb-2 hover:text-yellow-400 transition-colors break-words">
                       {post.title}
                     </h3>
 
-                    <p className="text-gray-400 text-sm mb-4 line-clamp-2">{post.content}</p>
+                    <p className="text-gray-400 text-xs sm:text-sm mb-4 line-clamp-2 break-words">{post.content}</p>
 
                     {post.tags.length > 0 && (
                       <div className="flex flex-wrap gap-2 mb-4">
@@ -382,7 +382,7 @@ export default function CommunityHub({ initialPostId, onPostClose }: CommunityHu
                       </div>
                     )}
 
-                    <div className="flex items-center gap-4 text-sm text-gray-500">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-500">
                       <span className="flex items-center gap-1">
                         <MessageSquare size={16} />
                         {post.comment_count} comments
@@ -522,8 +522,8 @@ export default function CommunityHub({ initialPostId, onPostClose }: CommunityHu
       {selectedPost && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
           <div className="bg-[#1a1f2e] rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-cyan-500/30">
-            <div className="flex items-center justify-between p-6 border-b border-cyan-500/20">
-              <h2 className="text-2xl font-bold text-white">{selectedPost.title}</h2>
+            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-cyan-500/20 gap-2">
+              <h2 className="text-lg sm:text-2xl font-bold text-white break-words flex-1 min-w-0">{selectedPost.title}</h2>
               <div className="flex items-center gap-2">
                 {currentUserId === selectedPost.author_id && (
                   <button
@@ -543,10 +543,10 @@ export default function CommunityHub({ initialPostId, onPostClose }: CommunityHu
               </div>
             </div>
 
-            <div className="p-6 space-y-6">
-              <div className="bg-[#0a0e1a] rounded-lg p-4">
-                <p className="text-gray-300 whitespace-pre-wrap">{selectedPost.content}</p>
-                <div className="flex items-center gap-3 mt-4 text-sm">
+            <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+              <div className="bg-[#0a0e1a] rounded-lg p-3 sm:p-4">
+                <p className="text-sm sm:text-base text-gray-300 whitespace-pre-wrap break-words">{selectedPost.content}</p>
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-4 text-xs sm:text-sm">
                   {selectedPost.author_avatar && (
                     <img 
                       src={selectedPost.author_avatar.startsWith('http') ? selectedPost.author_avatar : `http://localhost:3001${selectedPost.author_avatar}`}
@@ -561,13 +561,13 @@ export default function CommunityHub({ initialPostId, onPostClose }: CommunityHu
               </div>
 
               {/* Comments */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-bold text-white">
+              <div className="space-y-3 sm:space-y-4">
+                <h3 className="text-base sm:text-lg font-bold text-white">
                   Comments ({comments.length})
                 </h3>
 
                 {/* Add Comment */}
-                <div className="flex gap-3">
+                <div className="flex gap-2 sm:gap-3">
                   <input
                     type="text"
                     value={newComment}
@@ -589,10 +589,10 @@ export default function CommunityHub({ initialPostId, onPostClose }: CommunityHu
                 {comments.map((comment) => (
                   <div
                     key={comment._id}
-                    className="bg-[#0a0e1a] rounded-lg p-4 border border-gray-700/30"
+                    className="bg-[#0a0e1a] rounded-lg p-3 sm:p-4 border border-gray-700/30"
                   >
-                    <p className="text-gray-300 mb-3">{comment.content}</p>
-                    <div className="flex items-center gap-4">
+                    <p className="text-sm sm:text-base text-gray-300 mb-3 break-words">{comment.content}</p>
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-4">
                       <span className="text-sm text-cyan-400">{comment.author_name}</span>
                       <span className="text-sm text-gray-500">{formatDate(comment.created_at)}</span>
                       <div className="ml-auto flex items-center gap-2">
