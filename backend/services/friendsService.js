@@ -101,21 +101,27 @@ class FriendsService {
       throw new Error('Solicitud no encontrada');
     }
 
+    // Convertir todo a strings para comparación
+    const userIdStr = userId.toString();
+    const user1IdStr = friendship.user1Id.toString();
+    const user2IdStr = friendship.user2Id.toString();
+    const requesterIdStr = friendship.requesterId.toString();
+
     // Debug logs
     console.log('🔍 Respondiendo solicitud:', {
       friendshipId,
-      userId,
+      userId: userIdStr,
       friendship: {
-        user1Id: friendship.user1Id.toString(),
-        user2Id: friendship.user2Id.toString(),
-        requesterId: friendship.requesterId.toString(),
+        user1Id: user1IdStr,
+        user2Id: user2IdStr,
+        requesterId: requesterIdStr,
         status: friendship.status
       }
     });
 
     // Verificar que el usuario sea el receptor de la solicitud (no el que la envió)
-    const isReceiver = friendship.user2Id.toString() === userId;
-    const isRequester = friendship.requesterId.toString() === userId;
+    const isReceiver = user2IdStr === userIdStr;
+    const isRequester = requesterIdStr === userIdStr;
     
     console.log('✅ Verificación:', { isReceiver, isRequester, shouldPass: isReceiver && !isRequester });
     

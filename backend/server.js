@@ -3340,6 +3340,13 @@ app.post('/api/friends/respond/:friendshipId', authenticateToken, async (req, re
     const userId = req.user.userId;
     const friendshipId = req.params.friendshipId;
     
+    console.log('📨 Endpoint respond - Usuario intentando responder:', {
+      userId,
+      username: req.user.username,
+      friendshipId,
+      accept
+    });
+    
     const result = await friendsService.respondToFriendRequest(friendshipId, userId, accept);
     
     if (accept) {
