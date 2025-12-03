@@ -80,8 +80,10 @@ export default function MarketplaceNew() {
 
   const loadOffers = async (listingId: string) => {
     try {
+      console.log('Loading offers for listing:', listingId);
       const response = await fetch(`${API_URL}/trades/${listingId}/offers`);
       const data = await response.json();
+      console.log('Offers received:', data);
       setOffers(data || []);
     } catch (error) {
       console.error('Error loading offers:', error);
@@ -826,6 +828,16 @@ export default function MarketplaceNew() {
                   <MessageSquare size={20} className="text-cyan-400" />
                   Ofertas ({offers.length})
                 </h3>
+
+                {/* Debug info - remove later */}
+                {process.env.NODE_ENV === 'development' && (
+                  <div className="text-xs text-gray-500 bg-gray-800 p-2 rounded">
+                    <div>Listing owner: {selectedListing.username}</div>
+                    <div>Current user: {currentUser?.username}</div>
+                    <div>Is owner: {selectedListing.username === currentUser?.username ? 'YES' : 'NO'}</div>
+                    <div>Offers loaded: {offers.length}</div>
+                  </div>
+                )}
 
                 {/* New Offer Form */}
                 {selectedListing.status === 'active' && currentUser && selectedListing.username !== currentUser.username && (
