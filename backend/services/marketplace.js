@@ -601,7 +601,9 @@ class MarketplaceService {
   }
 
   async acceptOffer(offerId, listingOwnerId) {
+    console.log('acceptOffer called with:', { offerId, listingOwnerId });
     const offer = await this.tradeOffers.findOne({ _id: new ObjectId(offerId) });
+    console.log('Offer found:', offer);
     
     if (!offer) {
       throw new Error('Oferta no encontrada');
