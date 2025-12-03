@@ -4,11 +4,11 @@ import Layout from './components/Layout';
 import Login from './components/Login';
 import Register from './components/Register';
 import InstallPWA from './components/InstallPWA';
+import Dashboard from './components/Dashboard';
 import api from './services/api';
 import socketClient from './services/socket';
 
-// Lazy loading de componentes pesados
-const Dashboard = lazy(() => import('./components/Dashboard'));
+// Lazy loading de componentes pesados (Dashboard cargado directamente para iOS)
 const WeaponsDatabase = lazy(() => import('./components/WeaponsDatabase'));
 const Armor = lazy(() => import('./components/Armor'));
 const Enemies = lazy(() => import('./components/Enemies'));
@@ -216,9 +216,13 @@ function App() {
       );
     };
 
+    // Dashboard cargado directamente sin Suspense
+    if (currentView === 'dashboard') {
+      return <Dashboard onNavigate={setCurrentView} />;
+    }
+    
     return (
       <Suspense fallback={<LoadingFallback />}>
-        {currentView === 'dashboard' && <Dashboard onNavigate={setCurrentView} />}
         {currentView === 'weapons' && <WeaponsDatabase />}
         {currentView === 'armor' && <Armor />}
         {currentView === 'items' && <Items />}
