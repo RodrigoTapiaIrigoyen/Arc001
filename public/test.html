@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Test iOS</title>
+    <style>
+      body {
+        background: #0a0e1a;
+        color: white;
+        font-family: sans-serif;
+        padding: 20px;
+        text-align: center;
+      }
+      .success {
+        color: #22c55e;
+        font-size: 24px;
+        margin: 20px 0;
+      }
+      .info {
+        color: #eab308;
+        margin: 10px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="success">✓ El servidor funciona correctamente</div>
+    <div class="info" id="userAgent"></div>
+    <div class="info" id="platform"></div>
+    <div class="info" id="viewport"></div>
+
+    <script>
+      document.getElementById("userAgent").textContent =
+        "User Agent: " + navigator.userAgent;
+      document.getElementById("platform").textContent =
+        "Platform: " + navigator.platform;
+      document.getElementById("viewport").textContent =
+        "Viewport: " + window.innerWidth + "x" + window.innerHeight;
+    </script>
+  </body>
+</html>

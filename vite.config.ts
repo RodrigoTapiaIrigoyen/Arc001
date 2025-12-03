@@ -7,4 +7,11 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
+  build: {
+    target: ['es2015', 'safari11'],
+    minify: 'terser',
+    terserOptions: {
+      safari10: true
+    }
+  }
 });
