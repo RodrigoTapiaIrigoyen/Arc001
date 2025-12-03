@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { UserPlus, UserMinus, Check, X, Search, Users, Clock, Loader } from 'lucide-react';
+import { UserPlus, UserMinus, Check, X, Search, Users, Clock, Loader, MessageCircle } from 'lucide-react';
 import api from '../services/api';
 import socketClient from '../services/socket';
 import toast from 'react-hot-toast';
@@ -24,7 +24,12 @@ interface SearchResult {
 
 type Tab = 'friends' | 'requests' | 'sent' | 'search';
 
-export default function Friends() {
+interface FriendsProps {
+  onViewChange?: (view: string) => void;
+  onSelectUser?: (userId: string, username: string) => void;
+}
+
+export default function Friends({ onViewChange, onSelectUser }: FriendsProps = {}) {
   const [activeTab, setActiveTab] = useState<Tab>('friends');
   const [friends, setFriends] = useState<Friend[]>([]);
   const [pendingRequests, setPendingRequests] = useState<Friend[]>([]);
@@ -55,12 +60,14 @@ export default function Friends() {
   const setupSocketListeners = () => {
     // Nueva solicitud de amistad recibida
     socketClient.on('new-friend-request', (data: any) => {
+      console.log('🔔 Nueva solicitud recibida:', data);
       toast.success(`${data.senderUsername} te envió una solicitud de amistad`);
       loadPendingRequests();
     });
 
     // Solicitud aceptada
     socketClient.on('friend-request-accepted', (data: any) => {
+      console.log('✅ Solicitud aceptada:', data);
       toast.success(`${data.username} aceptó tu solicitud de amistad`);
       loadFriends();
       loadSentRequests();
@@ -206,6 +213,25 @@ export default function Friends() {
     searchUsers(query);
   };
 
+  const handleSendMessage = (userId: string, username: string) => {
+    console.log('💬 Abriendo chat con:', username, userId);
+    // Guardar el usuario seleccionado en localStorage para Messages
+    localStorage.setItem('selectedUserId', userId);
+    localStorage.setItem('selectedUsername', username);
+    
+    // Llamar a onSelectUser si existe
+    if (onSelectUser) {
+      onSelectUser(userId, username);
+    }
+    
+    // Cambiar a la vista de mensajes
+    if (onViewChange) {
+      onViewChange('messages');
+    }
+    
+    toast.success(`Abriendo chat con ${username}`);
+  };
+
   return (
     <div className="max-w-4xl mx-auto p-3 sm:p-6">
       <div className="bg-gray-800 rounded-lg shadow-xl border border-gray-700">
@@ -318,14 +344,23 @@ export default function Friends() {
                         </p>
                       </div>
                     </div>
-                    <button
-                      onClick={() => removeFriend(friend.friendshipId)}
-                      disabled={loading}
-                      className="p-2 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50 flex-shrink-0"
-                      title="Eliminar amigo"
-                    >
-                      <UserMinus className="w-4 h-4 sm:w-5 sm:h-5" />
-                    </button>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <button
+                        onClick={() => handleSendMessage(friend.userId, friend.username)}
+                        className="p-2 text-purple-400 hover:text-purple-300 hover:bg-purple-900/20 rounded-lg transition-colors"
+                        title="Enviar mensaje"
+                      >
+                        <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+                      </button>
+                      <button
+                        onClick={() => removeFriend(friend.friendshipId)}
+                        disabled={loading}
+                        className="p-2 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50"
+                        title="Eliminar amigo"
+                      >
+                        <UserMinus className="w-4 h-4 sm:w-5 sm:h-5" />
+                      </button>
+                    </div>
                   </div>
                 ))
               )}

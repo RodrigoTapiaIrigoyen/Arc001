@@ -112,6 +112,19 @@ export default function Messages() {
     loadConversations();
     loadUnreadCount();
 
+    // Verificar si hay un usuario seleccionado desde Friends
+    const selectedUserId = localStorage.getItem('selectedUserId');
+    const selectedUsername = localStorage.getItem('selectedUsername');
+    
+    if (selectedUserId && selectedUsername) {
+      console.log('👤 Usuario seleccionado desde Friends:', selectedUsername);
+      // Crear o buscar conversación con ese usuario
+      startConversationWithUser(selectedUserId, selectedUsername);
+      // Limpiar el localStorage
+      localStorage.removeItem('selectedUserId');
+      localStorage.removeItem('selectedUsername');
+    }
+
     return () => {
       // Cleanup socket listeners
       cleanupSocketListeners();
@@ -454,6 +467,40 @@ export default function Messages() {
       // toast.error('Error al buscar usuarios');
     } finally {
       setSearching(false);
+    }
+  };
+
+  const startConversationWithUser = (userId: string, username: string) => {
+    // Buscar si ya existe una conversación con este usuario
+    const existingConversation = conversations.find(
+      (c) => c.otherUser._id === userId
+    );
+    
+    if (existingConversation) {
+      console.log('✅ Conversación existente encontrada desde Friends');
+      setActiveConversation(existingConversation);
+      loadMessages(userId);
+    } else {
+      console.log('🆕 Creando conversación temporal desde Friends');
+      const tempConversation: Conversation = {
+        conversationId: `temp_${userId}`,
+        otherUser: {
+          _id: userId,
+          username: username,
+          email: ''
+        },
+        lastMessage: {
+          content: '',
+          senderId: '',
+          createdAt: new Date().toISOString(),
+          read: true
+        },
+        unreadCount: 0,
+        updatedAt: new Date().toISOString()
+      };
+
+      setActiveConversation(tempConversation);
+      setMessages([]);
     }
   };
 

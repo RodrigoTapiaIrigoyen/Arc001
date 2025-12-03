@@ -247,7 +247,14 @@ function App() {
         {currentView === 'marketplace' && <MarketplaceNew />}
         {currentView === 'community' && <CommunityHub initialPostId={selectedPostId} onPostClose={() => setSelectedPostId(null)} />}
         {currentView === 'messages' && <Messages />}
-        {currentView === 'friends' && <Friends />}
+        {currentView === 'friends' && (
+          <Friends 
+            onViewChange={setCurrentView}
+            onSelectUser={(userId, username) => {
+              console.log('Usuario seleccionado desde Friends:', userId, username);
+            }}
+          />
+        )}
         {currentView === 'help' && <HelpGuide />}
         {currentView === 'admin' && user?.role === 'admin' && <AdminDashboard />}
         {currentView === 'profile' && user && (
