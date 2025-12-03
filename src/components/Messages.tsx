@@ -101,6 +101,12 @@ export default function Messages() {
     if (socketClient.isConnected()) {
       console.log('📞 Socket ya conectado, solicitando usuarios online...');
       socketClient.requestOnlineUsers();
+      
+      // Reintentar después de 2 segundos si no recibe respuesta
+      setTimeout(() => {
+        console.log('🔄 Reintentando solicitud de usuarios online...');
+        socketClient.requestOnlineUsers();
+      }, 2000);
     }
 
     loadConversations();
