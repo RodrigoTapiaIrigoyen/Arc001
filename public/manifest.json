@@ -4,8 +4,8 @@
   "description": "Community platform for ARC Raiders players - Trade items, connect with players, and share strategies",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0f1419",
-  "theme_color": "#eab308",
+  "background_color": "#0a0e1a",
+  "theme_color": "#0a0e1a",
   "orientation": "portrait-primary",
   "icons": [
     {

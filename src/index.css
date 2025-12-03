@@ -2,6 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Forzar color scheme oscuro */
+:root {
+  color-scheme: dark;
+}
+
+html {
+  background-color: #0a0e1a;
+  color: #f3f4f6;
+}
+
 /* Arc Raiders Background Theme - Enhanced */
 body {
   background: linear-gradient(
