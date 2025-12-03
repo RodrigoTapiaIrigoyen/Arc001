@@ -144,7 +144,7 @@ export default function Messages() {
       console.log('🔌 Estado de conexión:', data.connected);
       setIsConnected(data.connected);
       if (data.connected) {
-        toast.success('Conectado al chat en tiempo real');
+        // toast.success('Conectado al chat en tiempo real');
       }
     });
 
@@ -262,7 +262,7 @@ export default function Messages() {
 
     // Notificación de nueva oferta de trade
     socketClient.on('new-trade-offer', (data: any) => {
-      toast.success(data.message || 'Nueva oferta de intercambio');
+      // toast.success(data.message || 'Nueva oferta de intercambio');
       playNotificationSound();
     });
 
@@ -351,7 +351,7 @@ export default function Messages() {
       loadUnreadCount();
     } catch (error: any) {
       console.error('Error al cargar mensajes:', error);
-      toast.error('Error al cargar mensajes');
+      // toast.error('Error al cargar mensajes');
     }
   };
 
@@ -386,11 +386,11 @@ export default function Messages() {
         setMessageInput('');
         await loadMessages(receiverId);
         await loadConversations();
-        toast.success('Mensaje enviado');
+        // toast.success('Mensaje enviado');
       }
     } catch (error: any) {
       console.error('Error al enviar mensaje:', error);
-      toast.error(error.message || 'Error al enviar mensaje');
+      // toast.error(error.message || 'Error al enviar mensaje');
     } finally {
       setSending(false);
     }
@@ -434,7 +434,7 @@ export default function Messages() {
       setSearchResults(response.users || []);
     } catch (error: any) {
       console.error('Error al buscar usuarios:', error);
-      toast.error('Error al buscar usuarios');
+      // toast.error('Error al buscar usuarios');
     } finally {
       setSearching(false);
     }

@@ -2914,7 +2914,7 @@ app.post('/api/marketplace/listings/:id/offer', authenticateToken, async (req, r
 // Obtener ofertas de un listing
 app.get('/api/marketplace/listings/:id/offers', authenticateToken, async (req, res) => {
   try {
-    const offers = await marketplaceService.getOffersForListing(req.params.id);
+    const offers = await marketplaceService.getOffersByListing(req.params.id);
     res.json(offers);
   } catch (error) {
     console.error('Error fetching offers:', error);
