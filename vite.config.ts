@@ -9,9 +9,6 @@ export default defineConfig({
   },
   build: {
     target: ['es2015', 'safari11'],
-    minify: 'terser',
-    terserOptions: {
-      safari10: true
-    }
+    minify: 'esbuild', // Cambiar a esbuild (más rápido y no requiere dependencia extra)
   }
 });

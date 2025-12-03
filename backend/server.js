@@ -88,6 +88,10 @@ const upload = multer({
 });
 
 const app = express();
+
+// IMPORTANTE: Configurar trust proxy para Railway/Vercel
+app.set('trust proxy', 1); // Confiar en el primer proxy (Railway)
+
 const PORT = process.env.PORT || 3001;
 const JWT_SECRET = process.env.JWT_SECRET || 'arc-raiders-secret-key-change-in-production';
 
