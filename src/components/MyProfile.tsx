@@ -93,9 +93,11 @@ export default function MyProfile({ user }: { user: any }) {
   };
 
   const loadStats = async () => {
+    // TODO: Implementar endpoint /users/my-stats en backend
     try {
-      const response = await api.get('/users/my-stats');
-      setStats(response.stats);
+      // const response = await api.get('/users/my-stats');
+      // setStats(response.stats);
+      setStats({});
     } catch (error: any) {
       console.error('Error loading stats:', error);
     }
@@ -111,9 +113,11 @@ export default function MyProfile({ user }: { user: any }) {
   };
 
   const loadRecentActivity = async () => {
+    // TODO: Implementar endpoint /users/recent-activity en backend
     try {
-      const response = await api.get('/users/recent-activity');
-      setRecentActivity(response.activity || []);
+      // const response = await api.get('/users/recent-activity');
+      // setRecentActivity(response.activity || []);
+      setRecentActivity([]);
     } catch (error: any) {
       console.error('Error loading activity:', error);
     }
