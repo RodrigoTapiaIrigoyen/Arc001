@@ -206,24 +206,19 @@ export default function MarketplaceNew() {
     if (!currentUser) return;
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/marketplace/offers/${offerId}/reply`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          reply_user: currentUser.username,
-          reply_text: replyText
-        }),
+      await api.post(`/marketplace/offers/${offerId}/reply`, {
+        reply_user: currentUser.username,
+        reply_text: replyText
       });
 
-      if (response.ok) {
-        setReplyText('');
-        setReplyingTo(null);
-        if (selectedListing) {
-          loadOffers(selectedListing._id);
-        }
+      setReplyText('');
+      setReplyingTo(null);
+      if (selectedListing) {
+        loadOffers(selectedListing._id);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error replying to offer:', error);
+      alert(error.message || 'Error al responder');
     }
   };
 
@@ -234,32 +229,26 @@ export default function MarketplaceNew() {
     if (!confirmed) return;
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/marketplace/offers/${offerId}/accept`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          listing_owner: currentUser.username
-        }),
+      const result = await api.post(`/marketplace/offers/${offerId}/accept`, {
+        listing_owner: currentUser.username
       });
 
-      if (response.ok) {
-        const result = await response.json();
-        alert(result.message);
-        setSelectedListing(null);
-        loadListings();
-        
-        // Mostrar modal de calificación
-        setRatingData({
-          transaction_id: result.transaction._id,
-          rated_user: result.transaction.buyer,
-          rating: 5,
-          comment: '',
-          trade_completed: true
-        });
-        setShowRatingModal(true);
-      }
-    } catch (error) {
+      alert(result.message);
+      setSelectedListing(null);
+      loadListings();
+      
+      // Mostrar modal de calificación
+      setRatingData({
+        transaction_id: result.transaction._id,
+        rated_user: result.transaction.buyer,
+        rating: 5,
+        comment: '',
+        trade_completed: true
+      });
+      setShowRatingModal(true);
+    } catch (error: any) {
       console.error('Error accepting offer:', error);
+      alert(error.message || 'Error al aceptar oferta');
     }
   };
 
@@ -267,31 +256,23 @@ export default function MarketplaceNew() {
     if (!currentUser) return;
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/marketplace/ratings`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...ratingData,
-          rater_user: currentUser.username
-        }),
+      await api.post('/marketplace/ratings', {
+        ...ratingData,
+        rater_user: currentUser.username
       });
 
-      if (response.ok) {
-        alert('¡Gracias por tu calificación!');
-        setShowRatingModal(false);
-        setRatingData({
-          transaction_id: '',
-          rated_user: '',
-          rating: 5,
-          comment: '',
-          trade_completed: true
-        });
-      } else {
-        const error = await response.json();
-        alert(error.error || 'Error al enviar calificación');
-      }
-    } catch (error) {
+      alert('¡Gracias por tu calificación!');
+      setShowRatingModal(false);
+      setRatingData({
+        transaction_id: '',
+        rated_user: '',
+        rating: 5,
+        comment: '',
+        trade_completed: true
+      });
+    } catch (error: any) {
       console.error('Error submitting rating:', error);
+      alert(error.message || 'Error al enviar calificación');
     }
   };
 
