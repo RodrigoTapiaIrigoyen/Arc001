@@ -542,6 +542,11 @@ export default function MarketplaceNew() {
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
+                                console.log('Listing clicked:', { 
+                                  listingUsername: listing.username, 
+                                  currentUsername: currentUser?.username,
+                                  isOwner: listing.username === currentUser?.username 
+                                });
                                 setSelectedListingForOffers(listing);
                                 setShowOffersModal(true);
                               }}
