@@ -801,15 +801,15 @@ const InteractiveMap = ({ mapName, onClose }: InteractiveMapProps) => {
         </div>
         <button
           onClick={onClose}
-          className="px-6 py-3 bg-red-600 hover:bg-red-700 rounded-lg text-white transition-colors flex items-center gap-2"
+          className="px-3 py-2 sm:px-6 sm:py-3 text-sm sm:text-base bg-red-600 hover:bg-red-700 rounded-lg text-white transition-colors flex items-center gap-1 sm:gap-2"
         >
           <span>✕</span>
-          <span>Cerrar</span>
+          <span className="hidden sm:inline">Cerrar</span>
         </button>
       </div>
 
-      {/* Controles de ayuda */}
-      <div className="absolute top-24 right-4 bg-gray-900/90 backdrop-blur-sm z-10 p-4 rounded-lg text-white text-sm max-w-xs">
+      {/* Controles de ayuda - Oculto en móvil */}
+      <div className="hidden lg:block absolute top-24 right-4 bg-gray-900/90 backdrop-blur-sm z-10 p-4 rounded-lg text-white text-sm max-w-xs">
         <h3 className="font-bold mb-2">Controles:</h3>
         <ul className="space-y-1 text-gray-300">
           <li>🖱️ <strong>Arrastra</strong> para mover el mapa</li>
@@ -828,9 +828,9 @@ const InteractiveMap = ({ mapName, onClose }: InteractiveMapProps) => {
 
       {/* Indicador de modo agregar marcador */}
       {isAddingMarker && (
-        <div className="absolute top-32 left-1/2 transform -translate-x-1/2 bg-cyan-600 text-white px-6 py-3 rounded-full shadow-lg z-10 flex items-center gap-3 animate-pulse">
-          <MapPin size={20} />
-          <span className="font-medium">Click en el mapa para colocar el marcador</span>
+        <div className="absolute top-28 sm:top-32 left-1/2 transform -translate-x-1/2 bg-cyan-600 text-white px-3 py-2 sm:px-6 sm:py-3 rounded-full shadow-lg z-10 flex items-center gap-2 sm:gap-3 animate-pulse text-xs sm:text-base max-w-[90%]">
+          <MapPin size={16} className="sm:w-5 sm:h-5 flex-shrink-0" />
+          <span className="font-medium truncate">Click para colocar marcador</span>
         </div>
       )}
 
@@ -975,53 +975,53 @@ const InteractiveMap = ({ mapName, onClose }: InteractiveMapProps) => {
         </MapContainer>
       </div>
 
-      {/* Leyenda */}
-      <div className="absolute bottom-4 left-4 bg-gray-900/90 backdrop-blur-sm z-10 p-4 rounded-lg">
-        <h3 className="text-white font-bold mb-3">Leyenda:</h3>
-        <div className="space-y-2 text-sm">
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full bg-red-500 border-2 border-white"></div>
+      {/* Leyenda - Más pequeña en móvil */}
+      <div className="absolute bottom-2 sm:bottom-4 left-2 sm:left-4 bg-gray-900/90 backdrop-blur-sm z-10 p-2 sm:p-4 rounded-lg">
+        <h3 className="text-white font-bold mb-2 text-xs sm:text-sm">Leyenda:</h3>
+        <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-red-500 border-2 border-white flex-shrink-0"></div>
             <span className="text-gray-300">Ubicación</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full bg-yellow-500 border-2 border-white"></div>
+          <div className="flex items-center gap-1 sm:gap-2">
+            <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-yellow-500 border-2 border-white flex-shrink-0"></div>
             <span className="text-gray-300">Loot</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full bg-cyan-500 border-2 border-white"></div>
+          <div className="flex items-center gap-1 sm:gap-2">
+            <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-cyan-500 border-2 border-white flex-shrink-0"></div>
             <span className="text-gray-300">Entrada</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full bg-red-700 border-2 border-white"></div>
+          <div className="flex items-center gap-1 sm:gap-2">
+            <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-red-700 border-2 border-white flex-shrink-0"></div>
             <span className="text-gray-300">Enemigo</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full bg-purple-500 border-2 border-white"></div>
-            <span className="text-gray-300">Personalizado</span>
+          <div className="flex items-center gap-1 sm:gap-2">
+            <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-purple-500 border-2 border-white flex-shrink-0"></div>
+            <span className="text-gray-300">Personal</span>
           </div>
         </div>
       </div>
 
       {/* Modal para agregar marcador */}
       {showMarkerForm && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-gray-900 border-2 border-cyan-500/50 rounded-lg p-6 max-w-lg w-full shadow-2xl my-4 relative z-[10000]">
-            <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-              <MapPin className="text-cyan-400" />
-              Agregar Marcador Personalizado
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[9999] flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+          <div className="bg-gray-900 border-2 border-cyan-500/50 rounded-lg p-4 sm:p-6 max-w-lg w-full shadow-2xl my-4 relative z-[10000]">
+            <h3 className="text-lg sm:text-xl font-bold text-white mb-3 sm:mb-4 flex items-center gap-2">
+              <MapPin className="text-cyan-400 flex-shrink-0" size={20} />
+              <span className="truncate">Agregar Marcador</span>
             </h3>
             
-            <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+            <div className="space-y-3 sm:space-y-4 max-h-[60vh] sm:max-h-[70vh] overflow-y-auto pr-1 sm:pr-2">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
                   Título *
                 </label>
                 <input
                   type="text"
                   value={markerForm.title}
                   onChange={(e) => setMarkerForm({ ...markerForm, title: e.target.value })}
-                  placeholder="Ej: Campamento enemigo, Cofre de loot..."
-                  className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500"
+                  placeholder="Ej: Campamento enemigo..."
+                  className="w-full px-3 py-2 sm:px-4 sm:py-2 text-sm sm:text-base bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500"
                   autoFocus
                 />
               </div>
