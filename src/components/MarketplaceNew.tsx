@@ -548,7 +548,7 @@ export default function MarketplaceNew() {
                               className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold rounded-lg hover:from-cyan-600 hover:to-blue-600 transition-all flex items-center gap-2"
                             >
                               <TrendingUp size={16} />
-                              {listing.user_id === currentUser?.userId ? 'Ver Ofertas' : 'Hacer Oferta'}
+                              {listing.username === currentUser?.username ? 'Ver Ofertas' : 'Hacer Oferta'}
                             </button>
                           )}
                         </div>
