@@ -3430,9 +3430,10 @@ app.get('/api/friends/search', authenticateToken, async (req, res) => {
     const userId = req.user.userId;
     const { q, limit } = req.query;
     
-    console.log('🔍 Búsqueda de usuarios:', { userId, query: q, friendsService: !!friendsService });
+    console.log('🔍 Búsqueda de usuarios - Inicio:', { userId, query: q, friendsService: !!friendsService });
     
     if (!q || q.length < 2) {
+      console.log('⚠️ Query muy corta o vacía');
       return res.json([]);
     }
     
@@ -3441,11 +3442,19 @@ app.get('/api/friends/search', authenticateToken, async (req, res) => {
       return res.status(503).json({ error: 'Service not available' });
     }
     
+    console.log('🔍 Llamando a friendsService.searchUsers...');
     const users = await friendsService.searchUsers(userId, q, limit ? parseInt(limit) : 20);
-    console.log('✅ Usuarios encontrados:', users?.length || 0);
-    res.json(users || []);
+    console.log('✅ friendsService.searchUsers completado:', { 
+      usersReturned: users, 
+      isArray: Array.isArray(users),
+      length: users?.length || 0 
+    });
+    
+    const result = users || [];
+    console.log('📤 Enviando respuesta:', result.length, 'usuarios');
+    res.json(result);
   } catch (error) {
-    console.error('❌ Error searching users:', error);
+    console.error('❌ Error searching users:', error.message, error.stack);
     res.status(500).json({ error: error.message });
   }
 });
