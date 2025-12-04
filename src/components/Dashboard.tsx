@@ -90,7 +90,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       const tradesData = await tradesRes.json();
 
       setStats({
-        users: Math.floor((communityData.total_posts || 0) * 6.5),
+        users: statsData.users || 0,
         items: (statsData.weapons || 0) + (statsData.items || 0),
         maps: 5,
         trades: tradesData.listings?.length || 0

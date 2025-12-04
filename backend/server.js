@@ -443,11 +443,12 @@ app.get('/api/stats', async (req, res) => {
       return res.status(503).json({ error: 'Database not available' });
     }
 
-    const [weaponsCount, itemsCount, tradersCount, enemiesCount, postsStats] = await Promise.all([
+    const [weaponsCount, itemsCount, tradersCount, enemiesCount, usersCount, postsStats] = await Promise.all([
       db.collection('weapons').countDocuments(),
       db.collection('items').countDocuments(),
       db.collection('traders').countDocuments(),
       db.collection('enemies').countDocuments(),
+      db.collection('users').countDocuments(),
       communityService.getStats()
     ]);
 
@@ -459,6 +460,7 @@ app.get('/api/stats', async (req, res) => {
       items: itemsCount,
       traders: tradersCount,
       enemies: enemiesCount,
+      users: usersCount,
       community: postsStats,
       recentUpdates: recentPosts
     });
