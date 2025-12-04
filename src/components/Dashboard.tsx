@@ -166,7 +166,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   ];
 
   const statsDisplay = [
-    { label: 'Usuarios Activos', value: loading ? '...' : `${(stats.users / 1000).toFixed(1)}K+`, icon: Users },
+    { label: 'Usuarios Activos', value: loading ? '...' : stats.users >= 1000 ? `${(stats.users / 1000).toFixed(1)}K+` : `${stats.users}+`, icon: Users },
     { label: 'Items en DB', value: loading ? '...' : `${stats.items}+`, icon: Database },
     { label: 'Mapas HD', value: stats.maps.toString(), icon: Map },
     { label: 'Intercambios', value: loading ? '...' : `${stats.trades}+`, icon: TrendingUp },
