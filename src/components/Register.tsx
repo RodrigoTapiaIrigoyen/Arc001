@@ -41,9 +41,29 @@ export default function Register({ onRegister, onSwitchToLogin }: RegisterProps)
       return false;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    // Validación estricta de email
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(formData.email)) {
-      setError('Please enter a valid email address');
+      setError('Por favor ingresa un email válido (ej: usuario@ejemplo.com)');
+      return false;
+    }
+
+    // Verificar que no sea un dominio temporal conocido
+    const emailDomain = formData.email.split('@')[1]?.toLowerCase();
+    const disposableEmails = [
+      'tempmail.com', 'guerrillamail.com', '10minutemail.com', 'throwaway.email',
+      'mailinator.com', 'trashmail.com', 'temp-mail.org', 'fakeinbox.com',
+      'yopmail.com', 'maildrop.cc', 'getnada.com', 'mohmal.com'
+    ];
+    
+    if (disposableEmails.includes(emailDomain)) {
+      setError('Por favor usa un email permanente válido');
+      return false;
+    }
+
+    // Verificar estructura básica del dominio
+    if (!emailDomain || !emailDomain.includes('.')) {
+      setError('El dominio del email no es válido');
       return false;
     }
 

@@ -224,6 +224,29 @@ app.post('/api/auth/register', registerLimiter, async (req, res) => {
       return res.status(400).json({ error: 'Password must be at least 6 characters' });
     }
 
+    // Validación estricta de email
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: 'Por favor ingresa un email válido' });
+    }
+
+    // Verificar que el dominio no sea temporal/desechable
+    const emailDomain = email.split('@')[1]?.toLowerCase();
+    const disposableEmails = [
+      'tempmail.com', 'guerrillamail.com', '10minutemail.com', 'throwaway.email',
+      'mailinator.com', 'trashmail.com', 'temp-mail.org', 'fakeinbox.com',
+      'yopmail.com', 'maildrop.cc', 'getnada.com', 'mohmal.com'
+    ];
+    
+    if (disposableEmails.includes(emailDomain)) {
+      return res.status(400).json({ error: 'Por favor usa un email permanente válido' });
+    }
+
+    // Verificar que tenga al menos un punto en el dominio
+    if (!emailDomain || !emailDomain.includes('.')) {
+      return res.status(400).json({ error: 'El dominio del email no es válido' });
+    }
+
     // Verificar si el usuario ya existe
     const existingUser = await db.collection('users').findOne({
       $or: [{ username }, { email }]
