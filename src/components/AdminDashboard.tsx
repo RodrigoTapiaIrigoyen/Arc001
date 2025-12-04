@@ -174,8 +174,16 @@ export default function AdminDashboard() {
       const response = await api.get('/community/posts');
       setPosts(response.posts || []);
     } else {
-      const response = await api.get('/admin/content/listings');
-      setListings(response.listings || []);
+      try {
+        // Intentar endpoint admin primero
+        const response = await api.get('/admin/content/listings');
+        setListings(response.listings || []);
+      } catch (error) {
+        // Fallback al endpoint público si el admin aún no está desplegado
+        console.log('Usando endpoint público como fallback');
+        const response = await api.get('/marketplace');
+        setListings(Array.isArray(response) ? response : []);
+      }
     }
   };
 
