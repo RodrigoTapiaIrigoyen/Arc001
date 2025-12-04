@@ -20,6 +20,7 @@ import toast from 'react-hot-toast';
 import StatusBadge from './StatusBadge';
 import StatusSelector from './StatusSelector';
 import OnlineUsersPanel from './OnlineUsersPanel';
+import GuestBanner from './GuestBanner';
 
 interface Conversation {
   conversationId: string;
@@ -55,7 +56,13 @@ interface SearchUser {
   email: string;
 }
 
-export default function Messages() {
+interface MessagesProps {
+  user?: any;
+  onSwitchToRegister?: () => void;
+  onSwitchToLogin?: () => void;
+}
+
+export default function Messages({ user, onSwitchToRegister, onSwitchToLogin }: MessagesProps = {}) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
   const activeConversationRef = useRef<Conversation | null>(null);
@@ -557,6 +564,17 @@ export default function Messages() {
       return date.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
     }
   };
+
+  // Si no hay usuario (modo guest), mostrar banner
+  if (!user) {
+    return (
+      <GuestBanner 
+        message="Necesitas una cuenta para enviar y recibir mensajes con otros Raiders."
+        onRegister={onSwitchToRegister || (() => {})}
+        onLogin={onSwitchToLogin || (() => {})}
+      />
+    );
+  }
 
   if (loading) {
     return (

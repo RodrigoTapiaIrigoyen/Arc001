@@ -4,9 +4,10 @@ import { Shield, LogIn, Mail, Lock, AlertCircle } from 'lucide-react';
 interface LoginProps {
   onLogin: (user: any) => void;
   onSwitchToRegister: () => void;
+  onGuestMode: () => void;
 }
 
-export default function Login({ onLogin, onSwitchToRegister }: LoginProps) {
+export default function Login({ onLogin, onSwitchToRegister, onGuestMode }: LoginProps) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -134,6 +135,18 @@ export default function Login({ onLogin, onSwitchToRegister }: LoginProps) {
               )}
             </button>
           </form>
+
+          {/* Guest Mode Button */}
+          <button
+            onClick={onGuestMode}
+            className="w-full mt-4 bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-600 hover:to-gray-500 text-white font-medium py-3 px-4 rounded-lg transition-all flex items-center justify-center gap-2 border border-gray-500/30"
+          >
+            <Shield size={18} />
+            Explorar como Visitante
+          </button>
+          <p className="text-center text-xs text-gray-400 mt-2">
+            Sin registro • Acceso limitado
+          </p>
 
           {/* Register Link */}
           <div className="mt-6 pt-6 border-t border-gray-700">

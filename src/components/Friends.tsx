@@ -3,6 +3,7 @@ import { UserPlus, UserMinus, Check, X, Search, Users, Clock, Loader, MessageCir
 import api from '../services/api';
 import socketClient from '../services/socket';
 import toast from 'react-hot-toast';
+import GuestBanner from './GuestBanner';
 
 interface Friend {
   friendshipId: string;
@@ -25,11 +26,14 @@ interface SearchResult {
 type Tab = 'friends' | 'requests' | 'sent' | 'search';
 
 interface FriendsProps {
+  user?: any;
   onViewChange?: (view: string) => void;
   onSelectUser?: (userId: string, username: string) => void;
+  onSwitchToRegister?: () => void;
+  onSwitchToLogin?: () => void;
 }
 
-export default function Friends({ onViewChange, onSelectUser }: FriendsProps = {}) {
+export default function Friends({ user, onViewChange, onSelectUser, onSwitchToRegister, onSwitchToLogin }: FriendsProps = {}) {
   const [activeTab, setActiveTab] = useState<Tab>('friends');
   const [friends, setFriends] = useState<Friend[]>([]);
   const [pendingRequests, setPendingRequests] = useState<Friend[]>([]);
@@ -225,6 +229,17 @@ export default function Friends({ onViewChange, onSelectUser }: FriendsProps = {
     
     toast.success(`Abriendo chat con ${username}`);
   };
+
+  // Si no hay usuario (modo guest), mostrar banner
+  if (!user) {
+    return (
+      <GuestBanner 
+        message="Necesitas una cuenta para conectar con otros Raiders y formar tu equipo."
+        onRegister={onSwitchToRegister || (() => {})}
+        onLogin={onSwitchToLogin || (() => {})}
+      />
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto p-3 sm:p-6">

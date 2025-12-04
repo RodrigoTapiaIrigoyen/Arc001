@@ -28,6 +28,7 @@ const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
 function App() {
   const [currentView, setCurrentView] = useState('dashboard');
   const [user, setUser] = useState<any>(null);
+  const [isGuestMode, setIsGuestMode] = useState(false);
   const [authView, setAuthView] = useState<'login' | 'register'>('login');
   const [loading, setLoading] = useState(false); // FALSE por defecto - iOS no puede actualizar estado
   const [profileUserId, setProfileUserId] = useState<string | null>(null);
@@ -158,6 +159,13 @@ function App() {
     socketClient.disconnect();
     
     setUser(null);
+    setIsGuestMode(false);
+    setCurrentView('dashboard');
+  };
+
+  const handleGuestMode = () => {
+    setIsGuestMode(true);
+    setUser(null);
     setCurrentView('dashboard');
   };
 
@@ -175,13 +183,14 @@ function App() {
   
   console.log('✅ Loading completado, renderizando app');
 
-  // Si no hay usuario, mostrar login/register
-  if (!user) {
+  // Si no hay usuario y no está en modo visitante, mostrar login/register
+  if (!user && !isGuestMode) {
     if (authView === 'login') {
       return (
         <Login 
           onLogin={handleLogin} 
-          onSwitchToRegister={() => setAuthView('register')} 
+          onSwitchToRegister={() => setAuthView('register')}
+          onGuestMode={handleGuestMode}
         />
       );
     } else {
@@ -240,10 +249,31 @@ function App() {
         {currentView === 'activity' && <ActivityFeed />}
         {currentView === 'marketplace' && <MarketplaceNew />}
         {currentView === 'community' && <CommunityHub initialPostId={selectedPostId} onPostClose={() => setSelectedPostId(null)} />}
-        {currentView === 'messages' && <Messages />}
+        {currentView === 'messages' && (
+          <Messages 
+            user={user}
+            onSwitchToRegister={() => {
+              setIsGuestMode(false);
+              setAuthView('register');
+            }}
+            onSwitchToLogin={() => {
+              setIsGuestMode(false);
+              setAuthView('login');
+            }}
+          />
+        )}
         {currentView === 'friends' && (
           <Friends 
+            user={user}
             onViewChange={setCurrentView}
+            onSwitchToRegister={() => {
+              setIsGuestMode(false);
+              setAuthView('register');
+            }}
+            onSwitchToLogin={() => {
+              setIsGuestMode(false);
+              setAuthView('login');
+            }}
           />
         )}
         {currentView === 'help' && <HelpGuide />}
@@ -294,9 +324,42 @@ function App() {
         currentView={currentView}
         onViewChange={setCurrentView}
         user={user}
+        isGuestMode={isGuestMode}
         onLogout={handleLogout}
         onEditProfile={handleOpenEditProfile}
       >
+        {isGuestMode && (
+          <div className="sticky top-0 z-30 bg-gradient-to-r from-yellow-600/20 via-red-600/20 to-yellow-600/20 border-b border-yellow-500/30 backdrop-blur-sm">
+            <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4 flex-wrap">
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse" />
+                <p className="text-sm text-gray-200">
+                  <span className="font-bold text-yellow-400">Modo Visitante</span> - Regístrate para acceder a todas las funciones
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setIsGuestMode(false);
+                    setAuthView('register');
+                  }}
+                  className="px-4 py-2 bg-gradient-to-r from-red-600 to-yellow-600 hover:from-red-700 hover:to-yellow-700 text-white text-sm font-medium rounded-lg transition-all"
+                >
+                  Crear Cuenta
+                </button>
+                <button
+                  onClick={() => {
+                    setIsGuestMode(false);
+                    setAuthView('login');
+                  }}
+                  className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-sm font-medium rounded-lg transition-all"
+                >
+                  Iniciar Sesión
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         {renderView()}
       </Layout>
     </div>

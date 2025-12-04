@@ -37,11 +37,12 @@ interface LayoutProps {
   currentView: string;
   onViewChange: (view: string) => void;
   user?: any;
+  isGuestMode?: boolean;
   onLogout?: () => void;
   onEditProfile?: () => void;
 }
 
-export default function Layout({ children, currentView, onViewChange, user, onLogout, onEditProfile }: LayoutProps) {
+export default function Layout({ children, currentView, onViewChange, user, isGuestMode = false, onLogout, onEditProfile }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -246,12 +247,19 @@ export default function Layout({ children, currentView, onViewChange, user, onLo
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-              <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
-              <span className="text-xs font-medium text-yellow-400">ONLINE</span>
-            </div>
+            {isGuestMode ? (
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-gray-700/50 to-gray-600/50 border border-gray-500/30 rounded-lg">
+                <Shield className="text-gray-400" size={14} />
+                <span className="text-xs font-medium text-gray-300">VISITANTE</span>
+              </div>
+            ) : (
+              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+                <span className="text-xs font-medium text-yellow-400">ONLINE</span>
+              </div>
+            )}
             
-            {user && (
+            {user && !isGuestMode && (
               <div className="flex items-center gap-2">
                 {/* Notifications Button */}
                 <button
