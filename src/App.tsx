@@ -26,7 +26,10 @@ const HelpGuide = lazy(() => import('./components/HelpGuide'));
 const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
 
 function App() {
-  const [currentView, setCurrentView] = useState('dashboard');
+  const [currentView, setCurrentView] = useState(() => {
+    // Restaurar vista guardada o usar dashboard por defecto
+    return localStorage.getItem('currentView') || 'dashboard';
+  });
   const [user, setUser] = useState<any>(null);
   const [isGuestMode, setIsGuestMode] = useState(false);
   const [authView, setAuthView] = useState<'login' | 'register'>('login');
@@ -40,6 +43,11 @@ function App() {
       window.__openEditProfile();
     }
   };
+
+  // Guardar vista actual en localStorage
+  useEffect(() => {
+    localStorage.setItem('currentView', currentView);
+  }, [currentView]);
 
   // Listener para eventos de navegación desde Activity Feed
   useEffect(() => {
