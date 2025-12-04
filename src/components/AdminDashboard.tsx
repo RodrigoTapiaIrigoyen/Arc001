@@ -174,9 +174,8 @@ export default function AdminDashboard() {
       const response = await api.get('/community/posts');
       setPosts(response.posts || []);
     } else {
-      const response = await api.get('/marketplace');
-      // La ruta /marketplace devuelve un array directamente
-      setListings(Array.isArray(response) ? response : []);
+      const response = await api.get('/admin/content/listings');
+      setListings(response.listings || []);
     }
   };
 

@@ -3616,6 +3616,20 @@ app.post('/api/admin/users/:userId/warn', authenticateToken, requireRole('admin'
   }
 });
 
+// Get all listings for admin (including deleted)
+app.get('/api/admin/content/listings', authenticateToken, requireRole('admin', 'moderator'), async (req, res) => {
+  try {
+    const listings = await db.collection('marketplace_listings')
+      .find({})
+      .sort({ createdAt: -1 })
+      .toArray();
+    res.json({ listings });
+  } catch (error) {
+    console.error('Error fetching listings:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Update user role
 app.patch('/api/admin/users/:userId/role', authenticateToken, requireRole('admin'), async (req, res) => {
   try {
