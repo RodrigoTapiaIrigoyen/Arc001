@@ -97,7 +97,23 @@ export default function MyProfile({ user }: { user: any }) {
     try {
       // const response = await api.get('/users/my-stats');
       // setStats(response.stats);
-      setStats({});
+      setStats({
+        totalTrades: 0,
+        completedTrades: 0,
+        activeTrades: 0,
+        rejectedTrades: 0,
+        totalPosts: 0,
+        totalComments: 0,
+        reputation: {
+          averageRating: 0,
+          totalRatings: 0,
+          positiveRatings: 0,
+          neutralRatings: 0,
+          negativeRatings: 0
+        },
+        joinedDate: user?.createdAt || new Date().toISOString(),
+        lastActive: new Date().toISOString()
+      });
     } catch (error: any) {
       console.error('Error loading stats:', error);
     }
