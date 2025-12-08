@@ -24,7 +24,7 @@ async function addExpeditionProjectPost() {
     console.log('✅ Conectado a MongoDB');
     
     const db = client.db();
-    const postsCollection = db.collection('posts');
+    const postsCollection = db.collection('community_posts');
     const usersCollection = db.collection('users');
     
     // Buscar un usuario admin o el primer usuario disponible
