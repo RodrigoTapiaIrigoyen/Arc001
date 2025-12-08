@@ -121,8 +121,9 @@ El **Expedition Project opcional** es nuestra solución a algunos de los problem
 ---
 
 *Fuente: [Anuncio oficial](https://arcraiders.com/es/news/the-expedition-project-is-departing-soon) - 6 de diciembre de 2025*`,
-      category: 'announcement',
+      category: 'news',
       isPinned: true,
+      tags: ['expedition', 'wipe', 'evento', 'actualización'],
       votes: 0,
       commentsCount: 0,
       shares: 0,
