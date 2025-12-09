@@ -237,14 +237,6 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       <div className="relative z-10 space-y-8 pb-8">
         {/* Hero Section with Giant Animated Title and Neon Glow */}
         <div className="text-center space-y-4 pt-8 px-4">
-          {/* System Status - Arc Raiders Style */}
-          <div className="inline-flex items-center gap-3 px-6 py-3 bg-red-500/10 border border-red-500/40 rounded-full backdrop-blur-sm animate-slide-down shadow-[0_0_30px_rgba(239,68,68,0.3)]">
-            <Activity className={`text-red-400 ${systemStatus === 'OPERACIONAL' ? 'animate-pulse' : 'animate-bounce'}`} size={20} />
-            <span className="text-sm text-red-400 font-bold tracking-wider neon-flicker">
-              SISTEMA {systemStatus}
-            </span>
-            <div className="w-2 h-2 rounded-full bg-red-400 animate-ping"></div>
-          </div>
 
           {/* Giant Title - Arc Raiders Style */}
           <div className="space-y-4 px-4">

@@ -183,6 +183,11 @@ export default function HelpGuide() {
   ];
 
   const faqs: FAQ[] = [
+        {
+          category: 'general',
+          question: '¿Cómo descargo la app en Android y iOS?',
+          answer: 'Para Android: abre Google Play Store y busca "Arc Raiders Community". Para iOS: abre App Store y busca "Arc Raiders Community". Descarga e instala la app oficial. Si no la encuentras, puedes usar la versión web desde tu navegador móvil.'
+        },
     {
       category: 'trading',
       question: '¿Cómo funciona el sistema de trading?',
