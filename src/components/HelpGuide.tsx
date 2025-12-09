@@ -186,7 +186,7 @@ export default function HelpGuide() {
         {
           category: 'general',
           question: '¿Cómo descargo la app en Android y iOS?',
-          answer: 'Para Android: abre Google Play Store y busca "Arc Raiders Community". Para iOS: abre App Store y busca "Arc Raiders Community". Descarga e instala la app oficial. Si no la encuentras, puedes usar la versión web desde tu navegador móvil.'
+          answer: 'La app se descarga directamente desde la web oficial. Ingresa a https://arc001.vercel.app desde tu dispositivo móvil y pulsa el botón "Descargar para Android/iOS". Se instalará como una app (PWA) en tu pantalla de inicio. Si no ves el botón, abre el menú de tu navegador y selecciona "Instalar app" o "Agregar a pantalla de inicio". No es necesario usar Play Store ni App Store.'
         },
     {
       category: 'trading',
