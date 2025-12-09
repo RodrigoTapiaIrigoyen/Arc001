@@ -186,7 +186,7 @@ export default function HelpGuide() {
         {
           category: 'general',
           question: '¿Cómo descargo la app en Android y iOS?',
-          answer: 'La app se descarga directamente desde la web oficial. Ingresa a https://arc001.vercel.app desde tu dispositivo móvil y pulsa el botón "Descargar para Android/iOS". Se instalará como una app (PWA) en tu pantalla de inicio. Si no ves el botón, abre el menú de tu navegador y selecciona "Instalar app" o "Agregar a pantalla de inicio". No es necesario usar Play Store ni App Store.'
+          answer: '1. Ingresa desde tu celular a https://arc001.vercel.app\n2. Pulsa el botón “Descargar para Android/iOS” que aparece en la web.\n3. Si no ves el botón, abre el menú de tu navegador (los tres puntos arriba a la derecha).\n4. Selecciona “Instalar app” o “Agregar a pantalla de inicio”.\n5. Listo: la app aparecerá como un ícono en tu celular, igual que cualquier otra app.\n\nNo necesitas Play Store ni App Store. Solo tu navegador y conexión a internet.'
         },
     {
       category: 'trading',
