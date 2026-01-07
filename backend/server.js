@@ -218,6 +218,10 @@ async function connectDB() {
     await wishlistService.createIndexes();
     await adminService.createIndexes();
     
+    // Crear el router de grupos DESPUÉS de que db esté listo
+    const groupsRouter = createGroupsRouter(db);
+    app.use('/api/groups', groupsRouter);
+    
     console.log('✅ Connected to MongoDB Atlas');
     useMockData = false;
   } catch (error) {
@@ -3147,10 +3151,6 @@ app.get('/api/users/:userId/ratings', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
-// ============ GROUPS ROUTES - USING ROUTER ============
-const groupsRouter = createGroupsRouter(db);
-app.use('/api/groups', groupsRouter);
 
 // ============ END GROUPS ROUTES ============
 
