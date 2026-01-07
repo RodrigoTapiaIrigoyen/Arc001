@@ -40,6 +40,7 @@ import {
 } from './middleware/auth.js';
 import GroupsService from './services/groups.js';
 import createGroupsRouter from './routes/groups.js';
+import createFriendsRouter from './routes/friends.js';
 
 dotenv.config();
 
@@ -221,6 +222,10 @@ async function connectDB() {
     // Crear el router de grupos DESPUÉS de que db esté listo
     const groupsRouter = createGroupsRouter(db);
     app.use('/api/groups', groupsRouter);
+    
+    // Crear el router de amigos DESPUÉS de que db esté listo
+    const friendsRouter = createFriendsRouter(db);
+    app.use('/api/friends', friendsRouter);
     
     console.log('✅ Connected to MongoDB Atlas');
     useMockData = false;
