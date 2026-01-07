@@ -219,14 +219,6 @@ async function connectDB() {
     await wishlistService.createIndexes();
     await adminService.createIndexes();
     
-    // Crear el router de grupos DESPUÉS de que db esté listo
-    const groupsRouter = createGroupsRouter(db);
-    app.use('/api/groups', groupsRouter);
-    
-    // Crear el router de amigos DESPUÉS de que db esté listo
-    const friendsRouter = createFriendsRouter(db);
-    app.use('/api/friends', friendsRouter);
-    
     console.log('✅ Connected to MongoDB Atlas');
     useMockData = false;
   } catch (error) {
@@ -3178,6 +3170,13 @@ process.on('unhandledRejection', (reason, promise) => {
 
 // Start server
 connectDB().then(() => {
+  // Crear los routers DESPUÉS de que DB esté listo
+  const groupsRouter = createGroupsRouter(db);
+  app.use('/api/groups', groupsRouter);
+  
+  const friendsRouter = createFriendsRouter(db);
+  app.use('/api/friends', friendsRouter);
+
   // Crear servidor HTTP explícito
   const httpServer = createServer(app);
 
