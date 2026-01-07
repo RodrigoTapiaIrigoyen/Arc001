@@ -3151,13 +3151,6 @@ app.get('/api/users/:userId/ratings', async (req, res) => {
 
 // ============ END GROUPS ROUTES ============
 
-// Middleware de rutas no encontradas (debe ir antes del errorHandler)
-app.use(notFoundHandler);
-
-// Middleware global de manejo de errores (debe ir al FINAL)
-app.use(errorHandler);
-
-
 // Manejo de errores no capturados
 process.on('uncaughtException', (error) => {
   logger.error('Uncaught Exception - El servidor se reiniciará:', error);
@@ -3176,6 +3169,12 @@ connectDB().then(() => {
   
   const friendsRouter = createFriendsRouter(db);
   app.use('/api/friends', friendsRouter);
+
+  // Middleware de rutas no encontradas (debe ir DESPUÉS de todos los routers)
+  app.use(notFoundHandler);
+
+  // Middleware global de manejo de errores (debe ir al FINAL)
+  app.use(errorHandler);
 
   // Crear servidor HTTP explícito
   const httpServer = createServer(app);
