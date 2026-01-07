@@ -222,6 +222,10 @@ async function connectDB() {
     const groupsRouter = createGroupsRouter(db);
     app.use('/api/groups', groupsRouter);
     
+    // Agregar middleware de manejo de errores DESPUÉS de todas las rutas
+    app.use(notFoundHandler);
+    app.use(errorHandler);
+    
     console.log('✅ Connected to MongoDB Atlas');
     useMockData = false;
   } catch (error) {
@@ -3154,11 +3158,6 @@ app.get('/api/users/:userId/ratings', async (req, res) => {
 
 // ============ END GROUPS ROUTES ============
 
-// Middleware de rutas no encontradas (debe ir antes del errorHandler)
-app.use(notFoundHandler);
-
-// Middleware global de manejo de errores (debe ir al FINAL)
-app.use(errorHandler);
 
 // Manejo de errores no capturados
 process.on('uncaughtException', (error) => {
