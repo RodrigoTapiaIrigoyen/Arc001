@@ -225,6 +225,8 @@ async function connectDB() {
     console.warn('⚠️ MongoDB connection failed, usando datos mock:', error.message);
     console.log('💡 Verifica: 1) Usuario activo, 2) IP autorizada, 3) Contraseña correcta');
     useMockData = true;
+    // Retornar normalmente para que el .then() se ejecute incluso sin DB
+    return;
   }
 }
 
@@ -3164,11 +3166,15 @@ process.on('unhandledRejection', (reason, promise) => {
 // Start server
 connectDB().then(() => {
   // Crear los routers DESPUÉS de que DB esté listo
-  const groupsRouter = createGroupsRouter(db);
-  app.use('/api/groups', groupsRouter);
-  
-  const friendsRouter = createFriendsRouter(db);
-  app.use('/api/friends', friendsRouter);
+  if (db) {
+    const groupsRouter = createGroupsRouter(db);
+    app.use('/api/groups', groupsRouter);
+    
+    const friendsRouter = createFriendsRouter(db);
+    app.use('/api/friends', friendsRouter);
+  } else {
+    console.warn('⚠️ Routers de groups y friends no registrados (sin conexión a DB)');
+  }
 
   // Middleware de rutas no encontradas (debe ir DESPUÉS de todos los routers)
   app.use(notFoundHandler);
