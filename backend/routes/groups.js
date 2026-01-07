@@ -4,7 +4,18 @@ import GroupsService from '../services/groups.js';
 
 export default function createGroupsRouter(db) {
   const router = express.Router();
+  
+  if (!db) {
+    console.error('❌ createGroupsRouter: db is undefined');
+    // Devolver un router con endpoints que retornan error
+    router.use((req, res) => {
+      res.status(503).json({ error: 'Servicio de grupos no disponible (sin conexión a DB)' });
+    });
+    return router;
+  }
+  
   const groupsService = new GroupsService(db);
+  console.log('✅ GroupsService inicializado para el router');
 
   // ============ CREAR GRUPO ============
   router.post('/create', authenticateToken, async (req, res) => {

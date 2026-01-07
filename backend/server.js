@@ -3165,13 +3165,21 @@ process.on('unhandledRejection', (reason, promise) => {
 
 // Start server
 connectDB().then(() => {
+  console.log('🔄 connectDB() completado, db =', db ? 'CONNECTED' : 'UNDEFINED');
+  
   // Crear los routers DESPUÉS de que DB esté listo
   if (db) {
-    const groupsRouter = createGroupsRouter(db);
-    app.use('/api/groups', groupsRouter);
-    
-    const friendsRouter = createFriendsRouter(db);
-    app.use('/api/friends', friendsRouter);
+    try {
+      const groupsRouter = createGroupsRouter(db);
+      app.use('/api/groups', groupsRouter);
+      console.log('✅ Groups router registered');
+      
+      const friendsRouter = createFriendsRouter(db);
+      app.use('/api/friends', friendsRouter);
+      console.log('✅ Friends router registered');
+    } catch (error) {
+      console.error('❌ Error registering routers:', error);
+    }
   } else {
     console.warn('⚠️ Routers de groups y friends no registrados (sin conexión a DB)');
   }

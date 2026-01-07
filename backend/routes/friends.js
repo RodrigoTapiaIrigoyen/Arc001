@@ -4,7 +4,18 @@ import FriendsService from '../services/friendsService.js';
 
 export default function createFriendsRouter(db) {
   const router = express.Router();
+  
+  if (!db) {
+    console.error('❌ createFriendsRouter: db is undefined');
+    // Devolver un router con endpoints que retornan error
+    router.use((req, res) => {
+      res.status(503).json({ error: 'Servicio de amigos no disponible (sin conexión a DB)' });
+    });
+    return router;
+  }
+  
   const friendsService = new FriendsService(db);
+  console.log('✅ FriendsService inicializado para el router');
 
   // RUTAS MÁS ESPECÍFICAS PRIMERO
 
