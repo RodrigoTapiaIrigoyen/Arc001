@@ -38,6 +38,8 @@ import {
   postLimiter,
   tradeLimiter 
 } from './middleware/auth.js';
+import GroupsService from './services/groups.js';
+import createGroupsRouter from './routes/groups.js';
 
 dotenv.config();
 
@@ -105,6 +107,18 @@ const allowedOrigins = process.env.CORS_ORIGINS
   ? process.env.CORS_ORIGINS.split(',').map(origin => origin.trim())
   : ['http://localhost:5173', 'http://localhost:5174', 'http://127.0.0.1:5173'];
 
+// Agregar dominios de producción
+const productionOrigins = [
+  'https://arc001.vercel.app',
+  'https://arc-raiders.vercel.app',
+  'https://www.arc001.vercel.app'
+];
+
+// Combinar orígenes permitidos
+const allAllowedOrigins = [...allowedOrigins, ...productionOrigins];
+
+console.log('✅ CORS configurado para orígenes:', allAllowedOrigins);
+
 // Middleware de seguridad (helmet)
 app.use(helmet({
   contentSecurityPolicy: false, // Desactivar CSP para desarrollo, configurar en producción
@@ -120,21 +134,27 @@ app.use(cors({
     if (!origin) return callback(null, true);
     
     // Verificar si está en la lista de orígenes permitidos
-    if (allowedOrigins.includes(origin)) {
+    if (allAllowedOrigins.includes(origin)) {
       return callback(null, true);
     }
     
-    // Permitir cualquier URL de Vercel (para previews)
-    if (origin && origin.includes('.vercel.app')) {
+    // Permitir cualquier URL de Vercel (para previews y subdominio genérico)
+    if (origin && (origin.includes('.vercel.app') || origin.includes('vercel.app'))) {
+      console.log('✅ CORS permitido para Vercel origin:', origin);
       return callback(null, true);
     }
     
-    // Rechazar otros orígenes
+    // Permitir localhost en desarrollo
+    if (origin && origin.includes('localhost')) {
+      return callback(null, true);
+    }
+    
+    console.warn('⚠️ CORS rechazado para origin:', origin);
     callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
@@ -156,6 +176,9 @@ let notificationService;
 let messageService;
 let profileService;
 let wishlistService;
+let adminService;
+let friendsService;
+let groupsService;
 let socketService;
 let useMockData = false;
 const client = new MongoClient(process.env.MONGODB_URI);
@@ -187,6 +210,7 @@ async function connectDB() {
     wishlistService = new WishlistService(db);
     adminService = new AdminService(db);
     friendsService = new FriendsService(db);
+    groupsService = new GroupsService(db);
     
     // Crear índices
     await messageService.createIndexes();
@@ -1368,7 +1392,6 @@ app.get('/api/marketplace/traders/:name/trades', async (req, res) => {
     if (useMockData) {
       return res.status(503).json({ error: 'Database not available' });
     }
-
     const trades = await marketplaceService.getTradeListingsByTrader(req.params.name);
     res.json(trades);
   } catch (error) {
@@ -3125,597 +3148,11 @@ app.get('/api/users/:userId/ratings', async (req, res) => {
   }
 });
 
-// ============ END ADVANCED TRADING ROUTES ============
+// ============ GROUPS ROUTES - USING ROUTER ============
+const groupsRouter = createGroupsRouter(db);
+app.use('/api/groups', groupsRouter);
 
-// ============ WISHLIST ROUTES ============
-
-// Obtener wishlist del usuario
-app.get('/api/wishlist', authenticateToken, async (req, res) => {
-  try {
-    const wishlist = await wishlistService.getUserWishlist(req.user.userId);
-    res.json({ wishlist });
-  } catch (error) {
-    console.error('Error fetching wishlist:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Agregar item a wishlist
-app.post('/api/wishlist', authenticateToken, async (req, res) => {
-  try {
-    const item = await wishlistService.addItem(req.user.userId, req.body);
-    res.json({ item });
-  } catch (error) {
-    console.error('Error adding wishlist item:', error);
-    res.status(400).json({ error: error.message });
-  }
-});
-
-// Actualizar item de wishlist
-app.patch('/api/wishlist/:itemId', authenticateToken, async (req, res) => {
-  try {
-    const updated = await wishlistService.updateItem(
-      req.params.itemId,
-      req.user.userId,
-      req.body
-    );
-    
-    if (!updated) {
-      return res.status(404).json({ error: 'Item no encontrado' });
-    }
-    
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Error updating wishlist item:', error);
-    res.status(400).json({ error: error.message });
-  }
-});
-
-// Eliminar item de wishlist
-app.delete('/api/wishlist/:itemId', authenticateToken, async (req, res) => {
-  try {
-    const deleted = await wishlistService.deleteItem(
-      req.params.itemId,
-      req.user.userId
-    );
-    
-    if (!deleted) {
-      return res.status(404).json({ error: 'Item no encontrado' });
-    }
-    
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Error deleting wishlist item:', error);
-    res.status(400).json({ error: error.message });
-  }
-});
-
-// ============ USER STATS ROUTES ============
-
-// Obtener estadísticas del usuario
-app.get('/api/users/my-stats', authenticateToken, async (req, res) => {
-  try {
-    // Normalizar userId (puede venir como string u ObjectId desde JWT)
-    const userId = req.user.userId?.toString ? req.user.userId.toString() : req.user.userId;
-    
-    // Trades stats
-    const totalTrades = await marketplaceService.db.collection('trade_offers').countDocuments({
-      $or: [{ senderId: new ObjectId(userId) }, { receiverId: new ObjectId(userId) }]
-    });
-    
-    const completedTrades = await marketplaceService.db.collection('trade_offers').countDocuments({
-      $or: [{ senderId: new ObjectId(userId) }, { receiverId: new ObjectId(userId) }],
-      status: 'accepted'
-    });
-    
-    const activeTrades = await marketplaceService.db.collection('trade_offers').countDocuments({
-      $or: [{ senderId: new ObjectId(userId) }, { receiverId: new ObjectId(userId) }],
-      status: 'pending'
-    });
-    
-    const rejectedTrades = await marketplaceService.db.collection('trade_offers').countDocuments({
-      $or: [{ senderId: new ObjectId(userId) }, { receiverId: new ObjectId(userId) }],
-      status: 'rejected'
-    });
-    
-    // Community stats
-    const totalPosts = await communityService.db.collection('community_posts').countDocuments({
-      userId: new ObjectId(userId)
-    });
-    
-    const totalComments = await communityService.db.collection('community_posts').countDocuments({
-      'comments.userId': new ObjectId(userId)
-    });
-    
-    // Reputation
-    const reputation = await marketplaceService.getUserReputation(userId);
-    
-    // User info
-    const user = await marketplaceService.db.collection('users').findOne(
-      { _id: new ObjectId(userId) },
-      { projection: { createdAt: 1, lastActive: 1 } }
-    );
-    
-    res.json({
-      stats: {
-        totalTrades,
-        completedTrades,
-        activeTrades,
-        rejectedTrades,
-        totalPosts,
-        totalComments,
-        reputation,
-        joinedDate: user?.createdAt || new Date(),
-        lastActive: user?.lastActive || new Date()
-      }
-    });
-  } catch (error) {
-    console.error('Error fetching user stats:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Obtener actividad reciente del usuario
-app.get('/api/users/recent-activity', authenticateToken, async (req, res) => {
-  try {
-    // Normalizar userId (puede venir como string u ObjectId desde JWT)
-    const userId = req.user.userId?.toString ? req.user.userId.toString() : req.user.userId;
-    const activity = [];
-    
-    // Trades recientes
-    const recentTrades = await marketplaceService.db.collection('trade_offers')
-      .find({
-        $or: [{ senderId: new ObjectId(userId) }, { receiverId: new ObjectId(userId) }]
-      })
-      .sort({ createdAt: -1 })
-      .limit(5)
-      .toArray();
-    
-    recentTrades.forEach(trade => {
-      activity.push({
-        type: 'trade',
-        description: `${trade.status === 'accepted' ? 'Completaste' : trade.status === 'pending' ? 'Enviaste' : 'Rechazaste'} una oferta de trade`,
-        timestamp: trade.createdAt,
-        status: trade.status
-      });
-    });
-    
-    // Posts recientes
-    const recentPosts = await communityService.db.collection('community_posts')
-      .find({ userId: new ObjectId(userId) })
-      .sort({ createdAt: -1 })
-      .limit(5)
-      .toArray();
-    
-    recentPosts.forEach(post => {
-      activity.push({
-        type: 'post',
-        description: `Publicaste: ${post.title}`,
-        timestamp: post.createdAt
-      });
-    });
-    
-    // Ordenar por fecha
-    activity.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-    
-    res.json({ activity: activity.slice(0, 20) });
-  } catch (error) {
-    console.error('Error fetching recent activity:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// ============ END USER STATS ROUTES ============
-
-// ============ FRIENDS ROUTES ============
-
-let friendsService;
-
-// Enviar solicitud de amistad
-app.post('/api/friends/request/:userId', authenticateToken, async (req, res) => {
-  try {
-    if (!friendsService) {
-      return res.status(503).json({ error: 'Friends service not available' });
-    }
-    
-    const senderId = req.user.userId;
-    const receiverId = req.params.userId;
-    
-    const friendshipId = await friendsService.sendFriendRequest(senderId, receiverId);
-    
-    // Emitir notificación en tiempo real para Friends component
-    const sender = req.user;
-    socketService.emitToUser(receiverId, 'new-friend-request', {
-      friendshipId,
-      senderId,
-      senderUsername: sender.username
-    });
-    
-    // Emitir notificación general para NotificationCenter
-    socketService.emitToUser(receiverId, 'new-notification', {
-      type: 'friend_request',
-      title: 'Nueva solicitud de amistad',
-      message: `${sender.username} te ha enviado una solicitud de amistad`,
-      data: {
-        friendshipId,
-        senderId,
-        senderUsername: sender.username,
-        view: 'friends',
-        tab: 'requests'
-      },
-      read: false,
-      createdAt: new Date()
-    });
-    
-    res.json({ 
-      success: true, 
-      friendshipId,
-      message: 'Solicitud enviada' 
-    });
-  } catch (error) {
-    console.error('Error sending friend request:', error);
-    res.status(400).json({ error: error.message });
-  }
-});
-
-// Responder a solicitud de amistad
-app.post('/api/friends/respond/:friendshipId', authenticateToken, async (req, res) => {
-  try {
-    const { accept } = req.body;
-    const userId = req.user.userId;
-    const friendshipId = req.params.friendshipId;
-    
-    const result = await friendsService.respondToFriendRequest(friendshipId, userId, accept);
-    
-    if (accept) {
-      // Obtener datos de la amistad para notificar
-      const friendship = await db.collection('friendships').findOne({
-        _id: new ObjectId(friendshipId)
-      });
-      
-      // Emitir para Friends component
-      socketService.emitToUser(friendship.requesterId.toString(), 'friend-request-accepted', {
-        friendshipId,
-        userId,
-        username: req.user.username
-      });
-      
-      // Emitir notificación general
-      socketService.emitToUser(friendship.requesterId.toString(), 'new-notification', {
-        type: 'friend_request_accepted',
-        title: 'Solicitud aceptada',
-        message: `${req.user.username} aceptó tu solicitud de amistad`,
-        data: {
-          friendshipId,
-          userId,
-          username: req.user.username,
-          view: 'friends',
-          tab: 'friends'
-        },
-        read: false,
-        createdAt: new Date()
-      });
-    }
-    
-    res.json(result);
-  } catch (error) {
-    console.error('Error responding to friend request:', error);
-    res.status(400).json({ error: error.message });
-  }
-});
-
-// Obtener lista de amigos
-app.get('/api/friends', authenticateToken, async (req, res) => {
-  try {
-    const userId = req.user.userId;
-    const friends = await friendsService.getFriends(userId);
-    res.json(friends);
-  } catch (error) {
-    console.error('Error fetching friends:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Obtener solicitudes pendientes
-app.get('/api/friends/requests/pending', authenticateToken, async (req, res) => {
-  try {
-    const userId = req.user.userId;
-    const requests = await friendsService.getPendingRequests(userId);
-    res.json(requests);
-  } catch (error) {
-    console.error('Error fetching pending requests:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Obtener solicitudes enviadas
-app.get('/api/friends/requests/sent', authenticateToken, async (req, res) => {
-  try {
-    const userId = req.user.userId;
-    const requests = await friendsService.getSentRequests(userId);
-    res.json(requests);
-  } catch (error) {
-    console.error('Error fetching sent requests:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Cancelar solicitud enviada
-app.delete('/api/friends/request/:friendshipId', authenticateToken, async (req, res) => {
-  try {
-    const userId = req.user.userId;
-    const friendshipId = req.params.friendshipId;
-    
-    const result = await friendsService.cancelFriendRequest(friendshipId, userId);
-    res.json(result);
-  } catch (error) {
-    console.error('Error canceling friend request:', error);
-    res.status(400).json({ error: error.message });
-  }
-});
-
-// Eliminar amigo
-app.delete('/api/friends/:friendshipId', authenticateToken, async (req, res) => {
-  try {
-    const userId = req.user.userId;
-    const friendshipId = req.params.friendshipId;
-    
-    const result = await friendsService.removeFriend(friendshipId, userId);
-    res.json(result);
-  } catch (error) {
-    console.error('Error removing friend:', error);
-    res.status(400).json({ error: error.message });
-  }
-});
-
-// Verificar estado de relación con otro usuario
-app.get('/api/friends/status/:userId', authenticateToken, async (req, res) => {
-  try {
-    const userId1 = req.user.userId;
-    const userId2 = req.params.userId;
-    
-    const status = await friendsService.getRelationshipStatus(userId1, userId2);
-    res.json(status);
-  } catch (error) {
-    console.error('Error checking friendship status:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Buscar usuarios para agregar
-app.get('/api/friends/search', authenticateToken, async (req, res) => {
-  try {
-    const userId = req.user.userId;
-    const { q, limit } = req.query;
-    
-    console.log('🔍 Búsqueda de usuarios - Inicio:', { userId, query: q, friendsService: !!friendsService });
-    
-    if (!q || q.length < 2) {
-      console.log('⚠️ Query muy corta o vacía');
-      return res.json([]);
-    }
-    
-    if (!friendsService) {
-      console.error('❌ FriendsService no está inicializado');
-      return res.status(503).json({ error: 'Service not available' });
-    }
-    
-    console.log('🔍 Llamando a friendsService.searchUsers...');
-    const users = await friendsService.searchUsers(userId, q, limit ? parseInt(limit) : 20);
-    console.log('✅ friendsService.searchUsers completado:', { 
-      usersReturned: users, 
-      isArray: Array.isArray(users),
-      length: users?.length || 0 
-    });
-    
-    const result = users || [];
-    console.log('📤 Enviando respuesta:', result.length, 'usuarios');
-    res.json(result);
-  } catch (error) {
-    console.error('❌ Error searching users:', error.message, error.stack);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// ============ END FRIENDS ROUTES ============
-
-// ============ ADMIN ROUTES ============
-
-let adminService;
-
-// Dashboard stats
-app.get('/api/admin/stats', authenticateToken, requireRole('admin', 'moderator'), async (req, res) => {
-  try {
-    const stats = await adminService.getDashboardStats();
-    res.json(stats);
-  } catch (error) {
-    console.error('Error fetching admin stats:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Recent admin activity
-app.get('/api/admin/activity', authenticateToken, requireRole('admin', 'moderator'), async (req, res) => {
-  try {
-    const limit = parseInt(req.query.limit) || 50;
-    const activity = await adminService.getRecentActivity(limit);
-    res.json({ activity });
-  } catch (error) {
-    console.error('Error fetching admin activity:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Get all users with pagination and filters
-app.get('/api/admin/users', authenticateToken, requireRole('admin', 'moderator'), async (req, res) => {
-  try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
-    const filters = {
-      role: req.query.role,
-      isActive: req.query.isActive !== undefined ? req.query.isActive === 'true' : undefined,
-      search: req.query.search
-    };
-
-    const result = await adminService.getAllUsers(page, limit, filters);
-    res.json(result);
-  } catch (error) {
-    console.error('Error fetching users:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Get user details
-app.get('/api/admin/users/:userId', authenticateToken, requireRole('admin', 'moderator'), async (req, res) => {
-  try {
-    const user = await adminService.getUserDetails(req.params.userId);
-    res.json(user);
-  } catch (error) {
-    console.error('Error fetching user details:', error);
-    res.status(404).json({ error: error.message });
-  }
-});
-
-// Ban user
-app.post('/api/admin/users/:userId/ban', authenticateToken, requireRole('admin'), async (req, res) => {
-  try {
-    const { reason, duration } = req.body;
-    const result = await adminService.banUser(
-      req.params.userId,
-      req.user.userId,
-      reason,
-      duration
-    );
-    res.json(result);
-  } catch (error) {
-    console.error('Error banning user:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Unban user
-app.post('/api/admin/users/:userId/unban', authenticateToken, requireRole('admin'), async (req, res) => {
-  try {
-    const result = await adminService.unbanUser(req.params.userId, req.user.userId);
-    res.json(result);
-  } catch (error) {
-    console.error('Error unbanning user:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Warn user
-app.post('/api/admin/users/:userId/warn', authenticateToken, requireRole('admin', 'moderator'), async (req, res) => {
-  try {
-    const { reason } = req.body;
-    const result = await adminService.warnUser(req.params.userId, req.user.userId, reason);
-    res.json(result);
-  } catch (error) {
-    console.error('Error warning user:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Get all listings for admin (including deleted)
-app.get('/api/admin/content/listings', authenticateToken, requireRole('admin', 'moderator'), async (req, res) => {
-  try {
-    const listings = await db.collection('marketplace_listings')
-      .find({})
-      .sort({ createdAt: -1 })
-      .toArray();
-    res.json({ listings });
-  } catch (error) {
-    console.error('Error fetching listings:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Update user role
-app.patch('/api/admin/users/:userId/role', authenticateToken, requireRole('admin'), async (req, res) => {
-  try {
-    const { role } = req.body;
-    const result = await adminService.updateUserRole(req.params.userId, req.user.userId, role);
-    res.json(result);
-  } catch (error) {
-    console.error('Error updating user role:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Delete post
-app.delete('/api/admin/posts/:postId', authenticateToken, requireRole('admin', 'moderator'), async (req, res) => {
-  try {
-    const { reason } = req.body;
-    const result = await adminService.deletePost(req.params.postId, req.user.userId, reason);
-    res.json(result);
-  } catch (error) {
-    console.error('Error deleting post:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Delete listing
-app.delete('/api/admin/listings/:listingId', authenticateToken, requireRole('admin', 'moderator'), async (req, res) => {
-  try {
-    const { reason } = req.body;
-    const result = await adminService.deleteListing(req.params.listingId, req.user.userId, reason);
-    res.json(result);
-  } catch (error) {
-    console.error('Error deleting listing:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Delete comment
-app.delete('/api/admin/posts/:postId/comments/:commentId', authenticateToken, requireRole('admin', 'moderator'), async (req, res) => {
-  try {
-    const { reason } = req.body;
-    const result = await adminService.deleteComment(
-      req.params.postId,
-      req.params.commentId,
-      req.user.userId,
-      reason
-    );
-    res.json(result);
-  } catch (error) {
-    console.error('Error deleting comment:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Get reports
-app.get('/api/admin/reports', authenticateToken, requireRole('admin', 'moderator'), async (req, res) => {
-  try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
-    const status = req.query.status;
-
-    const result = await adminService.getReports(page, limit, status);
-    res.json(result);
-  } catch (error) {
-    console.error('Error fetching reports:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Resolve report
-app.patch('/api/admin/reports/:reportId', authenticateToken, requireRole('admin', 'moderator'), async (req, res) => {
-  try {
-    const { action, notes } = req.body;
-    const result = await adminService.resolveReport(
-      req.params.reportId,
-      req.user.userId,
-      action,
-      notes
-    );
-    res.json(result);
-  } catch (error) {
-    console.error('Error resolving report:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// ============ END ADMIN ROUTES ============
+// ============ END GROUPS ROUTES ============
 
 // Middleware de rutas no encontradas (debe ir antes del errorHandler)
 app.use(notFoundHandler);

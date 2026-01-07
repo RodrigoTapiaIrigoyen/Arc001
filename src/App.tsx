@@ -22,6 +22,7 @@ const Messages = lazy(() => import('./components/Messages'));
 const Friends = lazy(() => import('./components/Friends'));
 const UserProfile = lazy(() => import('./components/UserProfile'));
 const PlaceholderView = lazy(() => import('./components/PlaceholderView'));
+const Groups = lazy(() => import('./components/Groups'));
 const HelpGuide = lazy(() => import('./components/HelpGuide'));
 const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
 
@@ -284,6 +285,7 @@ function App() {
             }}
           />
         )}
+        {currentView === 'groups' && <Groups />}
         {currentView === 'help' && <HelpGuide />}
         {currentView === 'admin' && user?.role === 'admin' && <AdminDashboard />}
         {currentView === 'profile' && user && (

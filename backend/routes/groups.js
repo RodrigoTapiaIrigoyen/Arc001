@@ -1,0 +1,356 @@
+import express from 'express';
+import { authenticateToken } from '../middleware/auth.js';
+import GroupsService from '../services/groups.js';
+
+export default function createGroupsRouter(db) {
+  const router = express.Router();
+  const groupsService = new GroupsService(db);
+
+  // ============ CREAR GRUPO ============
+  router.post('/create', authenticateToken, async (req, res) => {
+    try {
+      const { title, description, type, tags, max_members, mode, language, visibility, discord_link } = req.body;
+      
+      if (!title || !description) {
+        return res.status(400).json({ error: 'Título y descripción requeridos' });
+      }
+
+      const user = req.user;
+      const group = await groupsService.createGroup({
+        title,
+        description,
+        type,
+        owner_id: user.id,
+        owner_name: user.username,
+        owner_avatar: user.avatar || '',
+        tags: tags || [],
+        max_members: max_members || 50,
+        mode: mode || 'default',
+        language: language || 'es',
+        visibility: visibility || 'public',
+        discord_link: discord_link || ''
+      });
+
+      res.json({ success: true, group });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ============ BÚSQUEDA AVANZADA ============
+  router.get('/search', async (req, res) => {
+    try {
+      const { search, type, mode, language, level_required, status, visibility, tags, min_reputation, sort_by, page = 1, limit = 20 } = req.query;
+      
+      const filters = {
+        search,
+        type,
+        mode,
+        language,
+        level_required,
+        status,
+        visibility,
+        tags: tags ? tags.split(',') : [],
+        min_reputation: min_reputation ? parseInt(min_reputation) : undefined,
+        sort_by
+      };
+
+      const groups = await groupsService.searchGroups(filters, parseInt(page), parseInt(limit));
+      const total = await db.collection('groups').countDocuments(
+        filters.search ? { $text: { $search: filters.search } } : {}
+      );
+
+      res.json({ success: true, groups, total, page: parseInt(page), limit: parseInt(limit) });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ============ OBTENER DETALLES DEL GRUPO ============
+  router.get('/:groupId', async (req, res) => {
+    try {
+      const { groupId } = req.params;
+      const group = await groupsService.getGroupById(groupId);
+      
+      if (!group) {
+        return res.status(404).json({ error: 'Grupo no encontrado' });
+      }
+
+      // No mostrar banned users a menos que sea líder
+      if (req.user && group.owner_id !== req.user.id) {
+        group.bannedUsers = [];
+      }
+
+      res.json({ success: true, group });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ============ SOLICITAR UNIRSE ============
+  router.post('/:groupId/request-join', authenticateToken, async (req, res) => {
+    try {
+      const { groupId } = req.params;
+      const { message } = req.body;
+      
+      await groupsService.requestJoin(groupId, {
+        user_id: req.user.id,
+        username: req.user.username,
+        avatar: req.user.avatar || '',
+        message
+      });
+
+      res.json({ success: true, message: 'Solicitud enviada' });
+    } catch (error) {
+      console.error(error);
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // ============ ACEPTAR SOLICITUD ============
+  router.post('/:groupId/accept-request/:userId', authenticateToken, async (req, res) => {
+    try {
+      const { groupId, userId } = req.params;
+      
+      await groupsService.acceptJoinRequest(groupId, userId, req.user.id);
+      res.json({ success: true, message: 'Solicitud aceptada' });
+    } catch (error) {
+      console.error(error);
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // ============ RECHAZAR SOLICITUD ============
+  router.post('/:groupId/reject-request/:userId', authenticateToken, async (req, res) => {
+    try {
+      const { groupId, userId } = req.params;
+      const { reason } = req.body;
+      
+      await groupsService.rejectJoinRequest(groupId, userId, req.user.id, reason);
+      res.json({ success: true, message: 'Solicitud rechazada' });
+    } catch (error) {
+      console.error(error);
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // ============ REMOVER MIEMBRO ============
+  router.post('/:groupId/remove-member/:userId', authenticateToken, async (req, res) => {
+    try {
+      const { groupId, userId } = req.params;
+      const { reason } = req.body;
+      
+      await groupsService.removeMember(groupId, userId, req.user.id, reason);
+      res.json({ success: true, message: 'Miembro removido' });
+    } catch (error) {
+      console.error(error);
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // ============ BANEAR MIEMBRO ============
+  router.post('/:groupId/ban-member/:userId', authenticateToken, async (req, res) => {
+    try {
+      const { groupId, userId } = req.params;
+      const { reason } = req.body;
+      
+      await groupsService.banMember(groupId, userId, req.user.id, reason);
+      res.json({ success: true, message: 'Miembro baneado' });
+    } catch (error) {
+      console.error(error);
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // ============ PROMOVER A MODERADOR ============
+  router.post('/:groupId/promote/:userId', authenticateToken, async (req, res) => {
+    try {
+      const { groupId, userId } = req.params;
+      
+      await groupsService.promoteToModerator(groupId, userId, req.user.id);
+      res.json({ success: true, message: 'Miembro promovido' });
+    } catch (error) {
+      console.error(error);
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // ============ SALIR DEL GRUPO ============
+  router.post('/:groupId/leave', authenticateToken, async (req, res) => {
+    try {
+      const { groupId } = req.params;
+      
+      await groupsService.leaveClan(groupId, req.user.id);
+      res.json({ success: true, message: 'Has dejado el grupo' });
+    } catch (error) {
+      console.error(error);
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // ============ ENVIAR MENSAJE ============
+  router.post('/:groupId/messages', authenticateToken, async (req, res) => {
+    try {
+      const { groupId } = req.params;
+      const { content, attachments } = req.body;
+      
+      if (!content && (!attachments || attachments.length === 0)) {
+        return res.status(400).json({ error: 'El mensaje no puede estar vacío' });
+      }
+
+      const message = await groupsService.sendMessage(groupId, {
+        user_id: req.user.id,
+        username: req.user.username,
+        avatar: req.user.avatar || ''
+      }, content, attachments || []);
+
+      res.json({ success: true, message });
+    } catch (error) {
+      console.error(error);
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // ============ EDITAR MENSAJE ============
+  router.put('/messages/:messageId', authenticateToken, async (req, res) => {
+    try {
+      const { messageId } = req.params;
+      const { content } = req.body;
+      
+      if (!content) {
+        return res.status(400).json({ error: 'El contenido es requerido' });
+      }
+
+      await groupsService.editMessage(messageId, content, req.user.id);
+      res.json({ success: true, message: 'Mensaje actualizado' });
+    } catch (error) {
+      console.error(error);
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // ============ ELIMINAR MENSAJE ============
+  router.delete('/messages/:messageId', authenticateToken, async (req, res) => {
+    try {
+      const { messageId } = req.params;
+      
+      await groupsService.deleteMessage(messageId, req.user.id);
+      res.json({ success: true, message: 'Mensaje eliminado' });
+    } catch (error) {
+      console.error(error);
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // ============ OBTENER MENSAJES ============
+  router.get('/:groupId/messages', async (req, res) => {
+    try {
+      const { groupId } = req.params;
+      const { limit = 50, page = 1 } = req.query;
+      
+      const messages = await groupsService.getMessages(groupId, parseInt(limit), parseInt(page));
+      res.json({ success: true, messages });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ============ AGREGAR REACCIÓN ============
+  router.post('/messages/:messageId/reaction', authenticateToken, async (req, res) => {
+    try {
+      const { messageId } = req.params;
+      const { emoji } = req.body;
+      
+      if (!emoji) {
+        return res.status(400).json({ error: 'Emoji requerido' });
+      }
+
+      await groupsService.addReaction(messageId, req.user.id, emoji);
+      res.json({ success: true, message: 'Reacción agregada' });
+    } catch (error) {
+      console.error(error);
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // ============ ACTUALIZAR CONFIGURACIÓN ============
+  router.put('/:groupId/settings', authenticateToken, async (req, res) => {
+    try {
+      const { groupId } = req.params;
+      const settings = req.body;
+      
+      await groupsService.updateGroupSettings(groupId, settings, req.user.id);
+      res.json({ success: true, message: 'Configuración actualizada' });
+    } catch (error) {
+      console.error(error);
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // ============ ACTUALIZAR INFORMACIÓN ============
+  router.put('/:groupId/info', authenticateToken, async (req, res) => {
+    try {
+      const { groupId } = req.params;
+      const info = req.body;
+      
+      await groupsService.updateGroupInfo(groupId, info, req.user.id);
+      res.json({ success: true, message: 'Información actualizada' });
+    } catch (error) {
+      console.error(error);
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // ============ OBTENER LOGS (SOLO LÍDER) ============
+  router.get('/:groupId/logs', authenticateToken, async (req, res) => {
+    try {
+      const { groupId } = req.params;
+      const group = await groupsService.getGroupById(groupId);
+      
+      if (!group) {
+        return res.status(404).json({ error: 'Grupo no encontrado' });
+      }
+
+      const member = group.members.find(m => m.user_id === req.user.id);
+      if (!member || member.role !== 'leader') {
+        return res.status(403).json({ error: 'No tienes permisos' });
+      }
+
+      const logs = await groupsService.getGroupLogs(groupId);
+      res.json({ success: true, logs });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ============ OBTENER ESTADÍSTICAS ============
+  router.get('/:groupId/stats', async (req, res) => {
+    try {
+      const { groupId } = req.params;
+      const stats = await groupsService.getGroupStats(groupId);
+      
+      res.json({ success: true, stats });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ============ MIS GRUPOS ============
+  router.get('/user/my-groups', authenticateToken, async (req, res) => {
+    try {
+      const groups = await groupsService.getGroupsByUser(req.user.id);
+      res.json({ success: true, groups });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  return router;
+}

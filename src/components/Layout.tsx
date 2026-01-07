@@ -181,6 +181,7 @@ export default function Layout({ children, currentView, onViewChange, user, isGu
     { id: 'items', label: 'Items', icon: Package },
     { id: 'enemies', label: 'Enemies', icon: Target },
     { id: 'maps', label: 'Maps', icon: Map },
+    { id: 'groups', label: 'Clanes & Grupos', icon: Users },
     { id: 'help', label: 'Help & Guide', icon: HelpCircle },
     { id: 'profile', label: 'My Profile', icon: User },
     { id: 'activity', label: 'Activity Feed', icon: TrendingUp },
