@@ -145,8 +145,9 @@ app.use(cors({
       return callback(null, true);
     }
     
-    // Permitir localhost en desarrollo
-    if (origin && origin.includes('localhost')) {
+    // Permitir localhost en desarrollo (incluyendo 127.0.0.1)
+    if (origin && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
+      console.log('✅ CORS permitido para localhost origin:', origin);
       return callback(null, true);
     }
     
