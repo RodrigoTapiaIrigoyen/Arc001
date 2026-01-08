@@ -31,7 +31,7 @@ export default function createGroupsRouter(db) {
         title,
         description,
         type,
-        owner_id: user.id,
+        owner_id: user.userId,
         owner_name: user.username,
         owner_avatar: user.avatar || '',
         tags: tags || [],
