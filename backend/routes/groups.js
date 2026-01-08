@@ -86,7 +86,7 @@ export default function createGroupsRouter(db) {
       const { message } = req.body;
       
       await groupsService.requestJoin(groupId, {
-        user_id: req.user.id,
+        user_id: req.user.userId,
         username: req.user.username,
         avatar: req.user.avatar || '',
         message
@@ -104,7 +104,7 @@ export default function createGroupsRouter(db) {
     try {
       const { groupId, userId } = req.params;
       
-      await groupsService.acceptJoinRequest(groupId, userId, req.user.id);
+      await groupsService.acceptJoinRequest(groupId, userId, req.user.userId);
       res.json({ success: true, message: 'Solicitud aceptada' });
     } catch (error) {
       console.error(error);
@@ -118,7 +118,7 @@ export default function createGroupsRouter(db) {
       const { groupId, userId } = req.params;
       const { reason } = req.body;
       
-      await groupsService.rejectJoinRequest(groupId, userId, req.user.id, reason);
+      await groupsService.rejectJoinRequest(groupId, userId, req.user.userId, reason);
       res.json({ success: true, message: 'Solicitud rechazada' });
     } catch (error) {
       console.error(error);
@@ -132,7 +132,7 @@ export default function createGroupsRouter(db) {
       const { groupId, userId } = req.params;
       const { reason } = req.body;
       
-      await groupsService.removeMember(groupId, userId, req.user.id, reason);
+      await groupsService.removeMember(groupId, userId, req.user.userId, reason);
       res.json({ success: true, message: 'Miembro removido' });
     } catch (error) {
       console.error(error);
@@ -146,7 +146,7 @@ export default function createGroupsRouter(db) {
       const { groupId, userId } = req.params;
       const { reason } = req.body;
       
-      await groupsService.banMember(groupId, userId, req.user.id, reason);
+      await groupsService.banMember(groupId, userId, req.user.userId, reason);
       res.json({ success: true, message: 'Miembro baneado' });
     } catch (error) {
       console.error(error);
@@ -159,7 +159,7 @@ export default function createGroupsRouter(db) {
     try {
       const { groupId, userId } = req.params;
       
-      await groupsService.promoteToModerator(groupId, userId, req.user.id);
+      await groupsService.promoteToModerator(groupId, userId, req.user.userId);
       res.json({ success: true, message: 'Miembro promovido' });
     } catch (error) {
       console.error(error);
@@ -172,7 +172,7 @@ export default function createGroupsRouter(db) {
     try {
       const { groupId } = req.params;
       
-      await groupsService.leaveClan(groupId, req.user.id);
+      await groupsService.leaveClan(groupId, req.user.userId);
       res.json({ success: true, message: 'Has dejado el grupo' });
     } catch (error) {
       console.error(error);
@@ -191,7 +191,7 @@ export default function createGroupsRouter(db) {
       }
 
       const message = await groupsService.sendMessage(groupId, {
-        user_id: req.user.id,
+        user_id: req.user.userId,
         username: req.user.username,
         avatar: req.user.avatar || ''
       }, content, channelId, attachments || []);
@@ -213,7 +213,7 @@ export default function createGroupsRouter(db) {
         return res.status(400).json({ error: 'El contenido es requerido' });
       }
 
-      await groupsService.editMessage(messageId, content, req.user.id);
+      await groupsService.editMessage(messageId, content, req.user.userId);
       res.json({ success: true, message: 'Mensaje actualizado' });
     } catch (error) {
       console.error(error);
@@ -226,7 +226,7 @@ export default function createGroupsRouter(db) {
     try {
       const { messageId } = req.params;
       
-      await groupsService.deleteMessage(messageId, req.user.id);
+      await groupsService.deleteMessage(messageId, req.user.userId);
       res.json({ success: true, message: 'Mensaje eliminado' });
     } catch (error) {
       console.error(error);
@@ -258,7 +258,7 @@ export default function createGroupsRouter(db) {
         return res.status(400).json({ error: 'Emoji requerido' });
       }
 
-      await groupsService.addReaction(messageId, req.user.id, emoji);
+      await groupsService.addReaction(messageId, req.user.userId, emoji);
       res.json({ success: true, message: 'Reacción agregada' });
     } catch (error) {
       console.error(error);
@@ -272,7 +272,7 @@ export default function createGroupsRouter(db) {
       const { groupId } = req.params;
       const settings = req.body;
       
-      await groupsService.updateGroupSettings(groupId, settings, req.user.id);
+      await groupsService.updateGroupSettings(groupId, settings, req.user.userId);
       res.json({ success: true, message: 'Configuración actualizada' });
     } catch (error) {
       console.error(error);
@@ -286,7 +286,7 @@ export default function createGroupsRouter(db) {
       const { groupId } = req.params;
       const info = req.body;
       
-      await groupsService.updateGroupInfo(groupId, info, req.user.id);
+      await groupsService.updateGroupInfo(groupId, info, req.user.userId);
       res.json({ success: true, message: 'Información actualizada' });
     } catch (error) {
       console.error(error);
@@ -304,7 +304,7 @@ export default function createGroupsRouter(db) {
         return res.status(404).json({ error: 'Grupo no encontrado' });
       }
 
-      const member = group.members.find(m => m.user_id === req.user.id);
+      const member = group.members.find(m => m.user_id === req.user.userId);
       if (!member || member.role !== 'leader') {
         return res.status(403).json({ error: 'No tienes permisos' });
       }
@@ -333,7 +333,7 @@ export default function createGroupsRouter(db) {
   // ============ MIS GRUPOS ============
   router.get('/user/my-groups', authenticateToken, async (req, res) => {
     try {
-      const groups = await groupsService.getGroupsByUser(req.user.id);
+      const groups = await groupsService.getGroupsByUser(req.user.userId);
       res.json({ success: true, groups });
     } catch (error) {
       console.error(error);
@@ -374,7 +374,7 @@ export default function createGroupsRouter(db) {
         return res.status(400).json({ error: 'El nombre del canal es requerido' });
       }
 
-      const channel = await groupsService.createChannel(groupId, req.user.id, { name, description });
+      const channel = await groupsService.createChannel(groupId, req.user.userId, { name, description });
       res.json({ success: true, channel });
     } catch (error) {
       console.error(error);
@@ -385,7 +385,7 @@ export default function createGroupsRouter(db) {
   router.delete('/:groupId/channels/:channelId', authenticateToken, async (req, res) => {
     try {
       const { groupId, channelId } = req.params;
-      await groupsService.deleteChannel(groupId, channelId, req.user.id);
+      await groupsService.deleteChannel(groupId, channelId, req.user.userId);
       res.json({ success: true, message: 'Canal eliminado' });
     } catch (error) {
       console.error(error);
@@ -404,7 +404,7 @@ export default function createGroupsRouter(db) {
       }
 
       // No mostrar banned users a menos que sea líder
-      if (req.user && group.owner_id !== req.user.id) {
+      if (req.user && group.owner_id !== req.user.userId) {
         group.bannedUsers = [];
       }
 
