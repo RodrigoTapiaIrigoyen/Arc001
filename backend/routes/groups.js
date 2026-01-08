@@ -79,8 +79,6 @@ export default function createGroupsRouter(db) {
     }
   });
 
-  });
-
   // ============ SOLICITAR UNIRSE ============
   router.post('/:groupId/request-join', authenticateToken, async (req, res) => {
     try {
