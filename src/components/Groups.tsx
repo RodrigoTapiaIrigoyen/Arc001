@@ -24,6 +24,9 @@ export default function Groups() {
   const [myGroups, setMyGroups] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  
+  // API URL configurada desde env
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10000/api';
 
   // Cargar grupos disponibles
   useEffect(() => {
@@ -49,7 +52,7 @@ export default function Groups() {
       if (filterType !== 'all') params.append('type', filterType);
       if (filterLanguage !== 'all') params.append('language', filterLanguage);
 
-      const response = await fetch(`/api/groups/search?${params}`);
+      const response = await fetch(`${API_URL}/groups/search?${params}`);
       if (!response.ok) throw new Error('Error al cargar grupos');
 
       const data = await response.json();
@@ -67,7 +70,7 @@ export default function Groups() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/groups/user/my-groups', {
+      const response = await fetch(`${API_URL}/groups/user/my-groups`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -101,7 +104,7 @@ export default function Groups() {
     setError(null);
 
     try {
-      const response = await fetch('/api/groups/create', {
+      const response = await fetch(`${API_URL}/groups/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -142,7 +145,7 @@ export default function Groups() {
 
   const handleRequestJoin = async (groupId: string) => {
     try {
-      const response = await fetch(`/api/groups/${groupId}/request-join`, {
+      const response = await fetch(`${API_URL}/groups/${groupId}/request-join`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

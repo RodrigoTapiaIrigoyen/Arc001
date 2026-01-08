@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Target, Zap, Shield as ShieldIcon, Search, Skull, ThumbsUp, Edit } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10000/api';
 
 interface EnemyComponent {
   name: string;

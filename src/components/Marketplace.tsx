@@ -17,7 +17,7 @@ import {
   ArrowLeftRight,
 } from 'lucide-react';
 
-const API_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/marketplace`;
+const API_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:10000/api'}/marketplace`;
 
 export default function Marketplace() {
   const [activeTab, setActiveTab] = useState<'trading' | 'discussions'>('trading');

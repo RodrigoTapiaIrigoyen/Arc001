@@ -17,7 +17,7 @@ import {
 import api from '../services/api';
 import OffersModal from './OffersModal';
 
-const API_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/marketplace`;
+const API_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:10000/api'}/marketplace`;
 
 interface ItemImage {
   name: string;
