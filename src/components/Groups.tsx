@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from 'react';
-import { Users, Search, Plus, Eye, UserPlus, Globe, BarChart3 } from 'lucide-react';
+import { Users, Search, Plus, Eye, UserPlus, Globe, BarChart3, ArrowLeft } from 'lucide-react';
+import GroupChat from './GroupChat';
+import GroupLeaderPanel from './GroupLeaderPanel';
 
 export default function Groups() {
   const [groups, setGroups] = useState<any[]>([]);
@@ -25,6 +27,8 @@ export default function Groups() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+  const [selectedGroupData, setSelectedGroupData] = useState<any>(null);
   
   // API URL configurada desde env
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10000/api';
@@ -175,41 +179,171 @@ export default function Groups() {
     }
   };
 
+  const handleOpenGroup = async (groupId: string) => {
+    try {
+      const response = await fetch(`${API_URL}/groups/${groupId}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      if (!response.ok) throw new Error('Error al cargar grupo');
+      const data = await response.json();
+      setSelectedGroupId(groupId);
+      setSelectedGroupData(data.group);
+    } catch (err: any) {
+      setError(err?.message || 'Error al cargar grupo');
+    }
+  };
+
+  const handleCloseGroup = () => {
+    setSelectedGroupId(null);
+    setSelectedGroupData(null);
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-3">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <Users className="w-8 h-8 text-yellow-400" />
-            <h1 className="text-4xl font-bold text-white">Clanes y Grupos</h1>
+        {/* Vista del Grupo Seleccionado */}
+        {selectedGroupId && selectedGroupData && (
+          <div className="space-y-3">
+            {/* Header del grupo */}
+            <div>
+              <button
+                onClick={handleCloseGroup}
+                className="flex items-center gap-2 text-yellow-400 hover:text-yellow-300 mb-2 transition text-sm"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Volver a grupos
+              </button>
+
+              <div className="flex items-start justify-between">
+                <div>
+                  <h1 className="text-2xl font-bold text-white mb-1">{selectedGroupData.title}</h1>
+                  <p className="text-slate-300 text-sm mb-1">{selectedGroupData.description}</p>
+                  <div className="flex items-center gap-2 text-xs text-slate-400">
+                    <span>{selectedGroupData.members?.length || 0}/{selectedGroupData.max_members} miembros</span>
+                    <span>•</span>
+                    <span className="capitalize">{selectedGroupData.type}</span>
+                    <span>•</span>
+                    <span className="capitalize">{selectedGroupData.language}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Tabs del grupo */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+              {/* Chat - 2 columnas */}
+              <div className="lg:col-span-2 bg-slate-800 border border-slate-700 rounded-lg overflow-hidden">
+                <GroupChat 
+                  groupId={selectedGroupId} 
+                  userId={currentUser?.id}
+                  isLeader={selectedGroupData.owner_id === currentUser?.id || selectedGroupData.members.find((m: any) => m.user_id === currentUser?.id)?.role === 'leader'}
+                />
+              </div>
+
+              {/* Panel lateral - Miembros/Admin */}
+              <div className="space-y-3">
+                {/* Información del grupo */}
+                <div className="bg-slate-800 border border-slate-700 rounded-lg p-3">
+                  <h3 className="text-sm font-bold text-white mb-2">Información</h3>
+                  <div className="space-y-3 text-sm">
+                    <div>
+                      <p className="text-slate-400">Líder</p>
+                      <p className="text-white font-medium">{selectedGroupData.owner_name}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-400">Tipo</p>
+                      <p className="text-white font-medium capitalize">{selectedGroupData.type}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-400">Reputación</p>
+                      <p className="text-yellow-400 font-medium">⭐ {selectedGroupData.reputation}</p>
+                    </div>
+                    {selectedGroupData.tier && (
+                      <div>
+                        <p className="text-slate-400">Tier</p>
+                        <p className="text-white font-medium capitalize">{selectedGroupData.tier.level}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Panel de Admin si es líder */}
+                {selectedGroupData.owner_id === currentUser?.id && (
+                  <div className="bg-slate-800 border border-slate-700 rounded-lg overflow-hidden">
+                    <GroupLeaderPanel 
+                      groupId={selectedGroupId}
+                      isLeader={true}
+                    />
+                  </div>
+                )}
+
+                {/* Miembros */}
+                <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
+                  <h3 className="text-lg font-bold text-white mb-4">Miembros ({selectedGroupData.members?.length || 0})</h3>
+                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                    {selectedGroupData.members?.slice(0, 10).map((member: any) => (
+                      <div key={member.user_id} className="flex items-center gap-2 p-2 hover:bg-slate-700/50 rounded transition">
+                        <img
+                          src={member.avatar || '/default-avatar.png'}
+                          alt={member.username}
+                          className="w-8 h-8 rounded-full object-cover"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white text-sm font-medium truncate">{member.username}</p>
+                          <p className="text-slate-400 text-xs capitalize">{member.role}</p>
+                        </div>
+                      </div>
+                    ))}
+                    {(selectedGroupData.members?.length || 0) > 10 && (
+                      <p className="text-slate-400 text-sm text-center py-2">
+                        +{(selectedGroupData.members?.length || 0) - 10} más
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-          <p className="text-slate-300">Encuentra o crea un grupo para jugar con otros Raiders</p>
-        </div>
+        )}
+
+        {/* Vista de Listado de Grupos */}
+        {!selectedGroupId && (
+          <>
+            {/* Header */}
+            <div className="mb-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Users className="w-5 h-5 text-yellow-400" />
+                <h1 className="text-2xl font-bold text-white">Clanes y Grupos</h1>
+              </div>
+              <p className="text-slate-300 text-sm">Encuentra o crea un grupo para jugar con otros Raiders</p>
+            </div>
 
         {/* Mensajes de error/éxito */}
         {error && (
-          <div className="mb-4 p-4 bg-red-900/50 border border-red-500 rounded-lg text-red-200">
+          <div className="mb-3 p-2 bg-red-900/50 border border-red-500 rounded-lg text-red-200 text-sm">
             {error}
           </div>
         )}
         {success && (
-          <div className="mb-4 p-4 bg-green-900/50 border border-green-500 rounded-lg text-green-200">
+          <div className="mb-3 p-2 bg-green-900/50 border border-green-500 rounded-lg text-green-200 text-sm">
             {success}
           </div>
         )}
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-8 border-b border-slate-700">
+        <div className="flex gap-2 mb-4 border-b border-slate-700">
           <button
             onClick={() => setSelectedTab('browse')}
-            className={`px-6 py-3 font-medium transition-colors ${
+            className={`px-3 py-2 font-medium transition-colors text-sm ${
               selectedTab === 'browse'
                 ? 'text-yellow-400 border-b-2 border-yellow-400'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
-            <Eye className="w-4 h-4 inline mr-2" />
+            <Eye className="w-3 h-3 inline mr-1" />
             Explorar Grupos
           </button>
           <button
@@ -225,13 +359,13 @@ export default function Groups() {
           </button>
           <button
             onClick={() => setSelectedTab('create')}
-            className={`px-6 py-3 font-medium transition-colors ml-auto ${
+            className={`px-3 py-2 font-medium transition-colors ml-auto text-sm ${
               selectedTab === 'create'
                 ? 'text-yellow-400 border-b-2 border-yellow-400'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
-            <Plus className="w-4 h-4 inline mr-2" />
+            <Plus className="w-3 h-3 inline mr-1" />
             Crear Grupo
           </button>
         </div>
@@ -240,38 +374,38 @@ export default function Groups() {
         {selectedTab === 'browse' && (
           <div>
             {/* Búsqueda y filtros */}
-            <div className="mb-6 space-y-4">
-              <div className="flex gap-4">
+            <div className="mb-3 space-y-2">
+              <div className="flex gap-2">
                 <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
+                  <Search className="absolute left-2 top-2 w-4 h-4 text-slate-400" />
                   <input
                     type="text"
                     placeholder="Buscar grupos..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-yellow-400"
+                    className="w-full pl-8 pr-3 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm placeholder-slate-400 focus:outline-none focus:border-yellow-400"
                   />
                 </div>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-yellow-400"
+                  className="px-2 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-yellow-400"
                 >
-                  <option value="popular">Más populares</option>
-                  <option value="new">Más recientes</option>
-                  <option value="active">Más activos</option>
+                  <option value="popular">Populares</option>
+                  <option value="new">Recientes</option>
+                  <option value="active">Activos</option>
                 </select>
               </div>
 
-              <div className="flex gap-4">
+              <div className="flex gap-2">
                 <select
                   value={filterType}
                   onChange={(e) => setFilterType(e.target.value)}
-                  className="px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-yellow-400"
+                  className="px-2 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-yellow-400"
                 >
                   <option value="all">Todos los tipos</option>
                   <option value="clan">Clanes</option>
-                  <option value="raid-group">Raid Groups</option>
+                  <option value="raid-group">Raids</option>
                   <option value="trading">Trading</option>
                   <option value="social">Social</option>
                 </select>
@@ -279,9 +413,9 @@ export default function Groups() {
                 <select
                   value={filterLanguage}
                   onChange={(e) => setFilterLanguage(e.target.value)}
-                  className="px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-yellow-400"
+                  className="px-2 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-yellow-400"
                 >
-                  <option value="all">Todos los idiomas</option>
+                  <option value="all">Todos idiomas</option>
                   <option value="es">Español</option>
                   <option value="en">English</option>
                   <option value="pt">Português</option>
@@ -292,22 +426,23 @@ export default function Groups() {
             {/* Grid de grupos */}
             {loading ? (
               <div className="text-center py-12">
-                <div className="animate-spin w-12 h-12 border-4 border-slate-700 border-t-yellow-400 rounded-full mx-auto"></div>
-                <p className="text-slate-400 mt-4">Cargando grupos...</p>
+                <div className="animate-spin w-8 h-8 border-4 border-slate-700 border-t-yellow-400 rounded-full mx-auto"></div>
+                <p className="text-slate-400 mt-2 text-sm">Cargando grupos...</p>
               </div>
             ) : filteredGroups.length === 0 ? (
-              <div className="text-center py-12">
-                <Users className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                <p className="text-slate-400">No se encontraron grupos</p>
+              <div className="text-center py-8">
+                <Users className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+                <p className="text-slate-400 text-sm">No se encontraron grupos</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {filteredGroups.map(group => (
                   <GroupCard
                     key={group._id}
                     group={group}
                     currentUser={currentUser}
                     onRequestJoin={handleRequestJoin}
+                    onOpenGroup={handleOpenGroup}
                   />
                 ))}
               </div>
@@ -318,16 +453,16 @@ export default function Groups() {
         {selectedTab === 'my-groups' && (
           <div>
             {loading ? (
-              <div className="text-center py-12">
-                <div className="animate-spin w-12 h-12 border-4 border-slate-700 border-t-yellow-400 rounded-full mx-auto"></div>
+              <div className="text-center py-8">
+                <div className="animate-spin w-8 h-8 border-4 border-slate-700 border-t-yellow-400 rounded-full mx-auto"></div>
               </div>
             ) : myGroups.length === 0 ? (
-              <div className="text-center py-12 bg-slate-800/50 rounded-lg border border-slate-700">
-                <Users className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                <p className="text-slate-400 mb-4">Aún no eres miembro de ningún grupo</p>
+              <div className="text-center py-8 bg-slate-800/50 rounded-lg border border-slate-700">
+                <Users className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+                <p className="text-slate-400 mb-3 text-sm">Aún no eres miembro de ningún grupo</p>
                 <button
                   onClick={() => setSelectedTab('browse')}
-                  className="px-6 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-medium rounded-lg transition"
+                  className="px-4 py-1.5 bg-yellow-500 hover:bg-yellow-600 text-black font-medium rounded-lg transition text-sm"
                 >
                   Explorar Grupos
                 </button>
@@ -337,7 +472,8 @@ export default function Groups() {
                 {myGroups.map(group => (
                   <div
                     key={group._id}
-                    className="p-6 bg-slate-800 border border-slate-700 rounded-lg hover:border-yellow-400 transition cursor-pointer"
+                    onClick={() => handleOpenGroup(group._id)}
+                    className="p-6 bg-slate-800 border border-slate-700 rounded-lg hover:border-yellow-400 transition cursor-pointer hover:shadow-lg hover:shadow-yellow-400/10"
                   >
                     <div className="flex justify-between items-start mb-3">
                       <div>
@@ -472,13 +608,15 @@ export default function Groups() {
             </div>
           </div>
         )}
+          </>
+        )}
       </div>
     </div>
   );
 }
 
 // Componente para tarjeta de grupo
-function GroupCard({ group, currentUser, onRequestJoin }: { group: any; currentUser: any; onRequestJoin: (id: string) => void }) {
+function GroupCard({ group, currentUser, onRequestJoin, onOpenGroup }: { group: any; currentUser: any; onRequestJoin: (id: string) => void; onOpenGroup?: (id: string) => void }) {
   const memberPercentage = (group.members?.length / group.max_members) * 100;
   const isOwner = currentUser && group.owner_id === currentUser.id;
 
@@ -501,17 +639,20 @@ function GroupCard({ group, currentUser, onRequestJoin }: { group: any; currentU
   };
 
   return (
-    <div className="p-6 bg-slate-800 border border-slate-700 rounded-lg hover:border-yellow-400 transition hover:shadow-lg hover:shadow-yellow-400/10">
+    <div 
+      onClick={() => onOpenGroup?.(group._id)}
+      className="p-3 bg-slate-800 border border-slate-700 rounded-lg hover:border-yellow-400 transition hover:shadow-lg hover:shadow-yellow-400/10 cursor-pointer"
+    >
       {/* Encabezado */}
-      <div className="flex justify-between items-start mb-3">
+      <div className="flex justify-between items-start mb-2">
         <div>
-          <h3 className="text-lg font-bold text-white">{group.title}</h3>
-          <p className="text-slate-400 text-sm capitalize">{group.type}</p>
+          <h3 className="text-sm font-bold text-white">{group.title}</h3>
+          <p className="text-slate-400 text-xs capitalize">{group.type}</p>
         </div>
-        <div className="text-right flex flex-col items-end gap-2">
-          <p className="text-yellow-400 font-bold text-sm">⭐ {group.reputation}</p>
+        <div className="text-right flex flex-col items-end gap-1">
+          <p className="text-yellow-400 font-bold text-xs">⭐ {group.reputation}</p>
           {group.tier && (
-            <span className={`px-2 py-1 rounded text-xs font-bold ${getTierColor(group.tier.level)}`}>
+            <span className={`px-1.5 py-0.5 rounded text-xs font-bold ${getTierColor(group.tier.level)}`}>
               {getTierEmoji(group.tier.level)} {group.tier.level.toUpperCase()}
             </span>
           )}
@@ -519,45 +660,45 @@ function GroupCard({ group, currentUser, onRequestJoin }: { group: any; currentU
       </div>
 
       {/* Descripción */}
-      <p className="text-slate-300 text-sm mb-4 line-clamp-2">{group.description}</p>
+      <p className="text-slate-300 text-xs mb-2 line-clamp-2">{group.description}</p>
 
       {/* Tags */}
       {group.tags && group.tags.length > 0 && (
-        <div className="flex flex-wrap gap-1 mb-4">
+        <div className="flex flex-wrap gap-0.5 mb-2">
           {group.tags.slice(0, 3).map((tag: string) => (
-            <span key={tag} className="px-2 py-1 bg-slate-700 text-slate-300 text-xs rounded">
+            <span key={tag} className="px-1.5 py-0.5 bg-slate-700 text-slate-300 text-xs rounded">
               #{tag}
             </span>
           ))}
           {group.tags.length > 3 && (
-            <span className="px-2 py-1 text-slate-400 text-xs">+{group.tags.length - 3}</span>
+            <span className="px-1.5 py-0.5 text-slate-400 text-xs">+{group.tags.length - 3}</span>
           )}
         </div>
       )}
 
       {/* Información */}
-      <div className="space-y-2 mb-4 text-sm">
-        <div className="flex items-center gap-2 text-slate-400">
-          <Users className="w-4 h-4" />
-          <span>{group.members?.length || 0}/{group.max_members} miembros</span>
+      <div className="space-y-1 mb-2 text-xs">
+        <div className="flex items-center gap-1 text-slate-400">
+          <Users className="w-3 h-3" />
+          <span>{group.members?.length || 0}/{group.max_members}</span>
         </div>
         {group.language && (
-          <div className="flex items-center gap-2 text-slate-400">
-            <Globe className="w-4 h-4" />
+          <div className="flex items-center gap-1 text-slate-400">
+            <Globe className="w-3 h-3" />
             <span>{group.language}</span>
           </div>
         )}
         {group.success_rate && (
-          <div className="flex items-center gap-2 text-slate-400">
-            <BarChart3 className="w-4 h-4" />
+          <div className="flex items-center gap-1 text-slate-400">
+            <BarChart3 className="w-3 h-3" />
             <span>{group.success_rate}% éxito</span>
           </div>
         )}
       </div>
 
       {/* Barra de progreso */}
-      <div className="mb-4">
-        <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
+      <div className="mb-2">
+        <div className="w-full h-1.5 bg-slate-700 rounded-full overflow-hidden">
           <div
             className="h-full bg-yellow-500 transition-all duration-300"
             style={{ width: `${memberPercentage}%` }}
@@ -566,19 +707,37 @@ function GroupCard({ group, currentUser, onRequestJoin }: { group: any; currentU
       </div>
 
       {/* Botón */}
-      <button
-        onClick={() => onRequestJoin(group._id)}
-        disabled={isOwner}
-        title={isOwner ? "Este es tu grupo" : ""}
-        className={`w-full px-4 py-2 font-medium rounded-lg transition flex items-center justify-center gap-2 ${
-          isOwner
-            ? 'bg-slate-700 text-slate-400 cursor-not-allowed opacity-50'
-            : 'bg-yellow-500 hover:bg-yellow-600 text-black'
-        }`}
-      >
-        <UserPlus className="w-4 h-4" />
-        {isOwner ? 'Tu Grupo' : 'Solicitar Unirse'}
-      </button>
+      {(() => {
+        const isMember = group.members?.some((m: any) => m.user_id === currentUser?.id);
+        
+        if (isOwner || isMember) {
+          return (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenGroup?.(group._id);
+              }}
+              className="w-full px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition flex items-center justify-center gap-1 text-xs"
+            >
+              <Eye className="w-3 h-3" />
+              Entrar
+            </button>
+          );
+        } else {
+          return (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onRequestJoin(group._id);
+              }}
+              className="w-full px-3 py-1.5 bg-yellow-500 hover:bg-yellow-600 text-black font-medium rounded-lg transition flex items-center justify-center gap-1 text-xs"
+            >
+              <UserPlus className="w-3 h-3" />
+              Solicitar
+            </button>
+          );
+        }
+      })()}
     </div>
   );
 }
