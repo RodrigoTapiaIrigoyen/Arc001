@@ -140,6 +140,7 @@ export default class GroupsService {
   async requestJoin(groupId, user) {
     const group = await this.groups.findOne({ _id: new ObjectId(groupId) });
     if (!group) throw new Error('Grupo no encontrado');
+    if (group.owner_id === user.user_id) throw new Error('No puedes solicitar unirse a tu propio grupo');
     if (group.members.find(m => m.user_id === user.user_id)) throw new Error('Ya eres miembro');
     if (group.bannedUsers.includes(user.user_id)) throw new Error('Has sido baneado de este grupo');
     if (group.joinRequests?.find(r => r.user_id === user.user_id)) throw new Error('Ya tienes una solicitud pendiente');

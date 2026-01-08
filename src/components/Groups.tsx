@@ -24,9 +24,22 @@ export default function Groups() {
   const [myGroups, setMyGroups] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
   
   // API URL configurada desde env
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10000/api';
+
+  // Obtener usuario actual del localStorage
+  useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        setCurrentUser(JSON.parse(userStr));
+      } catch (e) {
+        console.error('Error parsing user:', e);
+      }
+    }
+  }, []);
 
   // Cargar grupos disponibles
   useEffect(() => {
@@ -293,6 +306,7 @@ export default function Groups() {
                   <GroupCard
                     key={group._id}
                     group={group}
+                    currentUser={currentUser}
                     onRequestJoin={handleRequestJoin}
                   />
                 ))}
@@ -464,8 +478,9 @@ export default function Groups() {
 }
 
 // Componente para tarjeta de grupo
-function GroupCard({ group, onRequestJoin }: { group: any; onRequestJoin: (id: string) => void }) {
+function GroupCard({ group, currentUser, onRequestJoin }: { group: any; currentUser: any; onRequestJoin: (id: string) => void }) {
   const memberPercentage = (group.members?.length / group.max_members) * 100;
+  const isOwner = currentUser && group.owner_id === currentUser.id;
 
   return (
     <div className="p-6 bg-slate-800 border border-slate-700 rounded-lg hover:border-yellow-400 transition hover:shadow-lg hover:shadow-yellow-400/10">
@@ -530,10 +545,16 @@ function GroupCard({ group, onRequestJoin }: { group: any; onRequestJoin: (id: s
       {/* Botón */}
       <button
         onClick={() => onRequestJoin(group._id)}
-        className="w-full px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-medium rounded-lg transition flex items-center justify-center gap-2"
+        disabled={isOwner}
+        title={isOwner ? "Este es tu grupo" : ""}
+        className={`w-full px-4 py-2 font-medium rounded-lg transition flex items-center justify-center gap-2 ${
+          isOwner
+            ? 'bg-slate-700 text-slate-400 cursor-not-allowed opacity-50'
+            : 'bg-yellow-500 hover:bg-yellow-600 text-black'
+        }`}
       >
         <UserPlus className="w-4 h-4" />
-        Solicitar Unirse
+        {isOwner ? 'Tu Grupo' : 'Solicitar Unirse'}
       </button>
     </div>
   );
