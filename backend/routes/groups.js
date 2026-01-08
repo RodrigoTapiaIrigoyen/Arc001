@@ -79,26 +79,6 @@ export default function createGroupsRouter(db) {
     }
   });
 
-  // ============ OBTENER DETALLES DEL GRUPO ============
-  router.get('/:groupId', async (req, res) => {
-    try {
-      const { groupId } = req.params;
-      const group = await groupsService.getGroupById(groupId);
-      
-      if (!group) {
-        return res.status(404).json({ error: 'Grupo no encontrado' });
-      }
-
-      // No mostrar banned users a menos que sea líder
-      if (req.user && group.owner_id !== req.user.id) {
-        group.bannedUsers = [];
-      }
-
-      res.json({ success: true, group });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: error.message });
-    }
   });
 
   // ============ SOLICITAR UNIRSE ============
@@ -409,6 +389,28 @@ export default function createGroupsRouter(db) {
       const { groupId, channelId } = req.params;
       await groupsService.deleteChannel(groupId, channelId, req.user.id);
       res.json({ success: true, message: 'Canal eliminado' });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ============ OBTENER DETALLES DEL GRUPO (al final para no capturar otras rutas) ============
+  router.get('/:groupId', async (req, res) => {
+    try {
+      const { groupId } = req.params;
+      const group = await groupsService.getGroupById(groupId);
+      
+      if (!group) {
+        return res.status(404).json({ error: 'Grupo no encontrado' });
+      }
+
+      // No mostrar banned users a menos que sea líder
+      if (req.user && group.owner_id !== req.user.id) {
+        group.bannedUsers = [];
+      }
+
+      res.json({ success: true, group });
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: error.message });
