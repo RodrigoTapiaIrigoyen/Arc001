@@ -127,7 +127,7 @@ export function GroupDetails({ group, token, onClose }: GroupDetailsProps) {
               <div className="flex flex-wrap gap-3 mb-2">
                 {groupData.joinRequests.map((r: JoinRequest, i: number) => (
                   <div key={i} className="flex items-center gap-2 bg-[#2a2d3a] px-3 py-1 rounded-full border border-yellow-500/20">
-                    <img src={r.avatar || '/default-avatar.png'} alt={r.name} className="w-6 h-6 rounded-full border border-yellow-500/30" />
+                    <img src={r.avatar || '/default-avatar.svg'} alt={r.name} className="w-6 h-6 rounded-full border border-yellow-500/30" />
                     <span className="text-white text-sm">{r.name}</span>
                     <button onClick={() => handleAccept(r.user_id)} className="ml-2 px-2 py-1 bg-green-500/80 text-xs text-white rounded hover:bg-green-600">Aceptar</button>
                     <button onClick={() => handleReject(r.user_id)} className="ml-2 px-2 py-1 bg-red-500/80 text-xs text-white rounded hover:bg-red-600">Rechazar</button>
@@ -154,7 +154,7 @@ export function GroupDetails({ group, token, onClose }: GroupDetailsProps) {
             <div className="flex flex-wrap gap-3 mb-2">
               {groupData.members?.map((m: GroupMember, i: number) => (
                 <div key={i} className="flex items-center gap-2 bg-[#23263a] px-3 py-1 rounded-full border border-blue-500/20">
-                  <img src={m.avatar || '/default-avatar.png'} alt={m.name} className="w-6 h-6 rounded-full border border-green-500/30" />
+                  <img src={m.avatar || '/default-avatar.svg'} alt={m.name} className="w-6 h-6 rounded-full border border-green-500/30" />
                   <span className="text-white text-sm">{m.name}</span>
                   {m.user_id === groupData.owner_id && <span className="text-xs text-yellow-400 font-bold ml-1">Líder</span>}
                   <button className="ml-2 px-2 py-1 bg-green-500/80 text-xs text-white rounded hover:bg-green-600">Agregar a amigo</button>

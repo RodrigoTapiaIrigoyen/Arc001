@@ -4,7 +4,7 @@ export default function GroupCard({ group, onJoin, onView }) {
   return (
     <div className="bg-gradient-to-br from-[#1a1f2e] to-[#0a0e1a] border border-blue-500/20 rounded-lg p-4 sm:p-6 hover:border-yellow-500/50 transition-all cursor-pointer overflow-hidden shadow-lg">
       <div className="flex items-center gap-4 mb-2">
-        <img src={group.owner_avatar || '/default-avatar.png'} alt={group.owner_name} className="w-10 h-10 rounded-full border border-green-500/30" />
+        <img src={group.owner_avatar || '/default-avatar.svg'} alt={group.owner_name} className="w-10 h-10 rounded-full border border-green-500/30" />
         <div>
           <div className="font-bold text-lg text-white">{group.title}</div>
           <div className="text-xs text-gray-400">Líder: {group.owner_name}</div>

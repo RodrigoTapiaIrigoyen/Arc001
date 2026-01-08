@@ -287,7 +287,7 @@ export default function Groups() {
                     {selectedGroupData.members?.slice(0, 10).map((member: any) => (
                       <div key={member.user_id} className="flex items-center gap-2 p-2 hover:bg-slate-700/50 rounded transition">
                         <img
-                          src={member.avatar || '/default-avatar.png'}
+                          src={member.avatar || '/default-avatar.svg'}
                           alt={member.username}
                           className="w-8 h-8 rounded-full object-cover"
                         />

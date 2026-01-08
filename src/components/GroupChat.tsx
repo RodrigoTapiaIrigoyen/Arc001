@@ -270,7 +270,7 @@ export default function GroupChat({ groupId, userId, isLeader = false }: { group
             >
               {/* Avatar */}
               <img
-                src={msg.avatar || '/default-avatar.png'}
+                src={msg.avatar || '/default-avatar.svg'}
                 alt={msg.username}
                 className="w-10 h-10 rounded-full object-cover flex-shrink-0"
               />

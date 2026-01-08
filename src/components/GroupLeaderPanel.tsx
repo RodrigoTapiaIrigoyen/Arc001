@@ -338,7 +338,7 @@ export default function GroupLeaderPanel({ groupId, isLeader = false }: { groupI
               >
                 <div className="flex items-center gap-3 flex-1">
                   <img
-                    src={member.avatar || '/default-avatar.png'}
+                    src={member.avatar || '/default-avatar.svg'}
                     alt={member.username}
                     className="w-10 h-10 rounded-full object-cover"
                   />
@@ -414,7 +414,7 @@ export default function GroupLeaderPanel({ groupId, isLeader = false }: { groupI
                 >
                   <div className="flex items-center gap-3 flex-1">
                     <img
-                      src={request.avatar || '/default-avatar.png'}
+                      src={request.avatar || '/default-avatar.svg'}
                       alt={request.username}
                       className="w-10 h-10 rounded-full object-cover"
                     />
