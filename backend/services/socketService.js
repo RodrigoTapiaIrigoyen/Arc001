@@ -10,7 +10,28 @@ class SocketService {
 
     this.io = new Server(server, {
       cors: {
-        origin: allowedOrigins,
+        origin: (origin, callback) => {
+          // Permitir requests sin origin
+          if (!origin) return callback(null, true);
+          
+          // Verificar si está en la lista permitida
+          if (allowedOrigins.includes(origin)) {
+            return callback(null, true);
+          }
+          
+          // Permitir localhost en desarrollo (incluyendo 127.0.0.1)
+          if (origin && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
+            return callback(null, true);
+          }
+          
+          // Permitir cualquier Vercel origin
+          if (origin && origin.includes('vercel.app')) {
+            return callback(null, true);
+          }
+          
+          console.warn('⚠️ Socket.io CORS rechazado:', origin);
+          callback(new Error('Not allowed by CORS'));
+        },
         methods: ['GET', 'POST'],
         credentials: true
       },

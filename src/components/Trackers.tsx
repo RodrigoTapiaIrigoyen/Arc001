@@ -5,7 +5,7 @@ import {
   BarChart3, Clock, CheckCircle2
 } from 'lucide-react';
 
-const API_URL = 'http://localhost:3001/api/trackers';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10000/api/trackers';
 
 const categories = [
   { id: 'all', label: 'All', icon: BarChart3 },

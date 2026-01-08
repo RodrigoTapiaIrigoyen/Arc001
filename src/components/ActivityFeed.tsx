@@ -193,7 +193,7 @@ export default function ActivityFeed() {
           <div className="relative">
             {activity.user.avatar ? (
               <img
-                src={activity.user.avatar.startsWith('http') ? activity.user.avatar : `http://localhost:3001${activity.user.avatar}`}
+                src={activity.user.avatar.startsWith('http') ? activity.user.avatar : `${import.meta.env.VITE_API_URL || 'http://localhost:10000/api'}/../..${activity.user.avatar}`}
                 alt={activity.user.username}
                 className={`w-12 h-12 rounded-full border-2 ${avatarStyles[activity.type as keyof typeof avatarStyles]}`}
                 onError={(e) => e.currentTarget.style.display = 'none'}

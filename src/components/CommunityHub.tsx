@@ -398,7 +398,7 @@ export default function CommunityHub({ initialPostId, onPostClose }: CommunityHu
                       <div className="ml-auto flex items-center gap-3">
                         {post.author_avatar && (
                           <img 
-                            src={post.author_avatar.startsWith('http') ? post.author_avatar : `http://localhost:3001${post.author_avatar}`}
+                            src={post.author_avatar.startsWith('http') ? post.author_avatar : `${import.meta.env.VITE_API_URL || 'http://localhost:10000/api'}/../..E_API_URL || 'http://localhost:10000/api'}/../..${post.author_avatar}`}
                             alt={post.author_name}
                             className="w-6 h-6 rounded-full border border-green-500/30"
                             onError={(e) => e.currentTarget.style.display = 'none'}
@@ -549,7 +549,7 @@ export default function CommunityHub({ initialPostId, onPostClose }: CommunityHu
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-4 text-xs sm:text-sm">
                   {selectedPost.author_avatar && (
                     <img 
-                      src={selectedPost.author_avatar.startsWith('http') ? selectedPost.author_avatar : `http://localhost:3001${selectedPost.author_avatar}`}
+                      src={selectedPost.author_avatar.startsWith('http') ? selectedPost.author_avatar : `${import.meta.env.VITE_API_URL || 'http://localhost:10000/api'}/../..${selectedPost.author_avatar}`}
                       alt={selectedPost.author_name}
                       className="w-8 h-8 rounded-full border-2 border-cyan-500/50"
                       onError={(e) => e.currentTarget.style.display = 'none'}

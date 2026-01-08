@@ -33,7 +33,7 @@ class SocketClient {
 
     this.token = token;
     // Socket.io debe conectarse a la raíz del servidor, NO a /api
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:10000/api';
     const serverUrl = apiUrl.replace('/api', '');
 
     console.log('🔌 Conectando WebSocket a:', serverUrl);
