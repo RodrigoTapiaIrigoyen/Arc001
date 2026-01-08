@@ -316,7 +316,7 @@ export default function Groups() {
             <div className="mb-4">
               <div className="flex items-center gap-2 mb-2">
                 <Users className="w-5 h-5 text-yellow-400" />
-                <h1 className="text-2xl font-bold text-white">Clanes y Grupos</h1>
+                <h1 className="text-2xl font-bold text-white"> Grupos</h1>
               </div>
               <p className="text-slate-300 text-sm">Encuentra o crea un grupo para jugar con otros Raiders</p>
             </div>

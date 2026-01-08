@@ -183,7 +183,17 @@ export default class GroupsService {
   }
 
   async getGroupsByUser(userId) {
-    return this.groups.find({ 'members.user_id': userId }).toArray();
+    // Convertir a string para comparar con miembros
+    const userIdStr = userId instanceof ObjectId ? userId.toString() : userId;
+    const userIdObj = typeof userId === 'string' ? new ObjectId(userId) : userId;
+    
+    // Buscar grupos donde el usuario es miembro (comparar tanto como string como ObjectId)
+    return this.groups.find({
+      $or: [
+        { 'members.user_id': userIdStr },
+        { 'members.user_id': userIdObj }
+      ]
+    }).toArray();
   }
 
   // ============ GESTIÓN DE MIEMBROS ============
