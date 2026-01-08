@@ -1,18 +1,23 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from 'react';
-import { Settings, Users, Shield, UserX, Edit, Save, X } from 'lucide-react';
+import { Settings, Users, Shield, UserX, Edit, Save, X, Plus, Trash2 } from 'lucide-react';
 
 export default function GroupLeaderPanel({ groupId, isLeader = false }: { groupId: any; isLeader?: boolean }) {
   const [group, setGroup] = useState<any>(null);
   const [members, setMembers] = useState<any[]>([]);
   const [joinRequests, setJoinRequests] = useState<any[]>([]);
+  const [channels, setChannels] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('members'); // members, requests, settings
+  const [activeTab, setActiveTab] = useState('members'); // members, requests, settings, channels
   const [editingGroup, setEditingGroup] = useState(false);
   const [editData, setEditData] = useState<any>({});
   const [showMemberMenu, setShowMemberMenu] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [showNewChannelForm, setShowNewChannelForm] = useState(false);
+  const [newChannelName, setNewChannelName] = useState('');
+  const [newChannelDescription, setNewChannelDescription] = useState('');
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10000/api';
 
   // Cargar datos del grupo
   useEffect(() => {
@@ -25,7 +30,7 @@ export default function GroupLeaderPanel({ groupId, isLeader = false }: { groupI
     setError(null);
 
     try {
-      const response = await fetch(`/api/groups/${groupId}`, {
+      const response = await fetch(`${API_URL}/groups/${groupId}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -37,6 +42,7 @@ export default function GroupLeaderPanel({ groupId, isLeader = false }: { groupI
       setGroup(data.group);
       setMembers(data.group.members || []);
       setJoinRequests(data.group.joinRequests || []);
+      setChannels(data.group.channels || []);
       setEditData({
         title: data.group.title,
         description: data.group.description,
@@ -51,9 +57,60 @@ export default function GroupLeaderPanel({ groupId, isLeader = false }: { groupI
     }
   };
 
+  const handleCreateChannel = async () => {
+    if (!newChannelName.trim()) {
+      setError('El nombre del canal es requerido');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/groups/${groupId}/channels`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          name: newChannelName,
+          description: newChannelDescription
+        })
+      });
+
+      if (!response.ok) throw new Error('Error al crear canal');
+
+      setSuccess('Canal creado exitosamente');
+      setNewChannelName('');
+      setNewChannelDescription('');
+      setShowNewChannelForm(false);
+      await fetchGroupData();
+    } catch (err: any) {
+      setError(err?.message || 'Error al crear canal');
+    }
+  };
+
+  const handleDeleteChannel = async (channelId: string) => {
+    if (!window.confirm('¿Eliminar este canal? Se perderán todos los mensajes.')) return;
+
+    try {
+      const response = await fetch(`${API_URL}/groups/${groupId}/channels/${channelId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      if (!response.ok) throw new Error('Error al eliminar canal');
+
+      setSuccess('Canal eliminado');
+      await fetchGroupData();
+    } catch (err: any) {
+      setError(err?.message || 'Error al eliminar canal');
+    }
+  };
+
   const handleAcceptRequest = async (userId: string) => {
     try {
-      const response = await fetch(`/api/groups/${groupId}/accept-request/${userId}`, {
+      const response = await fetch(`${API_URL}/groups/${groupId}/accept-request/${userId}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -72,7 +129,7 @@ export default function GroupLeaderPanel({ groupId, isLeader = false }: { groupI
 
   const handleRejectRequest = async (userId: string) => {
     try {
-      const response = await fetch(`/api/groups/${groupId}/reject-request/${userId}`, {
+      const response = await fetch(`${API_URL}/groups/${groupId}/reject-request/${userId}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -95,7 +152,7 @@ export default function GroupLeaderPanel({ groupId, isLeader = false }: { groupI
     if (!confirm('¿Estás seguro de que quieres remover a este miembro?')) return;
 
     try {
-      const response = await fetch(`/api/groups/${groupId}/remove-member/${userId}`, {
+      const response = await fetch(`${API_URL}/groups/${groupId}/remove-member/${userId}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -119,7 +176,7 @@ export default function GroupLeaderPanel({ groupId, isLeader = false }: { groupI
     if (!confirm('¿Estás seguro de que quieres banear a este miembro? No podrá volver a unirse.')) return;
 
     try {
-      const response = await fetch(`/api/groups/${groupId}/ban-member/${userId}`, {
+      const response = await fetch(`${API_URL}/groups/${groupId}/ban-member/${userId}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -141,7 +198,7 @@ export default function GroupLeaderPanel({ groupId, isLeader = false }: { groupI
 
   const handlePromote = async (userId: string) => {
     try {
-      const response = await fetch(`/api/groups/${groupId}/promote/${userId}`, {
+      const response = await fetch(`${API_URL}/groups/${groupId}/promote/${userId}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -161,7 +218,7 @@ export default function GroupLeaderPanel({ groupId, isLeader = false }: { groupI
 
   const handleSaveGroupSettings = async () => {
     try {
-      const response = await fetch(`/api/groups/${groupId}/info`, {
+      const response = await fetch(`${API_URL}/groups/${groupId}/info`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -256,6 +313,16 @@ export default function GroupLeaderPanel({ groupId, isLeader = false }: { groupI
         >
           <Settings className="w-4 h-4 inline mr-2" />
           Configuración
+        </button>
+        <button
+          onClick={() => setActiveTab('channels')}
+          className={`px-6 py-3 font-medium transition-colors ${
+            activeTab === 'channels'
+              ? 'text-yellow-400 border-b-2 border-yellow-400'
+              : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          Canales ({channels.length})
         </button>
       </div>
 
@@ -485,6 +552,93 @@ export default function GroupLeaderPanel({ groupId, isLeader = false }: { groupI
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Tab de Canales */}
+      {activeTab === 'channels' && (
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-bold text-white">Canales del Grupo</h3>
+            <button
+              onClick={() => setShowNewChannelForm(!showNewChannelForm)}
+              className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-medium rounded-lg transition flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Nuevo Canal
+            </button>
+          </div>
+
+          {/* Formulario crear canal */}
+          {showNewChannelForm && (
+            <div className="bg-slate-800 border border-slate-700 p-4 rounded-lg space-y-3">
+              <input
+                type="text"
+                placeholder="Nombre del canal (ej: guias, eventos)"
+                value={newChannelName}
+                onChange={(e) => setNewChannelName(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white focus:outline-none focus:border-yellow-400"
+              />
+              <input
+                type="text"
+                placeholder="Descripción (opcional)"
+                value={newChannelDescription}
+                onChange={(e) => setNewChannelDescription(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white focus:outline-none focus:border-yellow-400"
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={handleCreateChannel}
+                  className="flex-1 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-medium rounded transition"
+                >
+                  Crear
+                </button>
+                <button
+                  onClick={() => setShowNewChannelForm(false)}
+                  className="flex-1 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded transition"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Lista de canales */}
+          <div className="space-y-2">
+            {channels.length === 0 ? (
+              <p className="text-slate-400">Sin canales personalizados. Los canales por defecto no pueden eliminarse.</p>
+            ) : (
+              channels.map(channel => (
+                <div
+                  key={channel.id}
+                  className="flex justify-between items-start p-4 bg-slate-800 border border-slate-700 rounded-lg"
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-yellow-400 font-bold">#{channel.name}</span>
+                      {channel.is_default && (
+                        <span className="px-2 py-0.5 bg-slate-700 text-slate-300 text-xs rounded">
+                          Por defecto
+                        </span>
+                      )}
+                    </div>
+                    {channel.description && (
+                      <p className="text-slate-400 text-sm">{channel.description}</p>
+                    )}
+                  </div>
+                  {!channel.is_default && (
+                    <button
+                      onClick={() => handleDeleteChannel(channel.id)}
+                      className="ml-4 p-2 hover:bg-red-500/20 rounded transition text-red-400"
+                      title="Eliminar canal"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
         </div>
       )}
     </div>

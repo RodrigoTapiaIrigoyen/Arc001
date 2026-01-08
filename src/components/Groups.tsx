@@ -482,6 +482,24 @@ function GroupCard({ group, currentUser, onRequestJoin }: { group: any; currentU
   const memberPercentage = (group.members?.length / group.max_members) * 100;
   const isOwner = currentUser && group.owner_id === currentUser.id;
 
+  const getTierColor = (tier: string) => {
+    switch(tier) {
+      case 'diamante': return 'bg-blue-500/20 text-blue-300 border border-blue-500';
+      case 'oro': return 'bg-yellow-500/20 text-yellow-300 border border-yellow-500';
+      case 'plata': return 'bg-gray-400/20 text-gray-300 border border-gray-400';
+      default: return 'bg-orange-500/20 text-orange-300 border border-orange-500';
+    }
+  };
+
+  const getTierEmoji = (tier: string) => {
+    switch(tier) {
+      case 'diamante': return '💎';
+      case 'oro': return '🏆';
+      case 'plata': return '⭐';
+      default: return '🔥';
+    }
+  };
+
   return (
     <div className="p-6 bg-slate-800 border border-slate-700 rounded-lg hover:border-yellow-400 transition hover:shadow-lg hover:shadow-yellow-400/10">
       {/* Encabezado */}
@@ -490,8 +508,13 @@ function GroupCard({ group, currentUser, onRequestJoin }: { group: any; currentU
           <h3 className="text-lg font-bold text-white">{group.title}</h3>
           <p className="text-slate-400 text-sm capitalize">{group.type}</p>
         </div>
-        <div className="text-right">
+        <div className="text-right flex flex-col items-end gap-2">
           <p className="text-yellow-400 font-bold text-sm">⭐ {group.reputation}</p>
+          {group.tier && (
+            <span className={`px-2 py-1 rounded text-xs font-bold ${getTierColor(group.tier.level)}`}>
+              {getTierEmoji(group.tier.level)} {group.tier.level.toUpperCase()}
+            </span>
+          )}
         </div>
       </div>
 

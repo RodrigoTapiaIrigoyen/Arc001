@@ -1,31 +1,59 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useRef } from 'react';
-import { Send, Heart, Smile, Settings, Users, MoreVertical } from 'lucide-react';
+import { Send, Heart, Smile, Settings, Users, MoreVertical, Plus, Trash2 } from 'lucide-react';
 
 export default function GroupChat({ groupId, userId, isLeader = false }: { groupId: any; userId: any; username?: string; isLeader?: boolean }) {
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [channels, setChannels] = useState<any[]>([]);
+  const [selectedChannel, setSelectedChannel] = useState('general');
+  const [showNewChannelForm, setShowNewChannelForm] = useState(false);
+  const [newChannelName, setNewChannelName] = useState('');
+  const [newChannelDescription, setNewChannelDescription] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10000/api';
 
-  // Cargar mensajes
+  // Cargar canales
+  useEffect(() => {
+    fetchChannels();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [groupId]);
+
+  // Cargar mensajes cuando cambia el canal
   useEffect(() => {
     fetchMessages();
-    // Polling cada 2 segundos
     const interval = setInterval(fetchMessages, 2000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [groupId]);
+  }, [groupId, selectedChannel]);
 
   // Auto scroll al último mensaje
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  const fetchChannels = async () => {
+    try {
+      const response = await fetch(`${API_URL}/groups/${groupId}/channels`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      if (!response.ok) throw new Error('Error al cargar canales');
+
+      const data = await response.json();
+      setChannels(data.channels || []);
+    } catch (err) {
+      console.error('Error cargando canales:', err);
+    }
+  };
+
   const fetchMessages = async () => {
     try {
-      const response = await fetch(`/api/groups/${groupId}/messages`, {
+      const response = await fetch(`${API_URL}/groups/${groupId}/messages?channelId=${selectedChannel}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -50,13 +78,13 @@ export default function GroupChat({ groupId, userId, isLeader = false }: { group
     setNewMessage('');
 
     try {
-      const response = await fetch(`/api/groups/${groupId}/messages`, {
+      const response = await fetch(`${API_URL}/groups/${groupId}/messages`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify({ content: messageToSend })
+        body: JSON.stringify({ content: messageToSend, channelId: selectedChannel })
       });
 
       if (!response.ok) throw new Error('Error al enviar mensaje');
@@ -68,9 +96,55 @@ export default function GroupChat({ groupId, userId, isLeader = false }: { group
     }
   };
 
+  const handleCreateChannel = async () => {
+    if (!newChannelName.trim()) return;
+
+    try {
+      const response = await fetch(`${API_URL}/groups/${groupId}/channels`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ 
+          name: newChannelName, 
+          description: newChannelDescription 
+        })
+      });
+
+      if (!response.ok) throw new Error('Error al crear canal');
+
+      setNewChannelName('');
+      setNewChannelDescription('');
+      setShowNewChannelForm(false);
+      await fetchChannels();
+    } catch (err: any) {
+      setError(err?.message || 'Error al crear canal');
+    }
+  };
+
+  const handleDeleteChannel = async (channelId: string) => {
+    if (!window.confirm('¿Eliminar este canal?')) return;
+
+    try {
+      const response = await fetch(`${API_URL}/groups/${groupId}/channels/${channelId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      if (!response.ok) throw new Error('Error al eliminar canal');
+      await fetchChannels();
+      if (selectedChannel === channelId) setSelectedChannel('general');
+    } catch (err: any) {
+      setError(err?.message || 'Error al eliminar canal');
+    }
+  };
+
   const handleReaction = async (messageId: string, emoji: string) => {
     try {
-      await fetch(`/api/groups/messages/${messageId}/reaction`, {
+      await fetch(`${API_URL}/groups/messages/${messageId}/reaction`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -87,10 +161,83 @@ export default function GroupChat({ groupId, userId, isLeader = false }: { group
 
   return (
     <div className="flex flex-col h-screen bg-slate-900">
+      {/* Canales */}
+      <div className="bg-slate-800 border-b border-slate-700 px-4 py-2">
+        <div className="flex items-center gap-2 overflow-x-auto pb-2">
+          {channels.map(channel => (
+            <div key={channel.id} className="flex items-center">
+              <button
+                onClick={() => setSelectedChannel(channel.id)}
+                className={`px-3 py-1 rounded-lg transition text-sm font-medium flex items-center gap-1 ${
+                  selectedChannel === channel.id
+                    ? 'bg-yellow-500 text-black'
+                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                }`}
+                title={channel.description}
+              >
+                #{channel.name}
+              </button>
+              {isLeader && !channel.is_default && (
+                <button
+                  onClick={() => handleDeleteChannel(channel.id)}
+                  className="p-0.5 ml-1 hover:bg-red-500/20 rounded transition text-red-400"
+                  title="Eliminar canal"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+          ))}
+          {isLeader && (
+            <button
+              onClick={() => setShowNewChannelForm(!showNewChannelForm)}
+              className="px-3 py-1 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition text-sm font-medium flex items-center gap-1"
+            >
+              <Plus className="w-4 h-4" />
+              Nuevo
+            </button>
+          )}
+        </div>
+
+        {/* Formulario crear canal */}
+        {showNewChannelForm && isLeader && (
+          <div className="bg-slate-700 p-3 rounded-lg mt-2 space-y-2">
+            <input
+              type="text"
+              placeholder="Nombre del canal (ej: guias, eventos)"
+              value={newChannelName}
+              onChange={(e) => setNewChannelName(e.target.value)}
+              className="w-full px-3 py-2 bg-slate-600 border border-slate-500 rounded text-white text-sm focus:outline-none focus:border-yellow-400"
+            />
+            <input
+              type="text"
+              placeholder="Descripción (opcional)"
+              value={newChannelDescription}
+              onChange={(e) => setNewChannelDescription(e.target.value)}
+              className="w-full px-3 py-2 bg-slate-600 border border-slate-500 rounded text-white text-sm focus:outline-none focus:border-yellow-400"
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={handleCreateChannel}
+                className="flex-1 px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-black font-medium rounded text-sm transition"
+              >
+                Crear
+              </button>
+              <button
+                onClick={() => setShowNewChannelForm(false)}
+                className="flex-1 px-3 py-1 bg-slate-600 hover:bg-slate-500 text-white font-medium rounded text-sm transition"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Header del chat */}
       <div className="p-4 bg-slate-800 border-b border-slate-700 flex justify-between items-center">
         <div>
-          <h2 className="text-lg font-bold text-white">Chat del Grupo</h2>
+          <h2 className="text-lg font-bold text-white">#{selectedChannel}</h2>
           <p className="text-slate-400 text-sm">{messages.length} mensajes</p>
         </div>
         <div className="flex gap-2">

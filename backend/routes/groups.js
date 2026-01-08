@@ -206,7 +206,7 @@ export default function createGroupsRouter(db) {
   router.post('/:groupId/messages', authenticateToken, async (req, res) => {
     try {
       const { groupId } = req.params;
-      const { content, attachments } = req.body;
+      const { content, attachments, channelId = 'general' } = req.body;
       
       if (!content && (!attachments || attachments.length === 0)) {
         return res.status(400).json({ error: 'El mensaje no puede estar vacío' });
@@ -216,7 +216,7 @@ export default function createGroupsRouter(db) {
         user_id: req.user.id,
         username: req.user.username,
         avatar: req.user.avatar || ''
-      }, content, attachments || []);
+      }, content, channelId, attachments || []);
 
       res.json({ success: true, message });
     } catch (error) {
@@ -260,9 +260,9 @@ export default function createGroupsRouter(db) {
   router.get('/:groupId/messages', async (req, res) => {
     try {
       const { groupId } = req.params;
-      const { limit = 50, page = 1 } = req.query;
+      const { limit = 50, page = 1, channelId = 'general' } = req.query;
       
-      const messages = await groupsService.getMessages(groupId, parseInt(limit), parseInt(page));
+      const messages = await groupsService.getMessages(groupId, parseInt(limit), parseInt(page), channelId);
       res.json({ success: true, messages });
     } catch (error) {
       console.error(error);
@@ -357,6 +357,58 @@ export default function createGroupsRouter(db) {
     try {
       const groups = await groupsService.getGroupsByUser(req.user.id);
       res.json({ success: true, groups });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ============ SISTEMA DE TIERS ============
+  router.get('/:groupId/tier', async (req, res) => {
+    try {
+      const { groupId } = req.params;
+      const tier = await groupsService.calculateGroupTier(groupId);
+      res.json({ success: true, tier });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ============ GESTIÓN DE CANALES ============
+  router.get('/:groupId/channels', async (req, res) => {
+    try {
+      const { groupId } = req.params;
+      const channels = await groupsService.getGroupChannels(groupId);
+      res.json({ success: true, channels });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  router.post('/:groupId/channels', authenticateToken, async (req, res) => {
+    try {
+      const { groupId } = req.params;
+      const { name, description } = req.body;
+
+      if (!name) {
+        return res.status(400).json({ error: 'El nombre del canal es requerido' });
+      }
+
+      const channel = await groupsService.createChannel(groupId, req.user.id, { name, description });
+      res.json({ success: true, channel });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  router.delete('/:groupId/channels/:channelId', authenticateToken, async (req, res) => {
+    try {
+      const { groupId, channelId } = req.params;
+      await groupsService.deleteChannel(groupId, channelId, req.user.id);
+      res.json({ success: true, message: 'Canal eliminado' });
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: error.message });

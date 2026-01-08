@@ -65,12 +65,62 @@ export default class GroupsService {
       // Roles personalizados
       custom_roles: [],
       
+      // Canales temáticos (como Discord)
+      channels: [
+        {
+          id: 'general',
+          name: 'general',
+          type: 'text',
+          description: 'Canal general del grupo',
+          is_default: true,
+          created_at: new Date()
+        },
+        {
+          id: 'estrategia',
+          name: 'estrategia',
+          type: 'text',
+          description: 'Discusiones sobre estrategia y táctica',
+          is_default: true,
+          created_at: new Date()
+        },
+        {
+          id: 'trading',
+          name: 'trading',
+          type: 'text',
+          description: 'Intercambio de items y recursos',
+          is_default: true,
+          created_at: new Date()
+        },
+        {
+          id: 'noticias',
+          name: 'noticias',
+          type: 'text',
+          description: 'Noticias y actualizaciones del juego',
+          is_default: true,
+          created_at: new Date()
+        }
+      ],
+      
+      // Sistema de Tiers
+      tier: {
+        level: 'bronce', // bronce, plata, oro, diamante
+        next_milestone: {
+          type: 'members',
+          current: data.max_members ? 1 : 1,
+          required: 10
+        },
+        achievements: [],
+        calculated_at: new Date()
+      },
+      
       // Estadísticas
       statistics: {
         total_messages: 0,
         total_raids_completed: 0,
         average_session_duration: 0,
-        member_retention_rate: 100
+        member_retention_rate: 100,
+        days_active: 0,
+        last_activity: new Date()
       },
       
       // Auditoría
@@ -317,15 +367,19 @@ export default class GroupsService {
   }
 
   // ============ CHAT DE GRUPO ============
-  async sendMessage(groupId, user, content, attachments = []) {
+  async sendMessage(groupId, user, content, channelId = 'general', attachments = []) {
     const group = await this.groups.findOne({ _id: new ObjectId(groupId) });
     if (!group) throw new Error('Grupo no encontrado');
     
     const member = group.members.find(m => m.user_id === user.user_id);
     if (!member) throw new Error('No eres miembro de este grupo');
+
+    const channel = group.channels.find(c => c.id === channelId);
+    if (!channel) throw new Error('Canal no encontrado');
     
     const msg = {
       group_id: new ObjectId(groupId),
+      channel_id: channelId,
       user_id: user.user_id,
       username: user.username,
       avatar: user.avatar,
@@ -383,10 +437,10 @@ export default class GroupsService {
     return true;
   }
 
-  async getMessages(groupId, limit = 50, page = 1) {
+  async getMessages(groupId, limit = 50, page = 1, channelId = 'general') {
     const skip = (page - 1) * limit;
     return this.groupMessages
-      .find({ group_id: new ObjectId(groupId), deleted: { $ne: true } })
+      .find({ group_id: new ObjectId(groupId), channel_id: channelId, deleted: { $ne: true } })
       .sort({ created_at: -1 })
       .skip(skip)
       .limit(limit)
@@ -543,4 +597,126 @@ export default class GroupsService {
       created_at: group.created_at
     };
   }
+
+  // ============ SISTEMA DE TIERS ============
+  async calculateGroupTier(groupId) {
+    const group = await this.groups.findOne({ _id: new ObjectId(groupId) });
+    if (!group) throw new Error('Grupo no encontrado');
+
+    const memberCount = group.members.length;
+    const messageCount = group.statistics.total_messages || 0;
+    const daysActive = Math.floor((new Date() - new Date(group.created_at)) / (1000 * 60 * 60 * 24));
+
+    let tierLevel = 'bronce';
+    let nextMilestone = { type: 'members', current: memberCount, required: 10 };
+
+    // Lógica de tiers
+    if (memberCount >= 100 && messageCount >= 5000 && daysActive >= 30) {
+      tierLevel = 'diamante';
+      nextMilestone = { type: 'reputation', current: group.reputation, required: 1000 };
+    } else if (memberCount >= 50 && messageCount >= 2000 && daysActive >= 14) {
+      tierLevel = 'oro';
+      nextMilestone = { type: 'messages', current: messageCount, required: 5000 };
+    } else if (memberCount >= 25 && messageCount >= 500 && daysActive >= 7) {
+      tierLevel = 'plata';
+      nextMilestone = { type: 'members', current: memberCount, required: 50 };
+    } else {
+      tierLevel = 'bronce';
+      nextMilestone = { type: 'members', current: memberCount, required: 25 };
+    }
+
+    const tierData = {
+      level: tierLevel,
+      next_milestone: nextMilestone,
+      achievements: this.calculateAchievements(group),
+      calculated_at: new Date()
+    };
+
+    await this.groups.updateOne(
+      { _id: new ObjectId(groupId) },
+      { $set: { 'tier': tierData, 'statistics.days_active': daysActive } }
+    );
+
+    return tierData;
+  }
+
+  calculateAchievements(group) {
+    const achievements = [];
+    const memberCount = group.members.length;
+    const messageCount = group.statistics.total_messages || 0;
+
+    if (memberCount >= 10) achievements.push('10_members');
+    if (memberCount >= 25) achievements.push('25_members');
+    if (memberCount >= 50) achievements.push('50_members');
+    if (memberCount >= 100) achievements.push('100_members');
+    if (messageCount >= 500) achievements.push('500_messages');
+    if (messageCount >= 2000) achievements.push('2000_messages');
+    if (messageCount >= 5000) achievements.push('5000_messages');
+
+    const daysActive = Math.floor((new Date() - new Date(group.created_at)) / (1000 * 60 * 60 * 24));
+    if (daysActive >= 7) achievements.push('week_active');
+    if (daysActive >= 30) achievements.push('month_active');
+
+    return achievements;
+  }
+
+  // ============ GESTIÓN DE CANALES ============
+  async createChannel(groupId, actingUserId, channelData) {
+    const group = await this.groups.findOne({ _id: new ObjectId(groupId) });
+    if (!group) throw new Error('Grupo no encontrado');
+
+    const actor = group.members.find(m => m.user_id === actingUserId && ['leader', 'moderator'].includes(m.role));
+    if (!actor) throw new Error('No tienes permiso para crear canales');
+
+    const newChannel = {
+      id: channelData.name.toLowerCase().replace(/\s+/g, '-'),
+      name: channelData.name,
+      type: 'text',
+      description: channelData.description || '',
+      is_default: false,
+      created_at: new Date()
+    };
+
+    await this.groups.updateOne(
+      { _id: new ObjectId(groupId) },
+      { $push: { channels: newChannel } }
+    );
+
+    await this.logAction(groupId, actingUserId, 'channel_created', `Canal "${newChannel.name}" creado`);
+    return newChannel;
+  }
+
+  async deleteChannel(groupId, channelId, actingUserId) {
+    const group = await this.groups.findOne({ _id: new ObjectId(groupId) });
+    if (!group) throw new Error('Grupo no encontrado');
+
+    const actor = group.members.find(m => m.user_id === actingUserId && m.role === 'leader');
+    if (!actor) throw new Error('Solo el líder puede eliminar canales');
+
+    const channel = group.channels.find(c => c.id === channelId);
+    if (!channel) throw new Error('Canal no encontrado');
+    if (channel.is_default) throw new Error('No puedes eliminar canales por defecto');
+
+    await this.groups.updateOne(
+      { _id: new ObjectId(groupId) },
+      { $pull: { channels: { id: channelId } } }
+    );
+
+    // Eliminar todos los mensajes del canal
+    await this.groupMessages.deleteMany({
+      group_id: new ObjectId(groupId),
+      channel_id: channelId
+    });
+
+    await this.logAction(groupId, actingUserId, 'channel_deleted', `Canal "${channel.name}" eliminado`);
+    return true;
+  }
+
+  async getGroupChannels(groupId) {
+    const group = await this.groups.findOne({ _id: new ObjectId(groupId) });
+    if (!group) throw new Error('Grupo no encontrado');
+
+    return group.channels || [];
+  }
 }
+
