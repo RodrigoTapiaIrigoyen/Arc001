@@ -18,6 +18,9 @@ export default function createGroupsRouter(db) {
   const groupsService = new GroupsService(db);
   console.log('✅ GroupsService inicializado para el router');
 
+  // Helper para validar ObjectId
+  const validateObjectId = (id) => ObjectId.isValid(id);
+
   // ============ CREAR GRUPO ============
   router.post('/create', authenticateToken, async (req, res) => {
     try {
@@ -110,6 +113,10 @@ export default function createGroupsRouter(db) {
     try {
       const { groupId, userId } = req.params;
       
+      if (!validateObjectId(groupId)) {
+        return res.status(400).json({ error: 'ID de grupo inválido' });
+      }
+      
       await groupsService.acceptJoinRequest(groupId, userId, req.user.userId);
       res.json({ success: true, message: 'Solicitud aceptada' });
     } catch (error) {
@@ -123,6 +130,10 @@ export default function createGroupsRouter(db) {
     try {
       const { groupId, userId } = req.params;
       const { reason } = req.body;
+      
+      if (!validateObjectId(groupId)) {
+        return res.status(400).json({ error: 'ID de grupo inválido' });
+      }
       
       await groupsService.rejectJoinRequest(groupId, userId, req.user.userId, reason);
       res.json({ success: true, message: 'Solicitud rechazada' });
@@ -138,6 +149,10 @@ export default function createGroupsRouter(db) {
       const { groupId, userId } = req.params;
       const { reason } = req.body;
       
+      if (!validateObjectId(groupId)) {
+        return res.status(400).json({ error: 'ID de grupo inválido' });
+      }
+      
       await groupsService.removeMember(groupId, userId, req.user.userId, reason);
       res.json({ success: true, message: 'Miembro removido' });
     } catch (error) {
@@ -152,6 +167,10 @@ export default function createGroupsRouter(db) {
       const { groupId, userId } = req.params;
       const { reason } = req.body;
       
+      if (!validateObjectId(groupId)) {
+        return res.status(400).json({ error: 'ID de grupo inválido' });
+      }
+      
       await groupsService.banMember(groupId, userId, req.user.userId, reason);
       res.json({ success: true, message: 'Miembro baneado' });
     } catch (error) {
@@ -164,6 +183,10 @@ export default function createGroupsRouter(db) {
   router.post('/:groupId/promote/:userId', authenticateToken, async (req, res) => {
     try {
       const { groupId, userId } = req.params;
+      
+      if (!validateObjectId(groupId)) {
+        return res.status(400).json({ error: 'ID de grupo inválido' });
+      }
       
       await groupsService.promoteToModerator(groupId, userId, req.user.userId);
       res.json({ success: true, message: 'Miembro promovido' });
@@ -178,6 +201,10 @@ export default function createGroupsRouter(db) {
     try {
       const { groupId } = req.params;
       
+      if (!validateObjectId(groupId)) {
+        return res.status(400).json({ error: 'ID de grupo inválido' });
+      }
+      
       await groupsService.leaveClan(groupId, req.user.userId);
       res.json({ success: true, message: 'Has dejado el grupo' });
     } catch (error) {
@@ -191,6 +218,11 @@ export default function createGroupsRouter(db) {
     try {
       const { groupId } = req.params;
       const { content, attachments, channelId = 'general' } = req.body;
+      
+      // Validar que groupId sea un ObjectId válido
+      if (!ObjectId.isValid(groupId)) {
+        return res.status(400).json({ error: 'ID de grupo inválido' });
+      }
       
       if (!content && (!attachments || attachments.length === 0)) {
         return res.status(400).json({ error: 'El mensaje no puede estar vacío' });
@@ -283,6 +315,10 @@ export default function createGroupsRouter(db) {
       const { groupId } = req.params;
       const settings = req.body;
       
+      if (!validateObjectId(groupId)) {
+        return res.status(400).json({ error: 'ID de grupo inválido' });
+      }
+      
       await groupsService.updateGroupSettings(groupId, settings, req.user.userId);
       res.json({ success: true, message: 'Configuración actualizada' });
     } catch (error) {
@@ -296,6 +332,10 @@ export default function createGroupsRouter(db) {
     try {
       const { groupId } = req.params;
       const info = req.body;
+      
+      if (!validateObjectId(groupId)) {
+        return res.status(400).json({ error: 'ID de grupo inválido' });
+      }
       
       await groupsService.updateGroupInfo(groupId, info, req.user.userId);
       res.json({ success: true, message: 'Información actualizada' });
