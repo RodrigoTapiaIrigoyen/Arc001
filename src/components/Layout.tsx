@@ -373,8 +373,8 @@ export default function Layout({ children, currentView, onViewChange, user, isGu
         </div>
       </div>
 
-      <div className={`fixed top-16 left-0 bottom-0 w-64 bg-[#0f1420]/50 backdrop-blur-md border-r border-yellow-500/30 z-40 transform transition-transform duration-300 lg:translate-x-0 shadow-lg shadow-yellow-900/20 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <nav className="p-4 space-y-1">
+      <div className={`fixed top-16 left-0 bottom-0 w-64 bg-[#0f1420]/50 backdrop-blur-md border-r border-yellow-500/30 z-40 transform transition-transform duration-300 lg:translate-x-0 shadow-lg shadow-yellow-900/20 overflow-hidden flex flex-col ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <nav className="flex-1 overflow-y-auto p-4 space-y-1 scrollbar-thin scrollbar-thumb-yellow-500/30 scrollbar-track-transparent">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentView === item.id;
