@@ -12,83 +12,100 @@ class FriendsService {
    * Enviar solicitud de amistad
    */
   async sendFriendRequest(senderId, receiverId) {
-    // Verificar que no sean el mismo usuario
-    if (senderId === receiverId) {
-      throw new Error('No puedes enviarte solicitud a ti mismo');
-    }
+    try {
+      // Asegurar que los IDs son strings válidos
+      const senderIdStr = senderId.toString ? senderId.toString() : senderId;
+      const receiverIdStr = receiverId.toString ? receiverId.toString() : receiverId;
 
-    // Verificar que el receptor exista
-    const receiver = await this.usersCollection.findOne({ 
-      _id: new ObjectId(receiverId) 
-    });
-    
-    if (!receiver) {
-      throw new Error('Usuario no encontrado');
-    }
+      console.log('📤 sendFriendRequest - senderId:', senderIdStr, 'receiverId:', receiverIdStr);
 
-    // Verificar que no exista ya una solicitud o amistad
-    const existingRelation = await this.friendsCollection.findOne({
-      $or: [
-        { user1Id: new ObjectId(senderId), user2Id: new ObjectId(receiverId) },
-        { user1Id: new ObjectId(receiverId), user2Id: new ObjectId(senderId) }
-      ]
-    });
-
-    if (existingRelation) {
-      if (existingRelation.status === 'pending') {
-        throw new Error('Ya existe una solicitud pendiente');
+      // Validar que sean ObjectIds válidos
+      if (!ObjectId.isValid(senderIdStr) || !ObjectId.isValid(receiverIdStr)) {
+        throw new Error('IDs inválidos');
       }
-      if (existingRelation.status === 'accepted') {
-        throw new Error('Ya son amigos');
+
+      // Verificar que no sean el mismo usuario
+      if (senderIdStr === receiverIdStr) {
+        throw new Error('No puedes enviarte solicitud a ti mismo');
       }
-      if (existingRelation.status === 'rejected') {
-        // Permitir reenviar después de un rechazo
-        await this.friendsCollection.updateOne(
-          { _id: existingRelation._id },
-          { 
-            $set: { 
-              status: 'pending',
-              requesterId: new ObjectId(senderId),
-              updatedAt: new Date()
+
+      // Verificar que el receptor exista
+      const receiver = await this.usersCollection.findOne({ 
+        _id: new ObjectId(receiverIdStr) 
+      });
+      
+      if (!receiver) {
+        throw new Error('Usuario no encontrado');
+      }
+
+      // Verificar que no exista ya una solicitud o amistad
+      const existingRelation = await this.friendsCollection.findOne({
+        $or: [
+          { user1Id: new ObjectId(senderIdStr), user2Id: new ObjectId(receiverIdStr) },
+          { user1Id: new ObjectId(receiverIdStr), user2Id: new ObjectId(senderIdStr) }
+        ]
+      });
+
+      if (existingRelation) {
+        if (existingRelation.status === 'pending') {
+          throw new Error('Ya existe una solicitud pendiente');
+        }
+        if (existingRelation.status === 'accepted') {
+          throw new Error('Ya son amigos');
+        }
+        if (existingRelation.status === 'rejected') {
+          // Permitir reenviar después de un rechazo
+          await this.friendsCollection.updateOne(
+            { _id: existingRelation._id },
+            { 
+              $set: { 
+                status: 'pending',
+                requesterId: new ObjectId(senderIdStr),
+                updatedAt: new Date()
+              }
             }
-          }
-        );
-        return existingRelation._id;
+          );
+          return existingRelation._id;
+        }
       }
+
+      // Crear nueva solicitud
+      const result = await this.friendsCollection.insertOne({
+        user1Id: new ObjectId(senderIdStr),
+        user2Id: new ObjectId(receiverIdStr),
+        requesterId: new ObjectId(senderIdStr),
+        status: 'pending',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+
+      // Crear notificación
+      const sender = await this.usersCollection.findOne({ 
+        _id: new ObjectId(senderIdStr) 
+      });
+
+      await this.notificationsCollection.insertOne({
+        userId: new ObjectId(receiverIdStr),
+        type: 'friend_request',
+        title: 'Nueva solicitud de amistad',
+        message: `${sender.username} te ha enviado una solicitud de amistad`,
+        data: {
+          friendshipId: result.insertedId.toString(),
+          senderId: senderIdStr,
+          senderUsername: sender.username,
+          view: 'friends',
+          tab: 'requests'
+        },
+        read: false,
+        createdAt: new Date()
+      });
+
+      console.log('✅ Solicitud de amistad creada:', result.insertedId);
+      return result.insertedId;
+    } catch (error) {
+      console.error('❌ Error en sendFriendRequest:', error);
+      throw error;
     }
-
-    // Crear nueva solicitud
-    const result = await this.friendsCollection.insertOne({
-      user1Id: new ObjectId(senderId),
-      user2Id: new ObjectId(receiverId),
-      requesterId: new ObjectId(senderId),
-      status: 'pending',
-      createdAt: new Date(),
-      updatedAt: new Date()
-    });
-
-    // Crear notificación
-    const sender = await this.usersCollection.findOne({ 
-      _id: new ObjectId(senderId) 
-    });
-
-    await this.notificationsCollection.insertOne({
-      userId: new ObjectId(receiverId),
-      type: 'friend_request',
-      title: 'Nueva solicitud de amistad',
-      message: `${sender.username} te ha enviado una solicitud de amistad`,
-      data: {
-        friendshipId: result.insertedId.toString(),
-        senderId: senderId,
-        senderUsername: sender.username,
-        view: 'friends',
-        tab: 'requests'
-      },
-      read: false,
-      createdAt: new Date()
-    });
-
-    return result.insertedId;
   }
 
   /**

@@ -57,14 +57,14 @@ export default function RaiderHub() {
     }
   };
 
-  const sendMessage = async (targetUserId: string) => {
+  const sendMessage = async (targetUserId: string, targetUsername?: string) => {
     try {
       console.log('Enviando mensaje a:', targetUserId);
       if (!targetUserId) {
         toast.error('ID de usuario inválido');
         return;
       }
-      const username = selectedRaider?.username || 'usuario';
+      const username = targetUsername || selectedRaider?.username || 'usuario';
       const response = await api.post('/messages', {
         receiverId: targetUserId,
         content: `Hola ${username}, me gustaría conectar contigo`
@@ -78,14 +78,14 @@ export default function RaiderHub() {
     }
   };
 
-  const inviteToGroup = async (targetUserId: string) => {
+  const inviteToGroup = async (targetUserId: string, targetUsername?: string) => {
     try {
       console.log('Enviando invitación a grupo a:', targetUserId);
       if (!targetUserId) {
         toast.error('ID de usuario inválido');
         return;
       }
-      const username = selectedRaider?.username || 'usuario';
+      const username = targetUsername || selectedRaider?.username || 'usuario';
       const response = await api.post('/messages', {
         receiverId: targetUserId,
         content: `¡Hola ${username}! Te invito a unirte a mi grupo. Habla conmigo para más detalles. 👥`
@@ -290,14 +290,14 @@ export default function RaiderHub() {
                           <UserPlus size={16} className="text-green-400" />
                         </button>
                         <button
-                          onClick={() => sendMessage(raider.user_id)}
+                          onClick={() => sendMessage(raider.user_id, raider.username)}
                           className="p-2 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 rounded-lg transition group/btn"
                           title="Enviar mensaje"
                         >
                           <MessageSquare size={16} className="text-purple-400" />
                         </button>
                         <button
-                          onClick={() => inviteToGroup(raider.user_id)}
+                          onClick={() => inviteToGroup(raider.user_id, raider.username)}
                           className="p-2 bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/30 rounded-lg transition group/btn"
                           title="Invitar a grupo"
                         >
