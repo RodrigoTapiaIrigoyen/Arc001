@@ -17,6 +17,50 @@ export default function createRaiderProfileRouter(db) {
   const raiderProfileService = new RaiderProfileService(db);
   console.log('✅ RaiderProfileService inicializado');
 
+  // ============ OBTENER MEJORES RAIDERS (LEADERBOARD) ============
+  router.get('/leaderboard/top', async (req, res) => {
+    try {
+      const { limit = 50, sortBy = 'community_reputation' } = req.query;
+      const raiders = await raiderProfileService.getTopRaiders(
+        parseInt(limit),
+        sortBy
+      );
+
+      res.json({ success: true, raiders });
+    } catch (error) {
+      console.error('Error getting leaderboard:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ============ OBTENER RAIDERS POR TIPO ============
+  router.get('/type/:raiderType', async (req, res) => {
+    try {
+      const { raiderType } = req.params;
+
+      const raiders = await raiderProfileService.getRaidersByType(raiderType);
+
+      res.json({ success: true, raiders });
+    } catch (error) {
+      console.error('Error getting raiders by type:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ============ BUSCAR RAIDERS ============
+  router.get('/search/:query', async (req, res) => {
+    try {
+      const { query } = req.params;
+
+      const raiders = await raiderProfileService.searchRaiders(query);
+
+      res.json({ success: true, raiders });
+    } catch (error) {
+      console.error('Error searching raiders:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // ============ OBTENER PERFIL DEL USUARIO ============
   router.get('/:userId', authenticateToken, async (req, res) => {
     try {
@@ -97,50 +141,6 @@ export default function createRaiderProfileRouter(db) {
       res.json({ success: true, profile });
     } catch (error) {
       console.error('Error creating/updating profile:', error);
-      res.status(500).json({ error: error.message });
-    }
-  });
-
-  // ============ OBTENER MEJORES RAIDERS ============
-  router.get('/leaderboard/top', async (req, res) => {
-    try {
-      const { limit = 50, sortBy = 'community_reputation' } = req.query;
-      const raiders = await raiderProfileService.getTopRaiders(
-        parseInt(limit),
-        sortBy
-      );
-
-      res.json({ success: true, raiders });
-    } catch (error) {
-      console.error('Error getting leaderboard:', error);
-      res.status(500).json({ error: error.message });
-    }
-  });
-
-  // ============ OBTENER RAIDERS POR TIPO ============
-  router.get('/type/:raiderType', async (req, res) => {
-    try {
-      const { raiderType } = req.params;
-
-      const raiders = await raiderProfileService.getRaidersByType(raiderType);
-
-      res.json({ success: true, raiders });
-    } catch (error) {
-      console.error('Error getting raiders by type:', error);
-      res.status(500).json({ error: error.message });
-    }
-  });
-
-  // ============ BUSCAR RAIDERS ============
-  router.get('/search/:query', async (req, res) => {
-    try {
-      const { query } = req.params;
-
-      const raiders = await raiderProfileService.searchRaiders(query);
-
-      res.json({ success: true, raiders });
-    } catch (error) {
-      console.error('Error searching raiders:', error);
       res.status(500).json({ error: error.message });
     }
   });

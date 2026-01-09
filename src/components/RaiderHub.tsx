@@ -6,6 +6,7 @@ import api from '../services/api';
 
 interface RaiderProfile {
   _id: string;
+  user_id: string;
   username: string;
   avatar?: string;
   raider_type: string;
@@ -187,7 +188,7 @@ export default function RaiderHub() {
           <div className="space-y-3">
             {filteredRaiders.map((raider, index) => (
               <div
-                key={raider._id}
+                key={raider.user_id}
                 className="bg-gradient-to-r from-slate-800 to-slate-900 border border-slate-700 hover:border-yellow-400/50 rounded-lg p-4 transition group"
               >
                 <div className="flex items-center gap-4">
@@ -251,24 +252,24 @@ export default function RaiderHub() {
                     >
                       <Eye size={16} className="text-blue-400" />
                     </button>
-                    {currentUser?.userId !== raider._id && (
+                    {currentUser?.userId !== raider.user_id && (
                       <>
                         <button
-                          onClick={() => sendFriendRequest(raider._id)}
+                          onClick={() => sendFriendRequest(raider.user_id)}
                           className="p-2 bg-green-500/20 hover:bg-green-500/30 border border-green-500/30 rounded-lg transition group/btn"
                           title="Enviar solicitud de amistad"
                         >
                           <UserPlus size={16} className="text-green-400" />
                         </button>
                         <button
-                          onClick={() => sendMessage(raider._id)}
+                          onClick={() => sendMessage(raider.user_id)}
                           className="p-2 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 rounded-lg transition group/btn"
                           title="Enviar mensaje"
                         >
                           <MessageSquare size={16} className="text-purple-400" />
                         </button>
                         <button
-                          onClick={() => inviteToGroup(raider._id)}
+                          onClick={() => inviteToGroup(raider.user_id)}
                           className="p-2 bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/30 rounded-lg transition group/btn"
                           title="Invitar a grupo"
                         >
@@ -403,11 +404,11 @@ export default function RaiderHub() {
                 </div>
 
                 {/* Acciones */}
-                {currentUser?.userId !== selectedRaider._id && (
+                {currentUser?.userId !== selectedRaider.user_id && (
                   <div className="grid grid-cols-3 gap-3">
                     <button
                       onClick={() => {
-                        sendFriendRequest(selectedRaider._id);
+                        sendFriendRequest(selectedRaider.user_id);
                         setSelectedRaider(null);
                       }}
                       className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white font-bold rounded-lg flex items-center justify-center gap-2 transition"
@@ -417,7 +418,7 @@ export default function RaiderHub() {
                     </button>
                     <button
                       onClick={() => {
-                        sendMessage(selectedRaider._id);
+                        sendMessage(selectedRaider.user_id);
                       }}
                       className="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white font-bold rounded-lg flex items-center justify-center gap-2 transition"
                     >
@@ -425,7 +426,7 @@ export default function RaiderHub() {
                       Mensajear
                     </button>
                     <button
-                      onClick={() => inviteToGroup(selectedRaider._id)}
+                      onClick={() => inviteToGroup(selectedRaider.user_id)}
                       className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-lg flex items-center justify-center gap-2 transition"
                     >
                       <Users2 size={16} />
