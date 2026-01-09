@@ -98,6 +98,11 @@ export default class CommunityService {
     return await this.postsCollection.findOne({ _id: new ObjectId(postId) });
   }
 
+  async getCommentById(commentId) {
+    const { ObjectId } = await import('mongodb');
+    return await this.commentsCollection.findOne({ _id: new ObjectId(commentId) });
+  }
+
   // Votar post
   async votePost(postId, voteType) {
     const { ObjectId } = await import('mongodb');

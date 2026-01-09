@@ -42,6 +42,7 @@ import GroupsService from './services/groups.js';
 import createGroupsRouter from './routes/groups.js';
 import createFriendsRouter from './routes/friends.js';
 import createRaiderProfileRouter from './routes/raiderProfiles.js';
+import RaiderProfileService from './services/raiderProfile.js';
 
 dotenv.config();
 
@@ -1089,7 +1090,28 @@ app.post('/api/community/posts/:id/vote', authenticateToken, async (req, res) =>
     }
     
     const { vote } = req.body; // 'up' or 'down'
-    await communityService.votePost(req.params.id, vote);
+    const postId = req.params.id;
+    
+    // Obtener el post para saber quién es el autor
+    const post = await communityService.getPostById(postId);
+    
+    if (!post) {
+      return res.status(404).json({ error: 'Post no encontrado' });
+    }
+    
+    await communityService.votePost(postId, vote);
+    
+    // Incrementar reputación del autor solo si es un voto positivo
+    if (vote === 'up' && post.author_id && post.author_id !== 'anonymous') {
+      try {
+        // Usar RaiderProfileService para incrementar reputation
+        const raiderProfileService = new RaiderProfileService(db);
+        await raiderProfileService.incrementStat(post.author_id, 'community_reputation', 1);
+      } catch (err) {
+        console.log('Raider profile not found, skipping reputation update:', err.message);
+      }
+    }
+    
     res.json({ success: true });
   } catch (error) {
     console.error('Error voting post:', error);
@@ -1208,7 +1230,27 @@ app.post('/api/community/comments/:id/vote', authenticateToken, async (req, res)
     }
     
     const { vote } = req.body;
-    await communityService.voteComment(req.params.id, vote);
+    const commentId = req.params.id;
+    
+    // Obtener el comentario para saber quién es el autor
+    const comment = await communityService.getCommentById(commentId);
+    
+    if (!comment) {
+      return res.status(404).json({ error: 'Comentario no encontrado' });
+    }
+    
+    await communityService.voteComment(commentId, vote);
+    
+    // Incrementar reputación del autor solo si es un voto positivo
+    if (vote === 'up' && comment.author_id && comment.author_id !== 'anonymous') {
+      try {
+        const raiderProfileService = new RaiderProfileService(db);
+        await raiderProfileService.incrementStat(comment.author_id, 'community_reputation', 1);
+      } catch (err) {
+        console.log('Raider profile not found, skipping reputation update:', err.message);
+      }
+    }
+    
     res.json({ success: true });
   } catch (error) {
     console.error('Error voting comment:', error);
