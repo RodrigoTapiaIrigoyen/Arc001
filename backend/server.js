@@ -2558,19 +2558,26 @@ app.post('/api/messages', authenticateToken, async (req, res) => {
     // Convertir senderId a string si es ObjectId
     const senderId = req.user.userId.toString ? req.user.userId.toString() : req.user.userId;
 
+    console.log('📨 POST /api/messages - receiverId:', receiverId, 'content length:', content?.length, 'senderId:', senderId);
+
     if (!receiverId || !content) {
+      console.error('❌ Parámetros faltantes - receiverId:', receiverId, 'content:', content);
       return res.status(400).json({ error: 'receiverId y content son requeridos' });
     }
 
     if (content.trim().length === 0) {
+      console.error('❌ Contenido vacío');
       return res.status(400).json({ error: 'El mensaje no puede estar vacío' });
     }
 
     if (content.length > 1000) {
+      console.error('❌ Contenido demasiado largo');
       return res.status(400).json({ error: 'El mensaje es demasiado largo (máximo 1000 caracteres)' });
     }
 
+    console.log('📨 Enviando mensaje de', senderId, 'a', receiverId);
     const message = await messageService.sendMessage(senderId, receiverId, content);
+    console.log('✅ Mensaje enviado:', message._id);
 
     // Crear notificación para el receptor
     await notificationService.createNotification(
@@ -2587,7 +2594,7 @@ app.post('/api/messages', authenticateToken, async (req, res) => {
 
     res.status(201).json({ message });
   } catch (error) {
-    console.error('Error al enviar mensaje:', error);
+    console.error('❌ Error al enviar mensaje:', error);
     res.status(500).json({ error: error.message });
   }
 });

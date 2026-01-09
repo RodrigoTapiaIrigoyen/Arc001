@@ -75,15 +75,20 @@ export default function createFriendsRouter(db) {
       const senderId = getUserIdString(req.user.userId);
       const { userId } = req.params;
 
+      console.log('👥 POST /api/friends/request/:userId - senderId:', senderId, 'targetUserId:', userId);
+
       // Validar que no sea la misma persona
       if (senderId === userId) {
+        console.error('❌ Intentando enviar solicitud a sí mismo');
         return res.status(400).json({ error: 'No puedes enviar solicitud a ti mismo' });
       }
 
+      console.log('📤 Enviando solicitud de amistad de', senderId, 'a', userId);
       const result = await friendsService.sendFriendRequest(senderId, userId);
+      console.log('✅ Solicitud enviada:', result);
       res.status(201).json({ friendshipId: result });
     } catch (error) {
-      console.error('Error al enviar solicitud:', error);
+      console.error('❌ Error al enviar solicitud:', error);
       res.status(500).json({ error: error.message });
     }
   });
