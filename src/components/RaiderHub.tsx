@@ -102,6 +102,7 @@ export default function RaiderHub() {
     }
   };
 
+  // Fetch top raiders from leaderboard
   const fetchTopRaiders = async () => {
     setLoading(true);
     try {
