@@ -161,26 +161,17 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
-// Middleware para loguear request raw
-app.use((req, res, next) => {
-  if (req.method === 'POST' && req.path.includes('/messages')) {
-    let rawBody = '';
-    req.on('data', chunk => {
-      rawBody += chunk.toString();
-    });
-    req.on('end', () => {
-      console.log('📦 Raw body para', req.path, ':', rawBody);
-      req.rawBody = rawBody;
-      next();
-    });
-  } else {
-    next();
-  }
-});
-
+// Middleware para loguear request raw (DESPUÉS de JSON parser)
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(cookieParser());
+
+app.use((req, res, next) => {
+  if (req.method === 'POST' && req.path.includes('/messages')) {
+    console.log('📦 req.body después de JSON parser:', JSON.stringify(req.body));
+  }
+  next();
+});
 
 // Servir archivos estáticos (avatares)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
