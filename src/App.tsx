@@ -25,6 +25,8 @@ const PlaceholderView = lazy(() => import('./components/PlaceholderView'));
 const Groups = lazy(() => import('./components/Groups'));
 const HelpGuide = lazy(() => import('./components/HelpGuide'));
 const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
+const RaiderProfile = lazy(() => import('./components/RaiderProfile'));
+const RaiderHub = lazy(() => import('./components/RaiderHub'));
 
 function App() {
   const [currentView, setCurrentView] = useState(() => {
@@ -255,6 +257,8 @@ function App() {
         {currentView === 'enemies' && <Enemies />}
         {currentView === 'maps' && <Maps />}
         {currentView === 'profile' && <MyProfile user={user} />}
+        {currentView === 'raider-profile' && <RaiderProfile user={user} />}
+        {currentView === 'raider-hub' && <RaiderHub />}
         {currentView === 'activity' && <ActivityFeed />}
         {currentView === 'marketplace' && <MarketplaceNew />}
         {currentView === 'community' && <CommunityHub initialPostId={selectedPostId} onPostClose={() => setSelectedPostId(null)} />}

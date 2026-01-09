@@ -24,7 +24,9 @@ import {
   VolumeX,
   BellRing,
   ArrowLeft,
-  ChevronRight
+  ChevronRight,
+  Crown,
+  Zap
 } from 'lucide-react';
 import NotificationCenter from './NotificationCenter';
 import EditProfile from './EditProfile';
@@ -184,6 +186,8 @@ export default function Layout({ children, currentView, onViewChange, user, isGu
     { id: 'groups', label: ' Grupos', icon: Users },
     { id: 'help', label: 'Help & Guide', icon: HelpCircle },
     { id: 'profile', label: 'My Profile', icon: User },
+    { id: 'raider-profile', label: 'Raider Profile', icon: Crown },
+    { id: 'raider-hub', label: 'Raider Hub', icon: Zap },
     { id: 'activity', label: 'Activity Feed', icon: TrendingUp },
     { id: 'marketplace', label: 'Marketplace', icon: ShoppingCart },
     { id: 'community', label: 'Community', icon: Users },
