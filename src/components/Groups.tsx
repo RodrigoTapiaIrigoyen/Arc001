@@ -238,8 +238,8 @@ export default function Groups() {
               <div className="lg:col-span-2 bg-slate-800 border border-slate-700 rounded-lg overflow-hidden">
                 <GroupChat 
                   groupId={selectedGroupId} 
-                  userId={currentUser?.id}
-                  isLeader={selectedGroupData.owner_id === currentUser?.id || selectedGroupData.members.find((m: any) => m.user_id === currentUser?.id)?.role === 'leader'}
+                  userId={currentUser?.userId}
+                  isLeader={selectedGroupData.owner_id === currentUser?.userId || selectedGroupData.members.find((m: any) => m.user_id === currentUser?.userId)?.role === 'leader'}
                 />
               </div>
 
@@ -271,7 +271,7 @@ export default function Groups() {
                 </div>
 
                 {/* Panel de Admin si es líder */}
-                {selectedGroupData.owner_id === currentUser?.id && (
+                {selectedGroupData.owner_id === currentUser?.userId && (
                   <div className="bg-slate-800 border border-slate-700 rounded-lg overflow-hidden">
                     <GroupLeaderPanel 
                       groupId={selectedGroupId}
@@ -618,7 +618,7 @@ export default function Groups() {
 // Componente para tarjeta de grupo
 function GroupCard({ group, currentUser, onRequestJoin, onOpenGroup }: { group: any; currentUser: any; onRequestJoin: (id: string) => void; onOpenGroup?: (id: string) => void }) {
   const memberPercentage = (group.members?.length / group.max_members) * 100;
-  const isOwner = currentUser && group.owner_id === currentUser.id;
+  const isOwner = currentUser && group.owner_id === currentUser.userId;
 
   const getTierColor = (tier: string) => {
     switch(tier) {
@@ -708,7 +708,7 @@ function GroupCard({ group, currentUser, onRequestJoin, onOpenGroup }: { group: 
 
       {/* Botón */}
       {(() => {
-        const isMember = group.members?.some((m: any) => m.user_id === currentUser?.id);
+        const isMember = group.members?.some((m: any) => m.user_id === currentUser?.userId);
         
         if (isOwner || isMember) {
           return (
