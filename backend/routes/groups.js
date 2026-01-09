@@ -219,12 +219,17 @@ export default function createGroupsRouter(db) {
       const { groupId } = req.params;
       const { content, attachments, channelId = 'general' } = req.body;
       
+      console.log(`📨 Enviando mensaje a grupo ${groupId}, canal ${channelId}`);
+      console.log(`   Usuario: ${req.user.userId}, Contenido: "${content}"`);
+      
       // Validar que groupId sea un ObjectId válido
-      if (!ObjectId.isValid(groupId)) {
+      if (!validateObjectId(groupId)) {
+        console.log(`❌ ID de grupo inválido: ${groupId}`);
         return res.status(400).json({ error: 'ID de grupo inválido' });
       }
       
       if (!content && (!attachments || attachments.length === 0)) {
+        console.log(`❌ Mensaje vacío`);
         return res.status(400).json({ error: 'El mensaje no puede estar vacío' });
       }
 
@@ -234,9 +239,10 @@ export default function createGroupsRouter(db) {
         avatar: req.user.avatar || ''
       }, content, channelId, attachments || []);
 
+      console.log(`✅ Mensaje enviado exitosamente: ${message._id}`);
       res.json({ success: true, message });
     } catch (error) {
-      console.error(error);
+      console.error(`❌ Error al enviar mensaje:`, error);
       res.status(400).json({ error: error.message });
     }
   });

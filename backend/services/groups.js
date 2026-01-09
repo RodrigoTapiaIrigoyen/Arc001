@@ -381,7 +381,12 @@ export default class GroupsService {
     const group = await this.groups.findOne({ _id: new ObjectId(groupId) });
     if (!group) throw new Error('Grupo no encontrado');
     
-    const member = group.members.find(m => m.user_id === user.user_id);
+    // Comparar user_id como string para ambos lados
+    const userIdStr = user.user_id instanceof ObjectId ? user.user_id.toString() : user.user_id;
+    const member = group.members.find(m => {
+      const memberIdStr = m.user_id instanceof ObjectId ? m.user_id.toString() : m.user_id;
+      return memberIdStr === userIdStr;
+    });
     if (!member) throw new Error('No eres miembro de este grupo');
 
     const channel = group.channels.find(c => c.id === channelId);
@@ -390,7 +395,7 @@ export default class GroupsService {
     const msg = {
       group_id: new ObjectId(groupId),
       channel_id: channelId,
-      user_id: user.user_id,
+      user_id: userIdStr,
       username: user.username,
       avatar: user.avatar,
       content,
