@@ -49,8 +49,10 @@ export default function RaiderHub() {
         return;
       }
       const username = targetUsername || selectedRaider?.username || 'usuario';
-      const payload = { receiverId: targetUserId, content: `Hola ${username}, me gustaría conectar contigo` };
-      await api.post('/messages', payload);
+      await api.post('/messages', {
+        receiverId: targetUserId,
+        content: `Hola ${username}, me gustaría conectar contigo`
+      });
       toast.success('Mensaje enviado');
       setSelectedRaider(null);
     } catch (error: any) {
@@ -65,8 +67,10 @@ export default function RaiderHub() {
         return;
       }
       const username = targetUsername || selectedRaider?.username || 'usuario';
-      const payload = { receiverId: targetUserId, content: `¡Hola ${username}! Te invito a unirte a mi grupo. Habla conmigo para más detalles. 👥` };
-      await api.post('/messages', payload);
+      await api.post('/messages', {
+        receiverId: targetUserId,
+        content: `¡Hola ${username}! Te invito a unirte a mi grupo. Habla conmigo para más detalles. 👥`
+      });
       toast.success('Invitación enviada');
       setSelectedRaider(null);
     } catch (error: any) {
