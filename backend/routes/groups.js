@@ -2,6 +2,7 @@ import express from 'express';
 import { ObjectId } from 'mongodb';
 import { authenticateToken } from '../middleware/auth.js';
 import GroupsService from '../services/groups.js';
+import RaiderProfileService from '../services/raiderProfile.js';
 
 export default function createGroupsRouter(db) {
   const router = express.Router();
@@ -16,7 +17,9 @@ export default function createGroupsRouter(db) {
   }
   
   const groupsService = new GroupsService(db);
+  const raiderProfileService = new RaiderProfileService(db);
   console.log('✅ GroupsService inicializado para el router');
+  console.log('✅ RaiderProfileService inicializado para el router');
 
   // Helper para validar ObjectId
   const validateObjectId = (id) => ObjectId.isValid(id);
@@ -45,6 +48,13 @@ export default function createGroupsRouter(db) {
         visibility: visibility || 'public',
         discord_link: discord_link || ''
       });
+
+      // Incrementar groups_created en el perfil del raider
+      try {
+        await raiderProfileService.incrementStat(user.userId, 'groups_created', 1);
+      } catch (err) {
+        console.log('Raider profile not found, skipping stats update:', err.message);
+      }
 
       res.json({ success: true, group });
     } catch (error) {

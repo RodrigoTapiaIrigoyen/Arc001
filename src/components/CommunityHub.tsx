@@ -142,6 +142,22 @@ export default function CommunityHub({ initialPostId, onPostClose }: CommunityHu
         tags: newPostTags.split(',').map(t => t.trim()).filter(Boolean),
       });
 
+      // Incrementar posts_shared en el perfil del raider
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      if (user.userId) {
+        try {
+          const statsResponse = await api.get(`/api/raider-profiles/${user.userId}/statistics`);
+          if (statsResponse.stats) {
+            await api.put(`/api/raider-profiles/${user.userId}/stats`, {
+              posts_shared: statsResponse.stats.posts_shared + 1
+            });
+          }
+        } catch (err) {
+          // Si no existe perfil, ignorar el error
+          console.log('Raider profile not found, skipping stats update');
+        }
+      }
+
       setShowNewPostModal(false);
       setNewPostTitle('');
       setNewPostContent('');

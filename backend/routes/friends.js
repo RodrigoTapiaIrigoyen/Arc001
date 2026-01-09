@@ -1,6 +1,7 @@
 import express from 'express';
 import { authenticateToken } from '../middleware/auth.js';
 import FriendsService from '../services/friendsService.js';
+import RaiderProfileService from '../services/raiderProfile.js';
 
 export default function createFriendsRouter(db) {
   const router = express.Router();
@@ -15,7 +16,9 @@ export default function createFriendsRouter(db) {
   }
   
   const friendsService = new FriendsService(db);
+  const raiderProfileService = new RaiderProfileService(db);
   console.log('✅ FriendsService inicializado para el router');
+  console.log('✅ RaiderProfileService inicializado para el router');
 
   // RUTAS MÁS ESPECÍFICAS PRIMERO
 
@@ -106,6 +109,26 @@ export default function createFriendsRouter(db) {
       }
 
       const result = await friendsService.respondToFriendRequest(friendshipId, userId, accept);
+      
+      // Si se aceptó la solicitud, incrementar friends_count para ambos usuarios
+      if (accept && result) {
+        try {
+          // result debería contener requester_id y receiver_id
+          const requesterUserId = result.requester_id;
+          const receiverUserId = result.receiver_id;
+          
+          // Incrementar friends_count para ambos usuarios
+          if (raiderProfileService && requesterUserId) {
+            await raiderProfileService.incrementStat(requesterUserId, 'friends_count', 1);
+          }
+          if (raiderProfileService && receiverUserId) {
+            await raiderProfileService.incrementStat(receiverUserId, 'friends_count', 1);
+          }
+        } catch (err) {
+          console.log('Raider profile not found, skipping stats update:', err.message);
+        }
+      }
+      
       res.json(result);
     } catch (error) {
       console.error('Error al responder solicitud:', error);
