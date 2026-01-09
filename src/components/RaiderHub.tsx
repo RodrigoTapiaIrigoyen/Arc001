@@ -24,6 +24,7 @@ interface RaiderProfile {
 }
 
 export default function RaiderHub() {
+  // Force redeploy - Version 2.0
   const [raiders, setRaiders] = useState<RaiderProfile[]>([]);
   const [filteredRaiders, setFilteredRaiders] = useState<RaiderProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -65,10 +66,12 @@ export default function RaiderHub() {
         return;
       }
       const username = targetUsername || selectedRaider?.username || 'usuario';
-      const response = await api.post('/messages', {
+      const messagePayload = {
         receiverId: targetUserId,
         content: `Hola ${username}, me gustaría conectar contigo`
-      });
+      };
+      console.log('📤 Enviando payload a /messages:', JSON.stringify(messagePayload));
+      const response = await api.post('/messages', messagePayload);
       console.log('Mensaje enviado:', response);
       toast.success('Mensaje enviado');
       setSelectedRaider(null);

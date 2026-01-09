@@ -2566,7 +2566,9 @@ app.post('/api/messages', authenticateToken, async (req, res) => {
     console.log('🔍 DEBUG - req.headers:', JSON.stringify(req.headers));
     console.log('🔍 DEBUG - req.method:', req.method);
     
-    const { receiverId, content } = req.body;
+    // Intentar ambos nombres (receiverId y recipient_id)
+    const receiverId = req.body.receiverId || req.body.recipient_id;
+    const { content } = req.body;
     // Convertir senderId a string si es ObjectId
     const senderId = req.user.userId.toString ? req.user.userId.toString() : req.user.userId;
 
