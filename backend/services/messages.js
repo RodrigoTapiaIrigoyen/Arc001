@@ -12,18 +12,22 @@ class MessageService {
    */
   async sendMessage(senderId, receiverId, content) {
     try {
+      // Asegurar que los IDs sean strings
+      const senderIdStr = senderId.toString ? senderId.toString() : senderId;
+      const receiverIdStr = receiverId.toString ? receiverId.toString() : receiverId;
+
       // Validar que el receptor existe
-      const receiver = await this.users.findOne({ _id: new ObjectId(receiverId) });
+      const receiver = await this.users.findOne({ _id: new ObjectId(receiverIdStr) });
       if (!receiver) {
         throw new Error('Usuario receptor no encontrado');
       }
 
       // Crear ID de conversación (siempre el mismo orden para ambos usuarios)
-      const conversationId = this.generateConversationId(senderId, receiverId);
+      const conversationId = this.generateConversationId(senderIdStr, receiverIdStr);
 
       const message = {
-        senderId: new ObjectId(senderId),
-        receiverId: new ObjectId(receiverId),
+        senderId: new ObjectId(senderIdStr),
+        receiverId: new ObjectId(receiverIdStr),
         content: content.trim(),
         conversationId,
         read: false,
@@ -36,8 +40,8 @@ class MessageService {
       // Retornar mensaje con IDs como strings
       return {
         _id: result.insertedId.toString(),
-        senderId: senderId,
-        receiverId: receiverId,
+        senderId: senderIdStr,
+        receiverId: receiverIdStr,
         content: message.content,
         conversationId,
         read: false,

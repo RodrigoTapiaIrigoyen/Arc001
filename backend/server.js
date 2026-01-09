@@ -2555,7 +2555,8 @@ function scheduleAutoSync() {
 app.post('/api/messages', authenticateToken, async (req, res) => {
   try {
     const { receiverId, content } = req.body;
-    const senderId = req.user.userId;
+    // Convertir senderId a string si es ObjectId
+    const senderId = req.user.userId.toString ? req.user.userId.toString() : req.user.userId;
 
     if (!receiverId || !content) {
       return res.status(400).json({ error: 'receiverId y content son requeridos' });
