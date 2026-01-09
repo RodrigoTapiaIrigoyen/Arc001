@@ -24,7 +24,7 @@ interface RaiderProfile {
 }
 
 export default function RaiderHub() {
-  // Force redeploy - Version 2.0
+  // v3.0.1 - Clean rebuild
   const [raiders, setRaiders] = useState<RaiderProfile[]>([]);
   const [filteredRaiders, setFilteredRaiders] = useState<RaiderProfile[]>([]);
   const [loading, setLoading] = useState(true);
