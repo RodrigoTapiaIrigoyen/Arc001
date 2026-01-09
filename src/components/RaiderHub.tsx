@@ -54,7 +54,7 @@ export default function RaiderHub() {
     try {
       // Crear o abrir conversación
       const response = await api.post('/messages', {
-        recipient_id: targetUserId,
+        receiverId: targetUserId,
         content: `Hola ${selectedRaider?.username}, me gustaría conectar contigo`
       });
       toast.success('Mensaje enviado');
@@ -66,10 +66,17 @@ export default function RaiderHub() {
 
   const inviteToGroup = async (targetUserId: string) => {
     try {
-      // Esta función podría expandirse para seleccionar grupo
-      toast.info('Función de invitación a grupo en desarrollo');
-    } catch (error) {
-      toast.error('Error al invitar a grupo');
+      // Enviar un mensaje de invitación a grupo
+      const response = await api.post('/messages', {
+        receiverId: targetUserId,
+        content: `¡Hola ${selectedRaider?.username}! Te invito a unirte a mi grupo. Habla conmigo para más detalles. 👥`
+      });
+      toast.success('Invitación enviada');
+      setSelectedRaider(null);
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Error al enviar invitación');
+    }
+  };
     }
   };
 
