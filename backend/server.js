@@ -43,6 +43,7 @@ import createGroupsRouter from './routes/groups.js';
 import createFriendsRouter from './routes/friends.js';
 import createRaiderProfileRouter from './routes/raiderProfiles.js';
 import RaiderProfileService from './services/raiderProfile.js';
+import createClansRouter from './routes/clans.js';
 
 dotenv.config();
 
@@ -3225,6 +3226,10 @@ connectDB().then(() => {
       const raiderProfileRouter = createRaiderProfileRouter(db);
       app.use('/api/raider-profiles', raiderProfileRouter);
       console.log('✅ Raider Profile router registered');
+      
+      const clansRouter = createClansRouter(db);
+      app.use('/api/clans', clansRouter);
+      console.log('✅ Clans router registered');
     } catch (error) {
       console.error('❌ Error registering routers:', error);
     }

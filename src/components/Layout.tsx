@@ -26,7 +26,8 @@ import {
   ArrowLeft,
   ChevronRight,
   Crown,
-  Zap
+  Zap,
+  Flag
 } from 'lucide-react';
 import NotificationCenter from './NotificationCenter';
 import EditProfile from './EditProfile';
@@ -184,6 +185,7 @@ export default function Layout({ children, currentView, onViewChange, user, isGu
     { id: 'enemies', label: 'Enemies', icon: Target },
     { id: 'maps', label: 'Maps', icon: Map },
     { id: 'groups', label: ' Grupos', icon: Users },
+    { id: 'clans', label: 'Clanes', icon: Flag },
     { id: 'help', label: 'Help & Guide', icon: HelpCircle },
     { id: 'profile', label: 'My Profile', icon: User },
     { id: 'raider-profile', label: 'Raider Profile', icon: Crown },
