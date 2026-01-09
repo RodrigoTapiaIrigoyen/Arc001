@@ -424,7 +424,7 @@ export default function Clans() {
                       {selectedClan.leader_id === currentUser?.userId ? (
                         <button
                           onClick={() => {
-                            toast.info('Panel de administración del clan en desarrollo');
+                            toast.success('Panel de administración del clan en desarrollo');
                             setSelectedClan(null);
                           }}
                           className="flex-1 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white font-bold rounded-lg transition"
@@ -452,7 +452,7 @@ export default function Clans() {
                     </button>
                   )}
                   <button
-                    onClick={() => toast.info('Chat del clan en desarrollo')}
+                    onClick={() => toast.success('Chat del clan en desarrollo')}
                     className="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white font-bold rounded-lg flex items-center gap-2 transition"
                   >
                     <MessageSquare size={16} />
