@@ -1,4 +1,5 @@
 import express from 'express';
+import { ObjectId } from 'mongodb';
 import { authenticateToken } from '../middleware/auth.js';
 import GroupsService from '../services/groups.js';
 
@@ -84,6 +85,11 @@ export default function createGroupsRouter(db) {
     try {
       const { groupId } = req.params;
       const { message } = req.body;
+      
+      // Validar que groupId sea un ObjectId válido
+      if (!ObjectId.isValid(groupId)) {
+        return res.status(400).json({ error: 'ID de grupo inválido' });
+      }
       
       await groupsService.requestJoin(groupId, {
         user_id: req.user.userId,
@@ -239,6 +245,11 @@ export default function createGroupsRouter(db) {
     try {
       const { groupId } = req.params;
       const { limit = 50, page = 1, channelId = 'general' } = req.query;
+      
+      // Validar que groupId sea un ObjectId válido
+      if (!ObjectId.isValid(groupId)) {
+        return res.status(400).json({ error: 'ID de grupo inválido' });
+      }
       
       const messages = await groupsService.getMessages(groupId, parseInt(limit), parseInt(page), channelId);
       res.json({ success: true, messages });
