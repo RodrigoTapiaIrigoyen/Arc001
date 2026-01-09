@@ -42,67 +42,52 @@ export default function RaiderHub() {
     fetchTopRaiders();
   }, [sortBy]);
 
-  const sendFriendRequest = async (targetUserId: string) => {
-    try {
-      console.log('Enviando solicitud de amistad a:', targetUserId);
-      if (!targetUserId) {
-        toast.error('ID de usuario inválido');
-        return;
-      }
-      const response = await api.post(`/friends/request/${targetUserId}`);
-      console.log('Respuesta:', response);
-      toast.success('Solicitud de amistad enviada');
-    } catch (error: any) {
-      console.error('Error completo:', error);
-      toast.error(error.response?.data?.error || error.message || 'Error al enviar solicitud');
-    }
-  };
-
   const sendMessage = async (targetUserId: string, targetUsername?: string) => {
     try {
-      console.log('Enviando mensaje a:', targetUserId);
       if (!targetUserId) {
         toast.error('ID de usuario inválido');
         return;
       }
       const username = targetUsername || selectedRaider?.username || 'usuario';
-      const messagePayload = {
-        receiverId: targetUserId,
-        content: `Hola ${username}, me gustaría conectar contigo`
-      };
-      console.log('📤 Enviando payload a /messages:', JSON.stringify(messagePayload));
-      const response = await api.post('/messages', messagePayload);
-      console.log('Mensaje enviado:', response);
+      const payload = { receiverId: targetUserId, content: `Hola ${username}, me gustaría conectar contigo` };
+      await api.post('/messages', payload);
       toast.success('Mensaje enviado');
       setSelectedRaider(null);
     } catch (error: any) {
-      console.error('Error enviando mensaje:', error);
-      toast.error(error.response?.data?.error || error.message || 'Error al enviar mensaje');
+      toast.error(error.message || 'Error al enviar mensaje');
     }
   };
 
   const inviteToGroup = async (targetUserId: string, targetUsername?: string) => {
     try {
-      console.log('Enviando invitación a grupo a:', targetUserId);
       if (!targetUserId) {
         toast.error('ID de usuario inválido');
         return;
       }
       const username = targetUsername || selectedRaider?.username || 'usuario';
-      const response = await api.post('/messages', {
-        receiverId: targetUserId,
-        content: `¡Hola ${username}! Te invito a unirte a mi grupo. Habla conmigo para más detalles. 👥`
-      });
-      console.log('Invitación enviada:', response);
+      const payload = { receiverId: targetUserId, content: `¡Hola ${username}! Te invito a unirte a mi grupo. Habla conmigo para más detalles. 👥` };
+      await api.post('/messages', payload);
       toast.success('Invitación enviada');
       setSelectedRaider(null);
     } catch (error: any) {
-      console.error('Error invitación:', error);
-      toast.error(error.response?.data?.error || error.message || 'Error al enviar invitación');
+      toast.error(error.message || 'Error al enviar invitación');
     }
   };
 
-  // Fetch top raiders from leaderboard
+  const sendFriendRequest = async (targetUserId: string) => {
+    try {
+      if (!targetUserId) {
+        toast.error('ID de usuario inválido');
+        return;
+      }
+      await api.post(`/friends/request/${targetUserId}`, {});
+      toast.success('Solicitud de amistad enviada');
+      setSelectedRaider(null);
+    } catch (error: any) {
+      toast.error(error.message || 'Error al enviar solicitud');
+    }
+  };
+
   const fetchTopRaiders = async () => {
     setLoading(true);
     try {
