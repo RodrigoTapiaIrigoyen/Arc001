@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from 'react';
-import { Trophy, Search, Filter, Users, Sword } from 'lucide-react';
+import { Trophy, Search, Filter, Users, Sword, X, UserPlus, MessageSquare, Users2, Eye } from 'lucide-react';
+import toast from 'react-hot-toast';
+import api from '../services/api';
 
 interface RaiderProfile {
   _id: string;
@@ -13,6 +15,11 @@ interface RaiderProfile {
   posts_shared: number;
   friends_count: number;
   days_in_community: number;
+  equipment?: string;
+  strategy?: string;
+  company?: string;
+  preferred_weapons?: string[];
+  playstyle_notes?: string;
 }
 
 export default function RaiderHub() {
@@ -21,13 +28,49 @@ export default function RaiderHub() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
-  const [sortBy, setSortBy] = useState('kills');
+  const [sortBy, setSortBy] = useState('community_reputation');
+  const [selectedRaider, setSelectedRaider] = useState<RaiderProfile | null>(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10000/api';
 
   useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    setCurrentUser(user);
     fetchTopRaiders();
   }, [sortBy]);
+
+  const sendFriendRequest = async (targetUserId: string) => {
+    try {
+      await api.post(`/friends/request/${targetUserId}`);
+      toast.success('Solicitud de amistad enviada');
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Error al enviar solicitud');
+    }
+  };
+
+  const sendMessage = async (targetUserId: string) => {
+    try {
+      // Crear o abrir conversación
+      const response = await api.post('/messages', {
+        recipient_id: targetUserId,
+        content: `Hola ${selectedRaider?.username}, me gustaría conectar contigo`
+      });
+      toast.success('Mensaje enviado');
+      setSelectedRaider(null);
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Error al enviar mensaje');
+    }
+  };
+
+  const inviteToGroup = async (targetUserId: string) => {
+    try {
+      // Esta función podría expandirse para seleccionar grupo
+      toast.info('Función de invitación a grupo en desarrollo');
+    } catch (error) {
+      toast.error('Error al invitar a grupo');
+    }
+  };
 
   const fetchTopRaiders = async () => {
     setLoading(true);
@@ -199,16 +242,40 @@ export default function RaiderHub() {
                     </div>
                   </div>
 
-                  {/* Reputación */}
-                  <div className="text-center">
-                    <p className="text-slate-400 text-xs">Reputación</p>
-                    <p className={`font-bold text-sm ${
-                      raider.community_reputation > 100 ? 'text-yellow-400' :
-                      raider.community_reputation > 50 ? 'text-blue-400' :
-                      'text-slate-400'
-                    }`}>
-                      ⭐ {raider.community_reputation}
-                    </p>
+                  {/* Acciones */}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setSelectedRaider(raider)}
+                      className="p-2 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 rounded-lg transition group/btn"
+                      title="Ver perfil"
+                    >
+                      <Eye size={16} className="text-blue-400" />
+                    </button>
+                    {currentUser?.userId !== raider._id && (
+                      <>
+                        <button
+                          onClick={() => sendFriendRequest(raider._id)}
+                          className="p-2 bg-green-500/20 hover:bg-green-500/30 border border-green-500/30 rounded-lg transition group/btn"
+                          title="Enviar solicitud de amistad"
+                        >
+                          <UserPlus size={16} className="text-green-400" />
+                        </button>
+                        <button
+                          onClick={() => sendMessage(raider._id)}
+                          className="p-2 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 rounded-lg transition group/btn"
+                          title="Enviar mensaje"
+                        >
+                          <MessageSquare size={16} className="text-purple-400" />
+                        </button>
+                        <button
+                          onClick={() => inviteToGroup(raider._id)}
+                          className="p-2 bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/30 rounded-lg transition group/btn"
+                          title="Invitar a grupo"
+                        >
+                          <Users2 size={16} className="text-orange-400" />
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -235,7 +302,141 @@ export default function RaiderHub() {
             ))}
           </div>
         )}
-      </div>
+        {/* Modal de Perfil Detallado */}
+        {selectedRaider && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+            <div className="bg-slate-900 border border-slate-700 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              {/* Header */}
+              <div className="bg-gradient-to-r from-slate-800 to-slate-700 p-6 flex justify-between items-start">
+                <div className="flex items-center gap-4">
+                  <img
+                    src={selectedRaider.avatar || '/default-avatar.svg'}
+                    alt={selectedRaider.username}
+                    className="w-16 h-16 rounded-full object-cover border border-yellow-400"
+                  />
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">{selectedRaider.username}</h2>
+                    <p className="text-yellow-400 text-lg">{selectedRaider.raider_emoji} {selectedRaider.raider_type}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedRaider(null)}
+                  className="p-2 hover:bg-slate-600 rounded-lg transition"
+                >
+                  <X size={24} className="text-white" />
+                </button>
+              </div>
+
+              {/* Contenido */}
+              <div className="p-6 space-y-6">
+                {/* Descripción */}
+                <div>
+                  <h3 className="text-white font-bold mb-2">Descripción del Playstyle</h3>
+                  <p className="text-slate-300 text-sm">{selectedRaider.raider_description || 'Sin descripción'}</p>
+                </div>
+
+                {/* Estilo de Juego */}
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="bg-slate-800 p-4 rounded-lg">
+                    <p className="text-slate-400 text-xs mb-1">Equipo</p>
+                    <p className="text-white font-bold capitalize">{selectedRaider.equipment || 'N/A'}</p>
+                  </div>
+                  <div className="bg-slate-800 p-4 rounded-lg">
+                    <p className="text-slate-400 text-xs mb-1">Estrategia</p>
+                    <p className="text-white font-bold capitalize">{selectedRaider.strategy || 'N/A'}</p>
+                  </div>
+                  <div className="bg-slate-800 p-4 rounded-lg">
+                    <p className="text-slate-400 text-xs mb-1">Compañía</p>
+                    <p className="text-white font-bold capitalize">{selectedRaider.company || 'N/A'}</p>
+                  </div>
+                </div>
+
+                {/* Armas Preferidas */}
+                {selectedRaider.preferred_weapons && selectedRaider.preferred_weapons.length > 0 && (
+                  <div>
+                    <h3 className="text-white font-bold mb-2 flex items-center gap-2">
+                      <Sword size={16} className="text-yellow-400" />
+                      Armas Preferidas
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedRaider.preferred_weapons.map((weapon, idx) => (
+                        <span
+                          key={idx}
+                          className="px-3 py-1 bg-yellow-500/20 border border-yellow-500/30 rounded-full text-yellow-400 text-sm"
+                        >
+                          {weapon}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Notas de Playstyle */}
+                {selectedRaider.playstyle_notes && (
+                  <div>
+                    <h3 className="text-white font-bold mb-2">Notas de Playstyle</h3>
+                    <p className="text-slate-300 text-sm italic">{selectedRaider.playstyle_notes}</p>
+                  </div>
+                )}
+
+                {/* Estadísticas Completas */}
+                <div className="bg-slate-800 border border-slate-700 p-4 rounded-lg">
+                  <h3 className="text-white font-bold mb-4">Estadísticas Comunitarias</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-center">
+                      <p className="text-slate-400 text-xs mb-1">Reputación</p>
+                      <p className="text-yellow-400 font-bold text-lg">⭐ {selectedRaider.community_reputation}</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-slate-400 text-xs mb-1">Posts Compartidos</p>
+                      <p className="text-blue-400 font-bold text-lg">💬 {selectedRaider.posts_shared}</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-slate-400 text-xs mb-1">Amigos</p>
+                      <p className="text-green-400 font-bold text-lg">👫 {selectedRaider.friends_count}</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-slate-400 text-xs mb-1">En la Comunidad</p>
+                      <p className="text-purple-400 font-bold text-lg">📅 {selectedRaider.days_in_community} días</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Acciones */}
+                {currentUser?.userId !== selectedRaider._id && (
+                  <div className="grid grid-cols-3 gap-3">
+                    <button
+                      onClick={() => {
+                        sendFriendRequest(selectedRaider._id);
+                        setSelectedRaider(null);
+                      }}
+                      className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white font-bold rounded-lg flex items-center justify-center gap-2 transition"
+                    >
+                      <UserPlus size={16} />
+                      Agregar Amigo
+                    </button>
+                    <button
+                      onClick={() => {
+                        sendMessage(selectedRaider._id);
+                      }}
+                      className="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white font-bold rounded-lg flex items-center justify-center gap-2 transition"
+                    >
+                      <MessageSquare size={16} />
+                      Mensajear
+                    </button>
+                    <button
+                      onClick={() => inviteToGroup(selectedRaider._id)}
+                      className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-lg flex items-center justify-center gap-2 transition"
+                    >
+                      <Users2 size={16} />
+                      Invitar Grupo
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}      </div>
     </div>
   );
 }
