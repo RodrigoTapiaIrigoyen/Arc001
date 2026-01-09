@@ -2554,6 +2554,10 @@ function scheduleAutoSync() {
 // Enviar mensaje
 app.post('/api/messages', authenticateToken, async (req, res) => {
   try {
+    console.log('🔍 DEBUG - req.body completo:', JSON.stringify(req.body));
+    console.log('🔍 DEBUG - req.headers:', JSON.stringify(req.headers));
+    console.log('🔍 DEBUG - req.method:', req.method);
+    
     const { receiverId, content } = req.body;
     // Convertir senderId a string si es ObjectId
     const senderId = req.user.userId.toString ? req.user.userId.toString() : req.user.userId;
