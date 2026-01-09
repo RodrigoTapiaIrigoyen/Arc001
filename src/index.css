@@ -10,6 +10,7 @@
 html {
   background-color: #0a0e1a;
   color: #f3f4f6;
+  font-size: 12.8px; /* Escala al 80% del tamaño base (16px * 0.8) */
 }
 
 /* Arc Raiders Background Theme - Enhanced */
