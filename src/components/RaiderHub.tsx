@@ -101,8 +101,6 @@ export default function RaiderHub() {
       toast.error(error.response?.data?.error || error.message || 'Error al enviar invitación');
     }
   };
-    }
-  };
 
   const fetchTopRaiders = async () => {
     setLoading(true);
