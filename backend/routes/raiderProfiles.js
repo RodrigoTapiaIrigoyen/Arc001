@@ -104,7 +104,7 @@ export default function createRaiderProfileRouter(db) {
   // ============ OBTENER MEJORES RAIDERS ============
   router.get('/leaderboard/top', async (req, res) => {
     try {
-      const { limit = 20, sortBy = 'kills' } = req.query;
+      const { limit = 50, sortBy = 'community_reputation' } = req.query;
       const raiders = await raiderProfileService.getTopRaiders(
         parseInt(limit),
         sortBy
@@ -121,12 +121,8 @@ export default function createRaiderProfileRouter(db) {
   router.get('/type/:raiderType', async (req, res) => {
     try {
       const { raiderType } = req.params;
-      const { limit = 10 } = req.query;
 
-      const raiders = await raiderProfileService.getRaidersByType(
-        raiderType,
-        parseInt(limit)
-      );
+      const raiders = await raiderProfileService.getRaidersByType(raiderType);
 
       res.json({ success: true, raiders });
     } catch (error) {
@@ -139,12 +135,8 @@ export default function createRaiderProfileRouter(db) {
   router.get('/search/:query', async (req, res) => {
     try {
       const { query } = req.params;
-      const { limit = 10 } = req.query;
 
-      const raiders = await raiderProfileService.searchRaiders(
-        query,
-        parseInt(limit)
-      );
+      const raiders = await raiderProfileService.searchRaiders(query);
 
       res.json({ success: true, raiders });
     } catch (error) {

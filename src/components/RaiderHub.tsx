@@ -9,10 +9,10 @@ interface RaiderProfile {
   raider_type: string;
   raider_emoji: string;
   raider_description: string;
-  kills: number;
-  deaths: number;
-  survival_rate: number;
-  raids_completed: number;
+  community_reputation: number;
+  posts_shared: number;
+  friends_count: number;
+  days_in_community: number;
 }
 
 export default function RaiderHub() {
@@ -122,8 +122,9 @@ export default function RaiderHub() {
                 onChange={(e) => setSortBy(e.target.value)}
                 className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm focus:outline-none focus:border-yellow-400"
               >
-                <option value="kills">Más Muertes</option>
-                <option value="survival">Tasa de Supervivencia</option>
+                <option value="reputation">Más Reputación</option>
+                <option value="posts">Más Posts</option>
+                <option value="friends">Más Amigos</option>
               </select>
             </div>
           </div>
@@ -181,32 +182,32 @@ export default function RaiderHub() {
                   {/* Estadísticas */}
                   <div className="hidden md:grid grid-cols-4 gap-4 text-center min-w-max">
                     <div>
-                      <p className="text-slate-400 text-xs">Muertes</p>
-                      <p className="text-yellow-400 font-bold">{raider.kills}</p>
+                      <p className="text-slate-400 text-xs">Reputación</p>
+                      <p className="text-yellow-400 font-bold">⭐ {raider.community_reputation}</p>
                     </div>
                     <div>
-                      <p className="text-slate-400 text-xs">Muertes</p>
-                      <p className="text-red-400 font-bold">{raider.deaths}</p>
+                      <p className="text-slate-400 text-xs">Posts</p>
+                      <p className="text-blue-400 font-bold">{raider.posts_shared}</p>
                     </div>
                     <div>
-                      <p className="text-slate-400 text-xs">Incursiones</p>
-                      <p className="text-blue-400 font-bold">{raider.raids_completed}</p>
+                      <p className="text-slate-400 text-xs">Amigos</p>
+                      <p className="text-green-400 font-bold">{raider.friends_count}</p>
                     </div>
                     <div>
-                      <p className="text-slate-400 text-xs">Supervivencia</p>
-                      <p className="text-green-400 font-bold">{raider.survival_rate.toFixed(1)}%</p>
+                      <p className="text-slate-400 text-xs">Tiempo</p>
+                      <p className="text-purple-400 font-bold">{raider.days_in_community}d</p>
                     </div>
                   </div>
 
-                  {/* K/D Ratio */}
+                  {/* Reputación */}
                   <div className="text-center">
-                    <p className="text-slate-400 text-xs">K/D</p>
+                    <p className="text-slate-400 text-xs">Reputación</p>
                     <p className={`font-bold text-sm ${
-                      (raider.kills / Math.max(raider.deaths, 1)) > 2 ? 'text-green-400' :
-                      (raider.kills / Math.max(raider.deaths, 1)) > 1 ? 'text-yellow-400' :
-                      'text-red-400'
+                      raider.community_reputation > 100 ? 'text-yellow-400' :
+                      raider.community_reputation > 50 ? 'text-blue-400' :
+                      'text-slate-400'
                     }`}>
-                      {(raider.kills / Math.max(raider.deaths, 1)).toFixed(2)}
+                      ⭐ {raider.community_reputation}
                     </p>
                   </div>
                 </div>
@@ -214,20 +215,20 @@ export default function RaiderHub() {
                 {/* Estadísticas Mobile */}
                 <div className="md:hidden mt-3 grid grid-cols-4 gap-2 text-center text-xs">
                   <div className="bg-slate-700/50 p-2 rounded">
-                    <p className="text-slate-400">Muertes</p>
-                    <p className="text-yellow-400 font-bold">{raider.kills}</p>
+                    <p className="text-slate-400">Reputación</p>
+                    <p className="text-yellow-400 font-bold">⭐{raider.community_reputation}</p>
                   </div>
                   <div className="bg-slate-700/50 p-2 rounded">
-                    <p className="text-slate-400">Derrotas</p>
-                    <p className="text-red-400 font-bold">{raider.deaths}</p>
+                    <p className="text-slate-400">Posts</p>
+                    <p className="text-blue-400 font-bold">{raider.posts_shared}</p>
                   </div>
                   <div className="bg-slate-700/50 p-2 rounded">
-                    <p className="text-slate-400">Raids</p>
-                    <p className="text-blue-400 font-bold">{raider.raids_completed}</p>
+                    <p className="text-slate-400">Amigos</p>
+                    <p className="text-green-400 font-bold">{raider.friends_count}</p>
                   </div>
                   <div className="bg-slate-700/50 p-2 rounded">
-                    <p className="text-slate-400">Superviv.</p>
-                    <p className="text-green-400 font-bold">{raider.survival_rate.toFixed(0)}%</p>
+                    <p className="text-slate-400">Días</p>
+                    <p className="text-purple-400 font-bold">{raider.days_in_community}</p>
                   </div>
                 </div>
               </div>

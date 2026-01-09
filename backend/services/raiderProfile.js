@@ -32,11 +32,11 @@ export default class RaiderProfileService {
       raider_description: profileData.raider_description,
       preferred_weapons: profileData.preferred_weapons || [],
       playstyle_notes: profileData.playstyle_notes || '',
-      kills: 0,
-      deaths: 0,
-      raids_completed: 0,
-      resources_extracted: 0,
-      survival_rate: 100,
+      community_reputation: 0,
+      posts_shared: 0,
+      groups_created: 0,
+      friends_count: 0,
+      days_in_community: 0,
       created_at: new Date(),
       updated_at: new Date()
     };
@@ -48,105 +48,127 @@ export default class RaiderProfileService {
   async updateProfile(userId, profileData) {
     const userIdObj = userId instanceof ObjectId ? userId : new ObjectId(userId);
     
-    const update = {
-      $set: {
-        equipment: profileData.equipment,
-        strategy: profileData.strategy,
-        company: profileData.company,
-        raider_type: profileData.raider_type,
-        raider_emoji: profileData.raider_emoji,
-        raider_description: profileData.raider_description,
-        preferred_weapons: profileData.preferred_weapons || [],
-        playstyle_notes: profileData.playstyle_notes || '',
-        updated_at: new Date()
-      }
+    const updateData = {
+      username: profileData.username,
+      avatar: profileData.avatar,
+      equipment: profileData.equipment,
+      strategy: profileData.strategy,
+      company: profileData.company,
+      raider_type: profileData.raider_type,
+      raider_emoji: profileData.raider_emoji,
+      raider_description: profileData.raider_description,
+      preferred_weapons: profileData.preferred_weapons || [],
+      playstyle_notes: profileData.playstyle_notes || '',
+      updated_at: new Date()
     };
 
-    const result = await this.profiles.findOneAndUpdate(
+    return await this.profiles.findOneAndUpdate(
       { user_id: userIdObj },
-      update,
-      { returnDocument: 'after' }
+      { $set: updateData },
+      { returnDocument: 'after', upsert: true }
     );
-
-    return result.value;
   }
 
-  async getTopRaiders(limit = 20, sortBy = 'kills') {
-    const sortField = sortBy === 'survival' ? { survival_rate: -1 } : { kills: -1 };
-    return this.profiles
+  async getTopRaiders(limit = 50, sortBy = 'community_reputation') {
+    const sortField = {};
+    sortField[sortBy] = -1;
+
+    return await this.profiles
       .find({})
       .sort(sortField)
       .limit(limit)
       .toArray();
   }
 
-  async getRaidersByType(raiderType, limit = 10) {
-    return this.profiles
+  async getRaidersByType(raiderType) {
+    return await this.profiles
       .find({ raider_type: raiderType })
-      .limit(limit)
+      .sort({ community_reputation: -1 })
+      .toArray();
+  }
+
+  async searchRaiders(query) {
+    return await this.profiles
+      .find({
+        $or: [
+          { username: { $regex: query, $options: 'i' } },
+          { raider_type: { $regex: query, $options: 'i' } },
+          { playstyle_notes: { $regex: query, $options: 'i' } }
+        ]
+      })
+      .sort({ community_reputation: -1 })
       .toArray();
   }
 
   async updateStats(userId, stats) {
     const userIdObj = userId instanceof ObjectId ? userId : new ObjectId(userId);
     
-    const update = {
-      $inc: {
-        kills: stats.kills || 0,
-        deaths: stats.deaths || 0,
-        raids_completed: stats.raids_completed || 0,
-        resources_extracted: stats.resources_extracted || 0
-      }
-    };
-
-    // Recalcular survival_rate
-    const profile = await this.profiles.findOne({ user_id: userIdObj });
-    if (profile) {
-      const totalRaids = (profile.raids_completed || 0) + (stats.raids_completed || 0);
-      const totalDeaths = (profile.deaths || 0) + (stats.deaths || 0);
-      const survivalRate = totalRaids > 0 ? ((totalRaids - totalDeaths) / totalRaids) * 100 : 100;
-      
-      update.$set = {
-        survival_rate: Math.max(0, Math.min(100, survivalRate)),
-        updated_at: new Date()
-      };
+    const updateData = {};
+    if (stats.hasOwnProperty('community_reputation')) {
+      updateData.community_reputation = Math.max(0, stats.community_reputation);
     }
+    if (stats.hasOwnProperty('posts_shared')) {
+      updateData.posts_shared = Math.max(0, stats.posts_shared);
+    }
+    if (stats.hasOwnProperty('groups_created')) {
+      updateData.groups_created = Math.max(0, stats.groups_created);
+    }
+    if (stats.hasOwnProperty('friends_count')) {
+      updateData.friends_count = Math.max(0, stats.friends_count);
+    }
+    
+    updateData.updated_at = new Date();
 
-    const result = await this.profiles.findOneAndUpdate(
+    return await this.profiles.findOneAndUpdate(
       { user_id: userIdObj },
-      update,
+      { $set: updateData },
       { returnDocument: 'after' }
     );
-
-    return result.value;
   }
 
-  async searchRaiders(query = '', limit = 10) {
-    const searchRegex = { $regex: query, $options: 'i' };
-    return this.profiles
-      .find({
-        $or: [
-          { username: searchRegex },
-          { raider_type: searchRegex },
-          { playstyle_notes: searchRegex }
-        ]
-      })
-      .limit(limit)
-      .toArray();
+  async incrementStat(userId, statName, amount = 1) {
+    const userIdObj = userId instanceof ObjectId ? userId : new ObjectId(userId);
+    
+    const validStats = ['community_reputation', 'posts_shared', 'groups_created', 'friends_count'];
+    if (!validStats.includes(statName)) {
+      throw new Error(`Invalid stat: ${statName}`);
+    }
+
+    const updateData = {
+      [statName]: amount,
+      updated_at: new Date()
+    };
+
+    return await this.profiles.findOneAndUpdate(
+      { user_id: userIdObj },
+      { $inc: updateData },
+      { returnDocument: 'after' }
+    );
   }
 
   async getStatistics(userId) {
     const userIdObj = userId instanceof ObjectId ? userId : new ObjectId(userId);
     const profile = await this.profiles.findOne({ user_id: userIdObj });
     
-    if (!profile) return null;
+    if (!profile) {
+      return {
+        community_reputation: 0,
+        posts_shared: 0,
+        groups_created: 0,
+        friends_count: 0,
+        days_in_community: 0,
+        raider_type: 'sin clasificar'
+      };
+    }
 
     return {
-      kd_ratio: (profile.kills || 0) / Math.max(profile.deaths || 1, 1),
-      survival_rate: profile.survival_rate || 0,
-      raids_completed: profile.raids_completed || 0,
-      resources_extracted: profile.resources_extracted || 0,
-      total_engagements: (profile.kills || 0) + (profile.deaths || 0)
+      community_reputation: profile.community_reputation || 0,
+      posts_shared: profile.posts_shared || 0,
+      groups_created: profile.groups_created || 0,
+      friends_count: profile.friends_count || 0,
+      days_in_community: Math.floor((Date.now() - profile.created_at.getTime()) / (1000 * 60 * 60 * 24)),
+      raider_type: profile.raider_type,
+      raider_emoji: profile.raider_emoji
     };
   }
 }

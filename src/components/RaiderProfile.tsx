@@ -19,12 +19,12 @@ interface RaiderProfile {
   raider_description: string;
   raider_emoji: string;
   
-  // Estadísticas
-  kills: number;
-  deaths: number;
-  raids_completed: number;
-  resources_extracted: number;
-  survival_rate: number;
+  // Estadísticas de Comunidad
+  community_reputation: number;
+  posts_shared: number;
+  groups_created: number;
+  friends_count: number;
+  days_in_community: number;
   
   // Preferencias
   preferred_weapons: string[];
@@ -251,35 +251,38 @@ export default function RaiderProfile() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
               <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-slate-400 text-sm">Muertes en Combate</p>
+                  <p className="text-slate-400 text-sm">Reputación</p>
                   <Trophy className="w-4 h-4 text-yellow-400" />
                 </div>
-                <p className="text-2xl font-bold text-yellow-400">{profile.kills}</p>
-                <p className="text-slate-500 text-xs mt-1">K/D: {(profile.kills / Math.max(profile.deaths, 1)).toFixed(2)}</p>
+                <p className="text-2xl font-bold text-yellow-400">⭐ {profile.community_reputation}</p>
+                <p className="text-slate-500 text-xs mt-1">Puntos de comunidad</p>
               </div>
 
               <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-slate-400 text-sm">Derrotas</p>
+                  <p className="text-slate-400 text-sm">Posts</p>
                   <Heart className="w-4 h-4 text-red-400" />
                 </div>
-                <p className="text-2xl font-bold text-red-400">{profile.deaths}</p>
+                <p className="text-2xl font-bold text-red-400">{profile.posts_shared}</p>
+                <p className="text-slate-500 text-xs mt-1">Contribuciones</p>
               </div>
 
               <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-slate-400 text-sm">Incursiones</p>
+                  <p className="text-slate-400 text-sm">Amigos</p>
                   <Target className="w-4 h-4 text-blue-400" />
                 </div>
-                <p className="text-2xl font-bold text-blue-400">{profile.raids_completed}</p>
+                <p className="text-2xl font-bold text-blue-400">{profile.friends_count}</p>
+                <p className="text-slate-500 text-xs mt-1">En la comunidad</p>
               </div>
 
               <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-slate-400 text-sm">Tasa de Supervivencia</p>
+                  <p className="text-slate-400 text-sm">Tiempo</p>
                   <Eye className="w-4 h-4 text-green-400" />
                 </div>
-                <p className="text-2xl font-bold text-green-400">{profile.survival_rate.toFixed(1)}%</p>
+                <p className="text-2xl font-bold text-green-400">{profile.days_in_community}d</p>
+                <p className="text-slate-500 text-xs mt-1">Días en la comunidad</p>
               </div>
             </div>
 
