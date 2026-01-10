@@ -160,23 +160,38 @@ export default function AdminDashboard() {
   };
 
   const loadUsers = async () => {
-    const params = new URLSearchParams();
-    if (searchTerm) params.append('search', searchTerm);
-    if (filterRole) params.append('role', filterRole);
-    if (filterStatus) params.append('isActive', filterStatus);
+    try {
+      const params = new URLSearchParams();
+      if (searchTerm) params.append('search', searchTerm);
+      if (filterRole) params.append('role', filterRole);
+      if (filterStatus) params.append('isActive', filterStatus);
 
-    const response = await api.get(`/admin/users?${params.toString()}`);
-    setUsers(response.users);
+      const response = await api.get(`/admin/users?${params.toString()}`);
+      setUsers(response.users || []);
+    } catch (error) {
+      console.warn('Admin users endpoint not available:', error);
+      setUsers([]);
+    }
   };
 
   const loadReports = async () => {
-    const response = await api.get('/admin/reports');
-    setReports(response.reports);
+    try {
+      const response = await api.get('/admin/reports');
+      setReports(response.reports || []);
+    } catch (error) {
+      console.warn('Admin reports endpoint not available:', error);
+      setReports([]);
+    }
   };
 
   const loadAuditLogs = async () => {
-    const response = await api.get('/admin/activity');
-    setAuditLogs(response.activity);
+    try {
+      const response = await api.get('/admin/activity');
+      setAuditLogs(response.activity || []);
+    } catch (error) {
+      console.warn('Admin activity endpoint not available:', error);
+      setAuditLogs([]);
+    }
   };
 
   const loadContent = async () => {
