@@ -25,6 +25,7 @@ interface ClanProfile {
 }
 
 export default function Clans() {
+  // v2.1 - Fixed toast.info() error
   const [clans, setClans] = useState<ClanProfile[]>([]);
   const [userClans, setUserClans] = useState<ClanProfile[]>([]);
   const [filteredClans, setFilteredClans] = useState<ClanProfile[]>([]);
