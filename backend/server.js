@@ -2877,6 +2877,164 @@ app.get('/api/users', authenticateToken, async (req, res) => {
   }
 });
 
+// ============ ADMIN ROUTES ============
+
+// GET /api/admin/stats - Obtener estadísticas del sistema
+app.get('/api/admin/stats', authenticateToken, async (req, res) => {
+  try {
+    // Verificar que el usuario sea admin
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Acceso denegado' });
+    }
+
+    const users = db.collection('users');
+    const posts = db.collection('community_posts');
+    const listings = db.collection('marketplace_listings');
+
+    const totalUsers = await users.countDocuments();
+    const activeUsers = await users.countDocuments({ last_login: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } });
+    const bannedUsers = await users.countDocuments({ is_banned: true });
+    const todayUsers = await users.countDocuments({ created_at: { $gte: new Date(new Date().setHours(0, 0, 0, 0)) } });
+
+    const totalPosts = await posts.countDocuments();
+    const todayPosts = await posts.countDocuments({ created_at: { $gte: new Date(new Date().setHours(0, 0, 0, 0)) } });
+    
+    const totalListings = await listings.countDocuments();
+
+    res.json({
+      users: {
+        total: totalUsers,
+        active: activeUsers,
+        banned: bannedUsers,
+        today: todayUsers
+      },
+      reports: {
+        pending: 0 // TODO: Implementar sistema de reportes
+      },
+      content: {
+        posts: totalPosts,
+        postsToday: todayPosts,
+        listings: totalListings
+      }
+    });
+  } catch (error) {
+    console.error('Error en admin/stats:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/admin/users - Listar usuarios con filtros
+app.get('/api/admin/users', authenticateToken, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Acceso denegado' });
+    }
+
+    const { search, role, isActive, limit = 50, skip = 0 } = req.query;
+    const users = db.collection('users');
+    
+    let query = {};
+    
+    if (search) {
+      query.$or = [
+        { username: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } }
+      ];
+    }
+    
+    if (role && role !== 'all') {
+      query.role = role;
+    }
+    
+    if (isActive === 'true') {
+      query.is_banned = false;
+    } else if (isActive === 'false') {
+      query.is_banned = true;
+    }
+
+    const total = await users.countDocuments(query);
+    const userList = await users
+      .find(query)
+      .sort({ created_at: -1 })
+      .limit(parseInt(limit))
+      .skip(parseInt(skip))
+      .toArray();
+
+    res.json({
+      users: userList.map(u => ({
+        _id: u._id,
+        username: u.username,
+        email: u.email,
+        role: u.role,
+        is_banned: u.is_banned,
+        created_at: u.created_at,
+        last_login: u.last_login
+      })),
+      total,
+      limit: parseInt(limit),
+      skip: parseInt(skip)
+    });
+  } catch (error) {
+    console.error('Error en admin/users:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/admin/reports - Listar reportes
+app.get('/api/admin/reports', authenticateToken, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Acceso denegado' });
+    }
+
+    // TODO: Implementar colección de reportes
+    res.json({
+      reports: [],
+      total: 0
+    });
+  } catch (error) {
+    console.error('Error en admin/reports:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/admin/activity - Listar logs de actividad
+app.get('/api/admin/activity', authenticateToken, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Acceso denegado' });
+    }
+
+    const { limit = 50, skip = 0 } = req.query;
+    const logs = db.collection('activity_logs');
+    
+    if (!logs) {
+      return res.json({
+        activity: [],
+        total: 0
+      });
+    }
+
+    const total = await logs.countDocuments();
+    const activity = await logs
+      .find({})
+      .sort({ created_at: -1 })
+      .limit(parseInt(limit))
+      .skip(parseInt(skip))
+      .toArray();
+
+    res.json({
+      activity,
+      total,
+      limit: parseInt(limit),
+      skip: parseInt(skip)
+    });
+  } catch (error) {
+    console.error('Error en admin/activity:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // ============ ACTIVITY FEED ROUTES ============
 
 // Obtener feed de actividades
