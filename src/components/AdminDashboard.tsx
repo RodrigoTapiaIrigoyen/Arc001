@@ -145,8 +145,18 @@ export default function AdminDashboard() {
   };
 
   const loadStats = async () => {
-    const response = await api.get('/admin/stats');
-    setStats(response);
+    try {
+      const response = await api.get('/admin/stats');
+      setStats(response);
+    } catch (error) {
+      console.warn('Admin stats endpoint not available:', error);
+      // Set default stats if endpoint not available
+      setStats({
+        users: { total: 0, active: 0, banned: 0, today: 0 },
+        reports: { pending: 0 },
+        content: { posts: 0, postsToday: 0, listings: 0 }
+      });
+    }
   };
 
   const loadUsers = async () => {
