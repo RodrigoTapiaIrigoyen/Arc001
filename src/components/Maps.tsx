@@ -418,11 +418,11 @@ export default function Maps() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-0.5">
                           <h3 className={`font-bold ${color.text} group-hover:text-white transition-colors truncate`}>
-                            {location.name}
+                            {location.name.replace(/<br>/g, ' / ')}
                           </h3>
                         </div>
                         <p className="text-xs text-gray-400">
-                          {location.totalItems} items in this category
+                          {location.totalItems} item{location.totalItems !== 1 ? 's' : ''} in this category
                         </p>
                       </div>
                     </div>
