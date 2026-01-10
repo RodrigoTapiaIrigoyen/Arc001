@@ -160,15 +160,20 @@ export default class ClansService {
         { _id: requestIdObj },
         { $set: { status: 'accepted', responded_at: new Date() } }
       );
+
+      return { success: true, request, clan };
     } else {
       // Rechazar solicitud
+      const request = await this.db.collection('clan_requests').findOne({ _id: requestIdObj });
+      const clan = await this.clans.findOne({ _id: clanIdObj });
+
       await this.db.collection('clan_requests').updateOne(
         { _id: requestIdObj },
         { $set: { status: 'rejected', responded_at: new Date() } }
       );
-    }
 
-    return { success: true };
+      return { success: true, request, clan };
+    }
   }
 
   async removeMemberFromClan(clanId, memberId) {

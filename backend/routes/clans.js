@@ -3,7 +3,7 @@ import { ObjectId } from 'mongodb';
 import { authenticateToken } from '../middleware/auth.js';
 import ClansService from '../services/clans.js';
 
-export default function createClansRouter(db) {
+export default function createClansRouter(db, notificationService) {
   const router = express.Router();
 
   if (!db) {
@@ -166,6 +166,29 @@ export default function createClansRouter(db) {
       }
 
       const result = await clansService.respondToJoinRequest(requestId, approve, clanId, req.user.userId);
+
+      // Enviar notificación
+      if (notificationService && result.request) {
+        try {
+          if (approve) {
+            await notificationService.notifyClanJoined(
+              result.request.user_id,
+              clanId,
+              result.clan.name,
+              req.user.userId
+            );
+          } else {
+            await notificationService.notifyClanRejected(
+              result.request.user_id,
+              clanId,
+              result.clan.name,
+              req.user.userId
+            );
+          }
+        } catch (notifError) {
+          console.error('Error sending notification:', notifError);
+        }
+      }
 
       res.json({ success: true, result });
     } catch (error) {

@@ -12,7 +12,12 @@ import {
   AtSign, 
   AlertCircle,
   Clock,
-  UserPlus
+  UserPlus,
+  Users,
+  Shield,
+  Trophy,
+  CheckCircle,
+  XCircle
 } from 'lucide-react';
 import api from '../services/api';
 import toast from 'react-hot-toast';
@@ -20,7 +25,7 @@ import socketService from '../services/socket';
 
 interface Notification {
   _id: string;
-  type: 'comment' | 'reply' | 'trade' | 'vote' | 'mention' | 'system';
+  type: string;
   title: string;
   message: string;
   link?: string;
@@ -155,10 +160,10 @@ export default function NotificationCenter({ isOpen, onClose, onNavigate }: Noti
     }
     
     // Manejar navegación por data (para friends, etc)
-    if (notification.data && onNavigate) {
-      const data = typeof notification.data === 'string' 
-        ? JSON.parse(notification.data) 
-        : notification.data;
+    if ((notification as any).data && onNavigate) {
+      const data = typeof (notification as any).data === 'string' 
+        ? JSON.parse((notification as any).data) 
+        : (notification as any).data;
       
       if (data.view) {
         // Si hay un tab específico, usar sessionStorage para que Friends lo detecte
@@ -181,8 +186,23 @@ export default function NotificationCenter({ isOpen, onClose, onNavigate }: Noti
       case 'trade_accepted':
         return <ShoppingBag size={18} className="text-green-400" />;
       case 'friend_request':
-      case 'friend_request_accepted':
         return <UserPlus size={18} className="text-purple-400" />;
+      case 'friend_accepted':
+        return <CheckCircle size={18} className="text-green-400" />;
+      case 'group_joined':
+      case 'group_accepted':
+        return <CheckCircle size={18} className="text-green-500" />;
+      case 'group_rejected':
+        return <XCircle size={18} className="text-red-500" />;
+      case 'member_joined_group':
+        return <Users size={18} className="text-blue-400" />;
+      case 'clan_joined':
+      case 'clan_accepted':
+        return <Shield size={18} className="text-amber-500" />;
+      case 'clan_rejected':
+        return <XCircle size={18} className="text-red-500" />;
+      case 'member_joined_clan':
+        return <Trophy size={18} className="text-amber-400" />;
       case 'vote':
         return <ThumbsUp size={18} className="text-yellow-400" />;
       case 'mention':
@@ -219,26 +239,28 @@ export default function NotificationCenter({ isOpen, onClose, onNavigate }: Noti
       {/* Panel */}
       <div className="fixed right-0 top-0 h-full w-full sm:w-96 bg-[#0f1420] border-l border-red-500/30 shadow-2xl z-50 flex flex-col">
         {/* Header */}
-        <div className="p-4 border-b border-gray-800 flex items-center justify-between">
+        <div className="p-4 border-b border-gray-800 flex items-center justify-between bg-gradient-to-r from-gray-900 to-gray-800">
           <div className="flex items-center gap-3">
-            <Bell className="text-yellow-400" size={24} />
+            <div className="p-2 bg-yellow-500/20 rounded-lg">
+              <Bell className="text-yellow-400" size={24} />
+            </div>
             <h2 className="text-xl font-bold text-white">Notificaciones</h2>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
           >
             <X className="text-gray-400" size={20} />
           </button>
         </div>
 
         {/* Filter Tabs */}
-        <div className="p-4 border-b border-gray-800 flex gap-2">
+        <div className="p-4 border-b border-gray-800 flex gap-2 bg-gray-900/50">
           <button
             onClick={() => setFilter('all')}
             className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all ${
               filter === 'all'
-                ? 'bg-yellow-600 text-white'
+                ? 'bg-yellow-600 text-white shadow-lg shadow-yellow-600/20'
                 : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
             }`}
           >
@@ -248,7 +270,7 @@ export default function NotificationCenter({ isOpen, onClose, onNavigate }: Noti
             onClick={() => setFilter('unread')}
             className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all ${
               filter === 'unread'
-                ? 'bg-yellow-600 text-white'
+                ? 'bg-yellow-600 text-white shadow-lg shadow-yellow-600/20'
                 : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
             }`}
           >
@@ -258,33 +280,35 @@ export default function NotificationCenter({ isOpen, onClose, onNavigate }: Noti
 
         {/* Actions */}
         {notifications.length > 0 && (
-          <div className="p-4 border-b border-gray-800 flex gap-2">
+          <div className="p-4 border-b border-gray-800 flex gap-2 bg-gray-900/30">
             <button
               onClick={markAllAsRead}
-              className="flex-1 px-3 py-2 bg-green-600/20 hover:bg-green-600/30 text-green-400 rounded-lg transition-all flex items-center justify-center gap-2 text-sm"
+              className="flex-1 px-3 py-2 bg-green-600/20 hover:bg-green-600/30 text-green-400 rounded-lg transition-all flex items-center justify-center gap-2 text-sm font-medium"
             >
               <CheckCheck size={16} />
               Marcar todas
             </button>
             <button
               onClick={deleteAllRead}
-              className="flex-1 px-3 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-lg transition-all flex items-center justify-center gap-2 text-sm"
+              className="flex-1 px-3 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-lg transition-all flex items-center justify-center gap-2 text-sm font-medium"
             >
               <Trash2 size={16} />
-              Limpiar leídas
+              Limpiar
             </button>
           </div>
         )}
 
         {/* Notifications List */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900">
           {loading ? (
             <div className="flex items-center justify-center h-full">
               <div className="w-12 h-12 border-4 border-red-500/30 border-t-red-500 rounded-full animate-spin"></div>
             </div>
           ) : notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center p-8">
-              <Bell className="text-gray-600 mb-4" size={48} />
+              <div className="p-4 bg-gray-800/50 rounded-full mb-4">
+                <Bell className="text-gray-600" size={48} />
+              </div>
               <h3 className="text-xl font-bold text-gray-400 mb-2">
                 {filter === 'unread' ? 'Sin notificaciones nuevas' : 'No hay notificaciones'}
               </h3>
@@ -299,35 +323,37 @@ export default function NotificationCenter({ isOpen, onClose, onNavigate }: Noti
               {notifications.map((notification) => (
                 <div
                   key={notification._id}
-                  className={`p-4 hover:bg-gray-800/50 transition-colors cursor-pointer group ${
-                    !notification.is_read ? 'bg-yellow-600/5' : ''
+                  className={`p-4 hover:bg-gray-800/60 transition-all cursor-pointer group border-l-4 ${
+                    !notification.is_read 
+                      ? 'bg-yellow-600/10 border-l-yellow-500' 
+                      : 'border-l-transparent'
                   }`}
                   onClick={() => handleNotificationClick(notification)}
                 >
                   <div className="flex gap-3">
                     {/* Icon */}
-                    <div className="flex-shrink-0 mt-1">
+                    <div className="flex-shrink-0 mt-1 p-2 bg-gray-800 rounded-lg">
                       {getNotificationIcon(notification.type)}
                     </div>
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2 mb-1">
-                        <h4 className="font-semibold text-white text-sm">
+                        <h4 className="font-semibold text-white text-sm group-hover:text-yellow-400 transition-colors">
                           {notification.title}
                         </h4>
                         {!notification.is_read && (
-                          <div className="w-2 h-2 bg-yellow-500 rounded-full flex-shrink-0 mt-1" />
+                          <div className="w-2 h-2 bg-yellow-500 rounded-full flex-shrink-0 mt-1 animate-pulse" />
                         )}
                       </div>
 
-                      <p className="text-gray-400 text-sm mb-2 line-clamp-2">
+                      <p className="text-gray-400 text-sm mb-2 line-clamp-2 group-hover:text-gray-300 transition-colors">
                         {notification.message}
                       </p>
 
                       {notification.sender && (
                         <p className="text-xs text-gray-500 mb-2">
-                          Por: <span className="text-green-400">{notification.sender.username}</span>
+                          Por: <span className="text-green-400 font-medium">{notification.sender.username}</span>
                         </p>
                       )}
 
@@ -345,10 +371,10 @@ export default function NotificationCenter({ isOpen, onClose, onNavigate }: Noti
                                 e.stopPropagation();
                                 markAsRead(notification._id);
                               }}
-                              className="p-1.5 hover:bg-gray-700 rounded transition-colors"
+                              className="p-1.5 hover:bg-green-600/30 rounded transition-colors"
                               title="Marcar como leída"
                             >
-                              <Check size={14} className="text-gray-400" />
+                              <Check size={14} className="text-green-400" />
                             </button>
                           )}
                           <button
@@ -356,7 +382,7 @@ export default function NotificationCenter({ isOpen, onClose, onNavigate }: Noti
                               e.stopPropagation();
                               deleteNotification(notification._id);
                             }}
-                            className="p-1.5 hover:bg-red-600/20 rounded transition-colors"
+                            className="p-1.5 hover:bg-red-600/30 rounded transition-colors"
                             title="Eliminar"
                           >
                             <Trash2 size={14} className="text-red-400" />

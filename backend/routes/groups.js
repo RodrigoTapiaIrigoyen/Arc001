@@ -4,7 +4,7 @@ import { authenticateToken } from '../middleware/auth.js';
 import GroupsService from '../services/groups.js';
 import RaiderProfileService from '../services/raiderProfile.js';
 
-export default function createGroupsRouter(db) {
+export default function createGroupsRouter(db, notificationService) {
   const router = express.Router();
   
   if (!db) {
@@ -127,7 +127,28 @@ export default function createGroupsRouter(db) {
         return res.status(400).json({ error: 'ID de grupo inválido' });
       }
       
+      // Obtener datos del grupo antes de aceptar
+      const group = await db.collection('groups').findOne({ _id: new ObjectId(groupId) });
+      if (!group) {
+        return res.status(404).json({ error: 'Grupo no encontrado' });
+      }
+      
       await groupsService.acceptJoinRequest(groupId, userId, req.user.userId);
+      
+      // Enviar notificación al usuario que se unió
+      if (notificationService) {
+        try {
+          await notificationService.notifyGroupJoined(
+            userId,
+            groupId,
+            group.title,
+            req.user.userId
+          );
+        } catch (notifError) {
+          console.error('Error sending notification:', notifError);
+        }
+      }
+      
       res.json({ success: true, message: 'Solicitud aceptada' });
     } catch (error) {
       console.error(error);
@@ -145,7 +166,29 @@ export default function createGroupsRouter(db) {
         return res.status(400).json({ error: 'ID de grupo inválido' });
       }
       
+      // Obtener datos del grupo antes de rechazar
+      const group = await db.collection('groups').findOne({ _id: new ObjectId(groupId) });
+      if (!group) {
+        return res.status(404).json({ error: 'Grupo no encontrado' });
+      }
+      
       await groupsService.rejectJoinRequest(groupId, userId, req.user.userId, reason);
+      
+      // Enviar notificación al usuario rechazado
+      if (notificationService) {
+        try {
+          await notificationService.notifyGroupRejected(
+            userId,
+            groupId,
+            group.title,
+            req.user.userId,
+            reason
+          );
+        } catch (notifError) {
+          console.error('Error sending notification:', notifError);
+        }
+      }
+      
       res.json({ success: true, message: 'Solicitud rechazada' });
     } catch (error) {
       console.error(error);

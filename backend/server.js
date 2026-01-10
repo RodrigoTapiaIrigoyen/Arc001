@@ -3395,11 +3395,11 @@ connectDB().then(() => {
   // Crear los routers DESPUÉS de que DB esté listo
   if (db) {
     try {
-      const groupsRouter = createGroupsRouter(db);
+      const groupsRouter = createGroupsRouter(db, notificationService);
       app.use('/api/groups', groupsRouter);
       console.log('✅ Groups router registered');
       
-      const friendsRouter = createFriendsRouter(db);
+      const friendsRouter = createFriendsRouter(db, notificationService);
       app.use('/api/friends', friendsRouter);
       console.log('✅ Friends router registered');
       
@@ -3407,7 +3407,7 @@ connectDB().then(() => {
       app.use('/api/raider-profiles', raiderProfileRouter);
       console.log('✅ Raider Profile router registered');
       
-      const clansRouter = createClansRouter(db);
+      const clansRouter = createClansRouter(db, notificationService);
       app.use('/api/clans', clansRouter);
       console.log('✅ Clans router registered');
     } catch (error) {

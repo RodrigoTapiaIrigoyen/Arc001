@@ -245,6 +245,128 @@ class NotificationService {
       senderId: null
     });
   }
+
+  /**
+   * Crear notificación de aceptación a grupo
+   */
+  async notifyGroupJoined(userId, groupId, groupName, groupLeaderId) {
+    return await this.createNotification({
+      userId,
+      type: 'group_joined',
+      title: '✅ ¡Bienvenido al grupo!',
+      message: `Tu solicitud fue aceptada en "${groupName}"`,
+      link: `/groups/${groupId}`,
+      relatedId: groupId,
+      senderId: groupLeaderId
+    });
+  }
+
+  /**
+   * Crear notificación de rechazo a grupo
+   */
+  async notifyGroupRejected(userId, groupId, groupName, groupLeaderId, reason = '') {
+    const message = reason ? `Tu solicitud fue rechazada: ${reason}` : `Tu solicitud fue rechazada en "${groupName}"`;
+    return await this.createNotification({
+      userId,
+      type: 'group_rejected',
+      title: '❌ Solicitud rechazada',
+      message,
+      link: `/groups/${groupId}`,
+      relatedId: groupId,
+      senderId: groupLeaderId
+    });
+  }
+
+  /**
+   * Crear notificación de nuevo miembro en grupo
+   */
+  async notifyNewGroupMember(groupLeaderId, newMemberUsername, groupName, groupId) {
+    return await this.createNotification({
+      userId: groupLeaderId,
+      type: 'member_joined_group',
+      title: '👤 Nuevo miembro en tu grupo',
+      message: `${newMemberUsername} se unió a "${groupName}"`,
+      link: `/groups/${groupId}`,
+      relatedId: groupId,
+      senderId: null
+    });
+  }
+
+  /**
+   * Crear notificación de aceptación a clan
+   */
+  async notifyClanJoined(userId, clanId, clanName, clanLeaderId) {
+    return await this.createNotification({
+      userId,
+      type: 'clan_joined',
+      title: '✅ ¡Bienvenido al clan!',
+      message: `Tu solicitud fue aceptada en "${clanName}"`,
+      link: `/clans/${clanId}`,
+      relatedId: clanId,
+      senderId: clanLeaderId
+    });
+  }
+
+  /**
+   * Crear notificación de rechazo a clan
+   */
+  async notifyClanRejected(userId, clanId, clanName, clanLeaderId, reason = '') {
+    const message = reason ? `Tu solicitud fue rechazada: ${reason}` : `Tu solicitud fue rechazada en "${clanName}"`;
+    return await this.createNotification({
+      userId,
+      type: 'clan_rejected',
+      title: '❌ Solicitud rechazada',
+      message,
+      link: `/clans/${clanId}`,
+      relatedId: clanId,
+      senderId: clanLeaderId
+    });
+  }
+
+  /**
+   * Crear notificación de nuevo miembro en clan
+   */
+  async notifyNewClanMember(clanLeaderId, newMemberUsername, clanName, clanId) {
+    return await this.createNotification({
+      userId: clanLeaderId,
+      type: 'member_joined_clan',
+      title: '👤 Nuevo miembro en tu clan',
+      message: `${newMemberUsername} se unió a "${clanName}"`,
+      link: `/clans/${clanId}`,
+      relatedId: clanId,
+      senderId: null
+    });
+  }
+
+  /**
+   * Crear notificación de friend request
+   */
+  async notifyFriendRequest(userId, friendUsername, friendId) {
+    return await this.createNotification({
+      userId,
+      type: 'friend_request',
+      title: '👋 Nueva solicitud de amistad',
+      message: `${friendUsername} te envió una solicitud de amistad`,
+      link: `/profile/${friendId}`,
+      relatedId: friendId,
+      senderId: friendId
+    });
+  }
+
+  /**
+   * Crear notificación de amistad aceptada
+   */
+  async notifyFriendAccepted(userId, friendUsername, friendId) {
+    return await this.createNotification({
+      userId,
+      type: 'friend_accepted',
+      title: '✅ Solicitud aceptada',
+      message: `${friendUsername} aceptó tu solicitud de amistad`,
+      link: `/profile/${friendId}`,
+      relatedId: friendId,
+      senderId: friendId
+    });
+  }
 }
 
 export default NotificationService;

@@ -3,7 +3,7 @@ import { authenticateToken } from '../middleware/auth.js';
 import FriendsService from '../services/friendsService.js';
 import RaiderProfileService from '../services/raiderProfile.js';
 
-export default function createFriendsRouter(db) {
+export default function createFriendsRouter(db, notificationService) {
   const router = express.Router();
   
   if (!db) {
@@ -85,6 +85,23 @@ export default function createFriendsRouter(db) {
 
       console.log('📤 Enviando solicitud de amistad de', senderId, 'a', userId);
       const result = await friendsService.sendFriendRequest(senderId, userId);
+      
+      // Obtener datos del remitente para la notificación
+      const senderData = await db.collection('users').findOne({ _id: new (require('mongodb')).ObjectId(senderId) });
+      
+      // Enviar notificación al usuario que recibe la solicitud
+      if (notificationService && senderData) {
+        try {
+          await notificationService.notifyFriendRequest(
+            userId,
+            senderData.username || 'Jugador',
+            senderId
+          );
+        } catch (notifError) {
+          console.error('Error sending notification:', notifError);
+        }
+      }
+      
       console.log('✅ Solicitud enviada:', result);
       res.status(201).json({ friendshipId: result });
     } catch (error) {
@@ -133,6 +150,22 @@ export default function createFriendsRouter(db) {
           }
           if (raiderProfileService && receiverUserId) {
             await raiderProfileService.incrementStat(receiverUserId, 'friends_count', 1);
+          }
+
+          // Enviar notificación de aceptación
+          if (notificationService) {
+            try {
+              const senderData = await db.collection('users').findOne({ _id: new (require('mongodb')).ObjectId(userId) });
+              if (senderData) {
+                await notificationService.notifyFriendAccepted(
+                  requesterUserId,
+                  senderData.username || 'Jugador',
+                  userId
+                );
+              }
+            } catch (notifError) {
+              console.error('Error sending notification:', notifError);
+            }
           }
         } catch (err) {
           console.log('Raider profile not found, skipping stats update:', err.message);
