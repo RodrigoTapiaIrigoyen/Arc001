@@ -3035,6 +3035,431 @@ app.get('/api/admin/activity', authenticateToken, async (req, res) => {
   }
 });
 
+// ============ ADMIN CLANS ENDPOINTS ============
+
+// GET /api/admin/clans - Listar clanes
+app.get('/api/admin/clans', authenticateToken, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Acceso denegado' });
+    }
+
+    const { search, limit = 50, skip = 0 } = req.query;
+    const clans = db.collection('clans');
+    
+    let query = {};
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { tag: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    const total = await clans.countDocuments(query);
+    const clanList = await clans
+      .find(query)
+      .sort({ created_at: -1 })
+      .limit(parseInt(limit))
+      .skip(parseInt(skip))
+      .toArray();
+
+    res.json({
+      clans: clanList.map(c => ({
+        _id: c._id,
+        name: c.name,
+        tag: c.tag,
+        leader_name: c.leader_name,
+        members_count: c.members?.length || 0,
+        level: c.level || 1,
+        created_at: c.created_at,
+        visibility: c.visibility || 'public'
+      })),
+      total,
+      limit: parseInt(limit),
+      skip: parseInt(skip)
+    });
+  } catch (error) {
+    console.error('Error en admin/clans:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// DELETE /api/admin/clans/:clanId - Eliminar clan
+app.delete('/api/admin/clans/:clanId', authenticateToken, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Acceso denegado' });
+    }
+
+    const { clanId } = req.params;
+    if (!ObjectId.isValid(clanId)) {
+      return res.status(400).json({ error: 'ID de clan inválido' });
+    }
+
+    const clans = db.collection('clans');
+    const clan = await clans.findOne({ _id: new ObjectId(clanId) });
+    
+    if (!clan) {
+      return res.status(404).json({ error: 'Clan no encontrado' });
+    }
+
+    // Eliminar clan y sus solicitudes asociadas
+    await clans.deleteOne({ _id: new ObjectId(clanId) });
+    await db.collection('clan_requests').deleteMany({ clan_id: new ObjectId(clanId) });
+
+    res.json({ 
+      success: true, 
+      message: `Clan "${clan.name}" eliminado correctamente`,
+      deleted_clan: clan.name
+    });
+  } catch (error) {
+    console.error('Error eliminando clan:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/admin/clans/:clanId - Ver detalles del clan
+app.get('/api/admin/clans/:clanId', authenticateToken, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Acceso denegado' });
+    }
+
+    const { clanId } = req.params;
+    if (!ObjectId.isValid(clanId)) {
+      return res.status(400).json({ error: 'ID de clan inválido' });
+    }
+
+    const clan = await db.collection('clans').findOne({ _id: new ObjectId(clanId) });
+    if (!clan) {
+      return res.status(404).json({ error: 'Clan no encontrado' });
+    }
+
+    const requests = await db.collection('clan_requests')
+      .find({ clan_id: new ObjectId(clanId), status: 'pending' })
+      .toArray();
+
+    res.json({
+      clan: {
+        ...clan,
+        _id: clan._id.toString()
+      },
+      pending_requests: requests,
+      members_count: clan.members?.length || 0
+    });
+  } catch (error) {
+    console.error('Error obteniendo detalles del clan:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============ ADMIN GROUPS ENDPOINTS ============
+
+// GET /api/admin/groups - Listar grupos
+app.get('/api/admin/groups', authenticateToken, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Acceso denegado' });
+    }
+
+    const { search, limit = 50, skip = 0 } = req.query;
+    const groups = db.collection('groups');
+    
+    let query = {};
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { owner_name: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    const total = await groups.countDocuments(query);
+    const groupList = await groups
+      .find(query)
+      .sort({ created_at: -1 })
+      .limit(parseInt(limit))
+      .skip(parseInt(skip))
+      .toArray();
+
+    res.json({
+      groups: groupList.map(g => ({
+        _id: g._id,
+        title: g.title,
+        owner_name: g.owner_name,
+        members_count: g.members?.length || 0,
+        type: g.type,
+        created_at: g.created_at,
+        visibility: g.visibility || 'public'
+      })),
+      total,
+      limit: parseInt(limit),
+      skip: parseInt(skip)
+    });
+  } catch (error) {
+    console.error('Error en admin/groups:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// DELETE /api/admin/groups/:groupId - Eliminar grupo
+app.delete('/api/admin/groups/:groupId', authenticateToken, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Acceso denegado' });
+    }
+
+    const { groupId } = req.params;
+    if (!ObjectId.isValid(groupId)) {
+      return res.status(400).json({ error: 'ID de grupo inválido' });
+    }
+
+    const groups = db.collection('groups');
+    const group = await groups.findOne({ _id: new ObjectId(groupId) });
+    
+    if (!group) {
+      return res.status(404).json({ error: 'Grupo no encontrado' });
+    }
+
+    // Eliminar grupo y sus mensajes/solicitudes asociadas
+    await groups.deleteOne({ _id: new ObjectId(groupId) });
+    await db.collection('group_messages').deleteMany({ group_id: new ObjectId(groupId) });
+    await db.collection('group_logs').deleteMany({ group_id: new ObjectId(groupId) });
+
+    res.json({ 
+      success: true, 
+      message: `Grupo "${group.title}" eliminado correctamente`,
+      deleted_group: group.title
+    });
+  } catch (error) {
+    console.error('Error eliminando grupo:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/admin/groups/:groupId - Ver detalles del grupo
+app.get('/api/admin/groups/:groupId', authenticateToken, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Acceso denegado' });
+    }
+
+    const { groupId } = req.params;
+    if (!ObjectId.isValid(groupId)) {
+      return res.status(400).json({ error: 'ID de grupo inválido' });
+    }
+
+    const group = await db.collection('groups').findOne({ _id: new ObjectId(groupId) });
+    if (!group) {
+      return res.status(404).json({ error: 'Grupo no encontrado' });
+    }
+
+    const messages = await db.collection('group_messages')
+      .find({ group_id: new ObjectId(groupId) })
+      .sort({ created_at: -1 })
+      .limit(10)
+      .toArray();
+
+    res.json({
+      group: {
+        ...group,
+        _id: group._id.toString()
+      },
+      recent_messages: messages,
+      members_count: group.members?.length || 0,
+      join_requests: group.joinRequests?.length || 0
+    });
+  } catch (error) {
+    console.error('Error obteniendo detalles del grupo:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============ ADMIN USER MANAGEMENT ENDPOINTS ============
+
+// POST /api/admin/users/:userId/ban - Banear usuario
+app.post('/api/admin/users/:userId/ban', authenticateToken, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Acceso denegado' });
+    }
+
+    const { userId } = req.params;
+    const { reason } = req.body;
+
+    if (!ObjectId.isValid(userId)) {
+      return res.status(400).json({ error: 'ID de usuario inválido' });
+    }
+
+    const users = db.collection('users');
+    const user = await users.findOne({ _id: new ObjectId(userId) });
+    
+    if (!user) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    await users.updateOne(
+      { _id: new ObjectId(userId) },
+      {
+        $set: {
+          is_banned: true,
+          banned_at: new Date(),
+          ban_reason: reason || 'Baneado por administrador'
+        }
+      }
+    );
+
+    res.json({ 
+      success: true, 
+      message: `Usuario "${user.username}" baneado correctamente`,
+      banned_user: user.username
+    });
+  } catch (error) {
+    console.error('Error baneando usuario:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST /api/admin/users/:userId/unban - Desbanear usuario
+app.post('/api/admin/users/:userId/unban', authenticateToken, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Acceso denegado' });
+    }
+
+    const { userId } = req.params;
+
+    if (!ObjectId.isValid(userId)) {
+      return res.status(400).json({ error: 'ID de usuario inválido' });
+    }
+
+    const users = db.collection('users');
+    const user = await users.findOne({ _id: new ObjectId(userId) });
+    
+    if (!user) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    await users.updateOne(
+      { _id: new ObjectId(userId) },
+      {
+        $unset: {
+          banned_at: '',
+          ban_reason: ''
+        },
+        $set: {
+          is_banned: false
+        }
+      }
+    );
+
+    res.json({ 
+      success: true, 
+      message: `Usuario "${user.username}" desbaneado correctamente`,
+      unbanned_user: user.username
+    });
+  } catch (error) {
+    console.error('Error desbaneando usuario:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST /api/admin/users/:userId/delete - Eliminar usuario (soft delete)
+app.post('/api/admin/users/:userId/delete', authenticateToken, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Acceso denegado' });
+    }
+
+    const { userId } = req.params;
+    const { reason } = req.body;
+
+    if (!ObjectId.isValid(userId)) {
+      return res.status(400).json({ error: 'ID de usuario inválido' });
+    }
+
+    const users = db.collection('users');
+    const user = await users.findOne({ _id: new ObjectId(userId) });
+    
+    if (!user) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    await users.updateOne(
+      { _id: new ObjectId(userId) },
+      {
+        $set: {
+          deleted_at: new Date(),
+          deleted_reason: reason || 'Eliminado por administrador',
+          username: `deleted_${user.username}_${Date.now()}`,
+          email: `deleted_${Date.now()}@deleted.local`,
+          is_active: false
+        }
+      }
+    );
+
+    res.json({ 
+      success: true, 
+      message: `Usuario "${user.username}" eliminado correctamente`,
+      deleted_user: user.username
+    });
+  } catch (error) {
+    console.error('Error eliminando usuario:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/admin/user-issues - Listar problemas de usuarios
+app.get('/api/admin/user-issues', authenticateToken, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Acceso denegado' });
+    }
+
+    const { limit = 50, skip = 0 } = req.query;
+    const users = db.collection('users');
+    
+    // Buscar usuarios con problemas (baneados, múltiples advertencias, etc)
+    const bannedUsers = await users
+      .find({ is_banned: true })
+      .limit(parseInt(limit))
+      .skip(parseInt(skip))
+      .toArray();
+
+    const suspiciousUsers = await users
+      .find({ 
+        $or: [
+          { warnings: { $size: { $gte: 3 } } },
+          { last_login: { $lt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) } }
+        ]
+      })
+      .limit(parseInt(limit))
+      .toArray();
+
+    res.json({
+      banned_users: bannedUsers.map(u => ({
+        _id: u._id,
+        username: u.username,
+        email: u.email,
+        banned_at: u.banned_at,
+        ban_reason: u.ban_reason,
+        status: 'banned'
+      })),
+      suspicious_users: suspiciousUsers.map(u => ({
+        _id: u._id,
+        username: u.username,
+        email: u.email,
+        warnings_count: u.warnings?.length || 0,
+        last_login: u.last_login,
+        status: u.warnings?.length >= 3 ? 'multiple_warnings' : 'inactive'
+      })),
+      total_issues: bannedUsers.length + suspiciousUsers.length
+    });
+  } catch (error) {
+    console.error('Error en admin/user-issues:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // ============ ACTIVITY FEED ROUTES ============
 
 // Obtener feed de actividades
