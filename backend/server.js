@@ -3335,6 +3335,41 @@ app.delete('/api/marketplace/wishlist/:id', authenticateToken, async (req, res) 
   }
 });
 
+// === WISHLIST ALIASES (para compatibilidad con frontend) ===
+
+// Alias para obtener wishlist del usuario
+app.get('/api/wishlist', authenticateToken, async (req, res) => {
+  try {
+    const wishlist = await marketplaceService.getWishlist(req.user.userId);
+    res.json(wishlist);
+  } catch (error) {
+    console.error('Error fetching wishlist:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Alias para agregar item a wishlist
+app.post('/api/wishlist', authenticateToken, async (req, res) => {
+  try {
+    const item = await marketplaceService.addToWishlist(req.user.userId, req.body);
+    res.json(item);
+  } catch (error) {
+    console.error('Error adding to wishlist:', error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Alias para eliminar item de wishlist
+app.delete('/api/wishlist/:id', authenticateToken, async (req, res) => {
+  try {
+    const result = await marketplaceService.removeFromWishlist(req.user.userId, req.params.id);
+    res.json(result);
+  } catch (error) {
+    console.error('Error removing from wishlist:', error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
 // === SISTEMA DE REPUTACIÓN ===
 
 // Calificar usuario
