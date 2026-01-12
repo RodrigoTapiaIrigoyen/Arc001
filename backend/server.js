@@ -3417,42 +3417,70 @@ app.get('/api/admin/user-issues', authenticateToken, async (req, res) => {
 
     const { limit = 50, skip = 0 } = req.query;
     const users = db.collection('users');
+    const issues = [];
     
-    // Buscar usuarios con problemas (baneados, múltiples advertencias, etc)
+    // Buscar usuarios baneados
     const bannedUsers = await users
       .find({ is_banned: true })
       .limit(parseInt(limit))
-      .skip(parseInt(skip))
       .toArray();
 
-    const suspiciousUsers = await users
-      .find({ 
-        $or: [
-          { warnings: { $size: { $gte: 3 } } },
-          { last_login: { $lt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) } }
-        ]
+    const mappedBanned = bannedUsers.map(u => ({
+      _id: u._id,
+      username: u.username,
+      email: u.email,
+      banned_at: u.banned_at,
+      ban_reason: u.ban_reason,
+      issue_type: 'banned'
+    }));
+
+    issues.push(...mappedBanned);
+
+    // Buscar usuarios con múltiples advertencias (usando agregación)
+    const warningUsers = await users
+      .aggregate([
+        {
+          $expr: {
+            $gte: [{ $size: { $ifNull: ['$warnings', []] } }, 3]
+          }
+        },
+        { $limit: parseInt(limit) }
+      ])
+      .toArray();
+
+    const mappedWarnings = warningUsers.map(u => ({
+      _id: u._id,
+      username: u.username,
+      email: u.email,
+      warning_count: u.warnings?.length || 0,
+      issue_type: 'multiple_warnings'
+    }));
+
+    issues.push(...mappedWarnings);
+
+    // Buscar usuarios inactivos (sin login en 90 días)
+    const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+    const inactiveUsers = await users
+      .find({
+        last_login: { $lt: ninetyDaysAgo },
+        is_banned: { $ne: true }
       })
       .limit(parseInt(limit))
       .toArray();
 
+    const mappedInactive = inactiveUsers.map(u => ({
+      _id: u._id,
+      username: u.username,
+      email: u.email,
+      last_active: u.last_login,
+      issue_type: 'inactive'
+    }));
+
+    issues.push(...mappedInactive);
+
     res.json({
-      banned_users: bannedUsers.map(u => ({
-        _id: u._id,
-        username: u.username,
-        email: u.email,
-        banned_at: u.banned_at,
-        ban_reason: u.ban_reason,
-        status: 'banned'
-      })),
-      suspicious_users: suspiciousUsers.map(u => ({
-        _id: u._id,
-        username: u.username,
-        email: u.email,
-        warnings_count: u.warnings?.length || 0,
-        last_login: u.last_login,
-        status: u.warnings?.length >= 3 ? 'multiple_warnings' : 'inactive'
-      })),
-      total_issues: bannedUsers.length + suspiciousUsers.length
+      issues: issues.slice(0, parseInt(limit)),
+      total_issues: issues.length
     });
   } catch (error) {
     console.error('Error en admin/user-issues:', error);
