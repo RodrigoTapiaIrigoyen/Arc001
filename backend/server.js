@@ -3436,17 +3436,11 @@ app.get('/api/admin/user-issues', authenticateToken, async (req, res) => {
 
     issues.push(...mappedBanned);
 
-    // Buscar usuarios con múltiples advertencias (usando agregación)
-    const warningUsers = await users
-      .aggregate([
-        {
-          $expr: {
-            $gte: [{ $size: { $ifNull: ['$warnings', []] } }, 3]
-          }
-        },
-        { $limit: parseInt(limit) }
-      ])
-      .toArray();
+    // Buscar usuarios con múltiples advertencias
+    const allUsers = await users.find({}).toArray();
+    const warningUsers = allUsers
+      .filter(u => u.warnings && u.warnings.length >= 3)
+      .slice(0, parseInt(limit));
 
     const mappedWarnings = warningUsers.map(u => ({
       _id: u._id,
