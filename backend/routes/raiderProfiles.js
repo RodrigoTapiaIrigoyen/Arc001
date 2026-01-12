@@ -62,7 +62,7 @@ export default function createRaiderProfileRouter(db) {
   });
 
   // ============ OBTENER PERFIL DEL USUARIO ============
-  router.get('/:userId', authenticateToken, async (req, res) => {
+  router.get('/:userId', async (req, res) => {
     try {
       const { userId } = req.params;
 
