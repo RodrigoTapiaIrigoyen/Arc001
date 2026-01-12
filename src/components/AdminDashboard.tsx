@@ -16,7 +16,10 @@ import {
   Clock,
   TrendingUp,
   MessageSquare,
-  ShoppingCart
+  ShoppingCart,
+  Sword,
+  UserCheck,
+  Settings
 } from 'lucide-react';
 import api from '../lib/api';
 import toast from 'react-hot-toast';
@@ -93,14 +96,51 @@ interface Listing {
   deleted?: boolean;
 }
 
+interface Clan {
+  _id: string;
+  name: string;
+  tag: string;
+  leaderName: string;
+  leaderId: string;
+  members_count: number;
+  level: number;
+  createdAt: string;
+  visibility: string;
+}
+
+interface Group {
+  _id: string;
+  title: string;
+  owner_name: string;
+  ownerId: string;
+  members_count: number;
+  type: string;
+  visibility: string;
+  createdAt: string;
+}
+
+interface UserIssue {
+  _id: string;
+  username: string;
+  email: string;
+  issue_type: string;
+  last_active?: string;
+  banned_at?: string;
+  ban_reason?: string;
+  warning_count?: number;
+}
+
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'content' | 'reports' | 'activity'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'content' | 'reports' | 'activity' | 'clans' | 'groups' | 'issues'>('overview');
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [reports, setReports] = useState<Report[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
   const [listings, setListings] = useState<Listing[]>([]);
+  const [clans, setClans] = useState<Clan[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [userIssues, setUserIssues] = useState<UserIssue[]>([]);
   const [loading, setLoading] = useState(true);
   const [contentType, setContentType] = useState<'posts' | 'listings'>('posts');
   const [searchTerm, setSearchTerm] = useState('');
@@ -109,6 +149,8 @@ export default function AdminDashboard() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showBanModal, setShowBanModal] = useState(false);
   const [showWarnModal, setShowWarnModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ type: 'clan' | 'group'; id: string; name: string } | null>(null);
   const [banReason, setBanReason] = useState('');
   const [banDuration, setBanDuration] = useState('');
   const [warnReason, setWarnReason] = useState('');
@@ -136,6 +178,12 @@ export default function AdminDashboard() {
         await loadReports();
       } else if (activeTab === 'activity') {
         await loadAuditLogs();
+      } else if (activeTab === 'clans') {
+        await loadClans();
+      } else if (activeTab === 'groups') {
+        await loadGroups();
+      } else if (activeTab === 'issues') {
+        await loadUserIssues();
       }
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Error loading data');
@@ -209,6 +257,44 @@ export default function AdminDashboard() {
         const response = await api.get('/marketplace');
         setListings(Array.isArray(response) ? response : []);
       }
+    }
+  };
+
+  const loadClans = async () => {
+    try {
+      const params = new URLSearchParams();
+      if (searchTerm) params.append('search', searchTerm);
+      params.append('limit', '50');
+      
+      const response = await api.get(`/admin/clans?${params.toString()}`);
+      setClans(response.clans || []);
+    } catch (error) {
+      console.warn('Admin clans endpoint not available:', error);
+      setClans([]);
+    }
+  };
+
+  const loadGroups = async () => {
+    try {
+      const params = new URLSearchParams();
+      if (searchTerm) params.append('search', searchTerm);
+      params.append('limit', '50');
+      
+      const response = await api.get(`/admin/groups?${params.toString()}`);
+      setGroups(response.groups || []);
+    } catch (error) {
+      console.warn('Admin groups endpoint not available:', error);
+      setGroups([]);
+    }
+  };
+
+  const loadUserIssues = async () => {
+    try {
+      const response = await api.get('/admin/user-issues');
+      setUserIssues(response.issues || []);
+    } catch (error) {
+      console.warn('Admin user-issues endpoint not available:', error);
+      setUserIssues([]);
     }
   };
 
@@ -286,6 +372,34 @@ export default function AdminDashboard() {
       loadContent();
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Error al eliminar artículo');
+    }
+  };
+
+  const handleDeleteClan = async (clanId: string, clanName: string) => {
+    if (confirm(`¿Estás seguro de que quieres eliminar el clan "${clanName}"? Esta acción no se puede deshacer.`)) {
+      try {
+        await api.delete(`/admin/clans/${clanId}`);
+        toast.success('Clan eliminado exitosamente');
+        setShowDeleteModal(false);
+        setDeleteTarget(null);
+        loadClans();
+      } catch (error: any) {
+        toast.error(error.response?.data?.error || 'Error al eliminar clan');
+      }
+    }
+  };
+
+  const handleDeleteGroup = async (groupId: string, groupName: string) => {
+    if (confirm(`¿Estás seguro de que quieres eliminar el grupo "${groupName}"? Esta acción no se puede deshacer.`)) {
+      try {
+        await api.delete(`/admin/groups/${groupId}`);
+        toast.success('Grupo eliminado exitosamente');
+        setShowDeleteModal(false);
+        setDeleteTarget(null);
+        loadGroups();
+      } catch (error: any) {
+        toast.error(error.response?.data?.error || 'Error al eliminar grupo');
+      }
     }
   };
 
@@ -670,6 +784,220 @@ export default function AdminDashboard() {
     </div>
   );
 
+  const renderClans = () => (
+    <div className="space-y-6">
+      {/* Search */}
+      <div className="bg-[#1a1f2e] border border-yellow-500/20 rounded-lg p-4">
+        <div className="flex gap-2 mb-4">
+          <input
+            type="text"
+            placeholder="Buscar clanes..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="flex-1 bg-[#0f1419] border border-yellow-500/20 rounded-lg px-3 py-2 text-white"
+          />
+          <button
+            onClick={loadClans}
+            className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold px-4 py-2 rounded-lg transition-colors"
+          >
+            Buscar
+          </button>
+        </div>
+      </div>
+
+      {/* Clans Table */}
+      <div className="bg-[#1a1f2e] border border-yellow-500/20 rounded-lg overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-[#0f1419] border-b border-yellow-500/20">
+              <tr>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Nombre</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Tag</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Líder</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Miembros</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Nivel</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Creado</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Acciones</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-yellow-500/10">
+              {clans.map((clan) => (
+                <tr key={clan._id} className="hover:bg-yellow-500/5">
+                  <td className="px-4 py-3 font-medium text-white">{clan.name}</td>
+                  <td className="px-4 py-3 text-sm text-gray-400">[{clan.tag}]</td>
+                  <td className="px-4 py-3 text-sm text-gray-400">{clan.leaderName}</td>
+                  <td className="px-4 py-3 text-sm text-yellow-400">{clan.members_count}</td>
+                  <td className="px-4 py-3 text-sm text-yellow-400">⭐ {clan.level}</td>
+                  <td className="px-4 py-3 text-sm text-gray-400">
+                    {new Date(clan.createdAt).toLocaleDateString()}
+                  </td>
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() => handleDeleteClan(clan._id, clan.name)}
+                      className="p-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-lg transition-colors"
+                      title="Eliminar clan"
+                    >
+                      <Trash2 size={16} className="text-red-400" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {clans.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            No hay clanes para mostrar
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  const renderGroups = () => (
+    <div className="space-y-6">
+      {/* Search */}
+      <div className="bg-[#1a1f2e] border border-yellow-500/20 rounded-lg p-4">
+        <div className="flex gap-2 mb-4">
+          <input
+            type="text"
+            placeholder="Buscar grupos..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="flex-1 bg-[#0f1419] border border-yellow-500/20 rounded-lg px-3 py-2 text-white"
+          />
+          <button
+            onClick={loadGroups}
+            className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold px-4 py-2 rounded-lg transition-colors"
+          >
+            Buscar
+          </button>
+        </div>
+      </div>
+
+      {/* Groups Table */}
+      <div className="bg-[#1a1f2e] border border-yellow-500/20 rounded-lg overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-[#0f1419] border-b border-yellow-500/20">
+              <tr>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Nombre</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Propietario</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Miembros</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Tipo</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Visibilidad</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Creado</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Acciones</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-yellow-500/10">
+              {groups.map((group) => (
+                <tr key={group._id} className="hover:bg-yellow-500/5">
+                  <td className="px-4 py-3 font-medium text-white">{group.title}</td>
+                  <td className="px-4 py-3 text-sm text-gray-400">{group.owner_name}</td>
+                  <td className="px-4 py-3 text-sm text-yellow-400">{group.members_count}</td>
+                  <td className="px-4 py-3 text-sm text-gray-400">{group.type}</td>
+                  <td className="px-4 py-3 text-sm text-gray-400">
+                    <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                      group.visibility === 'public' ? 'bg-green-500/20 text-green-400' : 'bg-blue-500/20 text-blue-400'
+                    }`}>
+                      {group.visibility}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-400">
+                    {new Date(group.createdAt).toLocaleDateString()}
+                  </td>
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() => handleDeleteGroup(group._id, group.title)}
+                      className="p-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-lg transition-colors"
+                      title="Eliminar grupo"
+                    >
+                      <Trash2 size={16} className="text-red-400" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {groups.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            No hay grupos para mostrar
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  const renderUserIssues = () => (
+    <div className="space-y-6">
+      <div className="bg-[#1a1f2e] border border-yellow-500/20 rounded-lg p-4">
+        <h3 className="font-semibold text-white mb-4 flex items-center gap-2">
+          <AlertTriangle className="text-yellow-400" size={20} />
+          Usuarios Problemáticos
+        </h3>
+
+        {userIssues.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            No hay usuarios problemáticos en el sistema
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {userIssues.map((issue) => (
+              <div key={issue._id} className="bg-[#0f1419] border border-yellow-500/10 rounded-lg p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="font-medium text-white">{issue.username}</span>
+                      <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                        issue.issue_type === 'banned' ? 'bg-red-500/20 text-red-400' :
+                        issue.issue_type === 'multiple_warnings' ? 'bg-yellow-500/20 text-yellow-400' :
+                        'bg-gray-500/20 text-gray-400'
+                      }`}>
+                        {issue.issue_type === 'banned' && 'Baneado'}
+                        {issue.issue_type === 'multiple_warnings' && 'Múltiples Advertencias'}
+                        {issue.issue_type === 'inactive' && 'Inactivo'}
+                      </span>
+                    </div>
+                    <div className="text-sm text-gray-400 mb-2">{issue.email}</div>
+                    {issue.issue_type === 'banned' && issue.ban_reason && (
+                      <div className="text-sm text-gray-400">
+                        Razón: {issue.ban_reason}
+                      </div>
+                    )}
+                    {issue.issue_type === 'multiple_warnings' && issue.warning_count && (
+                      <div className="text-sm text-gray-400">
+                        Advertencias: {issue.warning_count}
+                      </div>
+                    )}
+                    {issue.last_active && (
+                      <div className="text-sm text-gray-400 mt-2">
+                        Última actividad: {new Date(issue.last_active).toLocaleDateString()}
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => {
+                      setSelectedUser(issue as any);
+                      setShowBanModal(true);
+                    }}
+                    className="p-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-lg transition-colors whitespace-nowrap"
+                    title="Banear usuario"
+                  >
+                    <Ban size={16} className="text-red-400" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <div className="max-w-7xl mx-auto">
       {/* Header */}
@@ -688,6 +1016,9 @@ export default function AdminDashboard() {
           { id: 'users', label: 'Usuarios', icon: Users },
           { id: 'content', label: 'Contenido', icon: FileText },
           { id: 'reports', label: 'Reportes', icon: AlertTriangle },
+          { id: 'clans', label: 'Clanes', icon: Sword },
+          { id: 'groups', label: 'Grupos', icon: UserCheck },
+          { id: 'issues', label: 'Problemas', icon: AlertTriangle },
           { id: 'activity', label: 'Actividad', icon: Activity }
         ].map((tab) => (
           <button
@@ -715,6 +1046,9 @@ export default function AdminDashboard() {
           {activeTab === 'overview' && renderOverview()}
           {activeTab === 'users' && renderUsers()}
           {activeTab === 'content' && renderContent()}
+          {activeTab === 'clans' && renderClans()}
+          {activeTab === 'groups' && renderGroups()}
+          {activeTab === 'issues' && renderUserIssues()}
           {activeTab === 'activity' && renderActivity()}
         </>
       )}
