@@ -1,5 +1,6 @@
 // Seed Data - Arc Raiders
 // Datos base para desarrollo mientras se encuentra la API correcta
+// Última actualización: Parche 1.11.0 - 13 de Enero 2026
 
 export const weapons = [
   {
@@ -30,6 +31,40 @@ export const weapons = [
     rarity: 'Legendary',
     description: 'Experimental plasma weapon with devastating power. Use with caution.',
     source: 'seed',
+    synced_at: new Date()
+  },
+  {
+    name: 'Kettle',
+    type: 'Marksman Rifle',
+    damage: 85,
+    dps: 425,
+    fire_rate: 450,
+    magazine_size: 1,
+    reload_speed: 2.8,
+    range: 800,
+    accuracy: 95,
+    rarity: 'Rare',
+    description: 'Precision marksman weapon. Fire rate reduced in patch 1.11.0 to prevent macro abuse and create fair PVP dynamics.',
+    patch_version: '1.11.0',
+    patch_notes: 'Reduced fire rate from 600 to 450 - previously only achievable with macros',
+    source: 'ardb',
+    synced_at: new Date()
+  },
+  {
+    name: 'Trigger Grenade',
+    type: 'Grenade',
+    damage: 120,
+    dps: 240,
+    fire_rate: 2,
+    magazine_size: 1,
+    reload_speed: 1.5,
+    range: 400,
+    accuracy: 85,
+    rarity: 'Uncommon',
+    description: 'Detonates on trigger press. Previously dominated PVP - now balanced for both air and sticky bomb playstyles.',
+    patch_version: '1.11.0',
+    patch_notes: 'Increased trigger delay from 0.7s to 1.5s, rebalanced damage falloff closer to explosion center',
+    source: 'ardb',
     synced_at: new Date()
   },
   {
