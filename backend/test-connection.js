@@ -23,8 +23,8 @@ try {
 } catch (error) {
   console.error('❌ Error de conexión:', error.message);
   console.log('\n💡 Verifica:');
-  console.log('1. Network Access: 189.172.221.0 o 0.0.0.0/0 autorizada');
-  console.log('2. Database Access: Usuario "staioirish_db_user" activo');
-  console.log('3. Contraseña correcta: GJeoJLED3lceUzil');
+  console.log('1. Network Access: Asegúrate de que tu IP esté autorizada');
+  console.log('2. Database Access: Verifica que el usuario esté activo');
+  console.log('3. Credenciales: Confirma que la contraseña sea correcta');
   process.exit(1);
 }

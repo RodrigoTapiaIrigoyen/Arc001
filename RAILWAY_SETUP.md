@@ -4,7 +4,7 @@
 
 ✅ Cuenta de GitHub con repo `Arc001`
 ✅ MongoDB URI listo
-✅ JWT_SECRET generado: `7T4xxxfIwJvaRQ+EPeaLXdOoCoYLWJS0nrH588MwNikEekrJDgvB/A3TN3UsVCEiYOck8XG3MlzW5g1YqGuK8Q==`
+✅ JWT_SECRET generado: `[REPLACED - Generate a new secure secret with: openssl rand -base64 64]`
 
 ---
 
@@ -46,10 +46,10 @@
 
 ```bash
 # MongoDB Connection
-MONGODB_URI=mongodb+srv://staioirish_db_user:GJeoJLED3lceUzil@arc001.1tlrpac.mongodb.net/arc_raiders?retryWrites=true&w=majority
+MONGODB_URI=your_mongodb_connection_string_here
 
 # JWT Secret (IMPORTANTE: Usar el generado)
-JWT_SECRET=7T4xxxfIwJvaRQ+EPeaLXdOoCoYLWJS0nrH588MwNikEekrJDgvB/A3TN3UsVCEiYOck8XG3MlzW5g1YqGuK8Q==
+JWT_SECRET=your_secure_jwt_secret_here
 
 # Environment
 NODE_ENV=production

@@ -18,8 +18,8 @@
 ### Base de Datos
 
 - ✅ MongoDB Atlas configurado
-- ✅ Usuario: `staioirish_db_user`
-- ✅ Cluster: `arc001.1tlrpac.mongodb.net`
+- ✅ Credenciales de usuario configuradas
+- ✅ Cluster: Conectado
 - ✅ IP autorizada
 
 ## 📡 Integración MetaForge

@@ -22,7 +22,7 @@
 6. Configura variables:
    ```
    MONGODB_URI=mongodb+srv://...
-   JWT_SECRET=7T4xxxfIwJvaRQ+EPeaLXdOoCoYLWJS0nrH588MwNikEekrJDgvB/A3TN3UsVCEi YOck8XG3MlzW5g1YqGuK8Q==
+   JWT_SECRET=your_secure_jwt_secret_generated_with_openssl
    NODE_ENV=production
    PORT=3001
    CORS_ORIGINS=https://tu-app.vercel.app
@@ -59,7 +59,7 @@ flyctl launch --name arc-raiders-backend
 
 # Configurar secrets
 flyctl secrets set MONGODB_URI="mongodb+srv://..."
-flyctl secrets set JWT_SECRET="7T4xxxfI..."
+flyctl secrets set JWT_SECRET="your_secure_jwt_secret_here"
 flyctl secrets set NODE_ENV="production"
 flyctl secrets set CORS_ORIGINS="https://tu-app.vercel.app"
 
@@ -195,8 +195,8 @@ https://railway.app → Sign up with GitHub
 Click "Variables" → Add:
 
 ```
-MONGODB_URI=mongodb+srv://staioirish_db_user:GJeoJLED3lceUzil@arc001.1tlrpac.mongodb.net/arc_raiders?retryWrites=true&w=majority
-JWT_SECRET=7T4xxxfIwJvaRQ+EPeaLXdOoCoYLWJS0nrH588MwNikEekrJDgvB/A3TN3UsVCEi YOck8XG3MlzW5g1YqGuK8Q==
+MONGODB_URI=your_mongodb_connection_string_here
+JWT_SECRET=your_secure_jwt_secret_here
 NODE_ENV=production
 PORT=3001
 CORS_ORIGINS=https://tu-app.vercel.app
