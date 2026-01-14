@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { db } from '../lib/mongodb';
 import { Weapon, Rarity } from '../types/database';
-import { Filter, SortAsc, Loader2 } from 'lucide-react';
+import { Filter, SortAsc, Loader2, AlertCircle } from 'lucide-react';
 
 export default function WeaponsDatabase() {
   const [weapons, setWeapons] = useState<Weapon[]>([]);
@@ -10,6 +10,7 @@ export default function WeaponsDatabase() {
   const [selectedRarity, setSelectedRarity] = useState<string>('all');
   const [selectedType, setSelectedType] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadData();
@@ -156,26 +157,61 @@ export default function WeaponsDatabase() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {filteredWeapons.map((weapon) => {
-            // Priorizar imagen del wiki, luego otros sources
-            const imageUrl = weapon.image_urls?.wiki || Object.values(weapon.image_urls || {})[0] as string;
+            // Intentar obtener imagen de múltiples fuentes
+            let imageUrl = weapon.image_urls?.wiki;
+            
+            // Si no hay imagen del wiki, intentar con otras fuentes
+            if (!imageUrl && weapon.image_urls) {
+              imageUrl = Object.values(weapon.image_urls).find(
+                url => typeof url === 'string' && url.length > 0
+              ) as string;
+            }
+            
             return (
             <div
               key={weapon.id}
               className="bg-gradient-to-br from-[#1a1f2e] to-[#0f1420] border border-red-500/20 rounded-xl overflow-hidden hover:border-yellow-500/40 transition-all group cursor-pointer flex flex-col"
             >
               {/* Imagen del arma */}
-              {imageUrl && (
-                <div className="relative w-full h-40 bg-black/40 overflow-hidden border-b border-red-500/20">
-                  <img
-                    src={imageUrl}
-                    alt={weapon.name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
-                </div>
-              )}
+              <div className="relative w-full h-48 bg-gradient-to-br from-black/60 to-red-950/40 overflow-hidden border-b border-red-500/20 flex items-center justify-center">
+                {imageUrl ? (
+                  <>
+                    {!loadedImages.has(weapon.id) && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-10">
+                        <div className="w-8 h-8 rounded-full border-2 border-yellow-500/30 border-t-yellow-500 animate-spin"></div>
+                      </div>
+                    )}
+                    <img
+                      key={`${weapon.id}-image`}
+                      src={imageUrl}
+                      alt={weapon.name}
+                      className={`w-full h-full object-contain p-3 group-hover:scale-105 transition-transform duration-300 ${
+                        loadedImages.has(weapon.id) ? 'opacity-100' : 'opacity-0'
+                      }`}
+                      crossOrigin="anonymous"
+                      referrerPolicy="no-referrer"
+                      onLoad={(e) => {
+                        setLoadedImages(prev => new Set([...prev, weapon.id]));
+                      }}
+                      onError={(e) => {
+                        // Si falla, intentar con una URL alternativa
+                        const fallbackUrl = `https://arcraiders.wiki/wiki/File:${weapon.name.replace(/ /g, '_')}-Level1.png`;
+                        if (e.currentTarget.src !== fallbackUrl) {
+                          e.currentTarget.src = fallbackUrl;
+                        } else {
+                          // Si ambas fallan, mostrar icono
+                          setLoadedImages(prev => new Set([...prev, weapon.id]));
+                        }
+                      }}
+                    />
+                  </>
+                ) : (
+                  <div className="text-center text-gray-500">
+                    <AlertCircle className="mx-auto mb-2 opacity-50" size={32} />
+                    <p className="text-xs">No image</p>
+                  </div>
+                )}
+              </div>
 
               {/* Contenido del card */}
               <div className="p-5 flex-1 flex flex-col">

@@ -548,6 +548,32 @@ app.get('/api/items', async (req, res) => {
   }
 });
 
+// Weapon Images - Get image URLs for specific weapons
+app.get('/api/weapons/images/:weaponName', async (req, res) => {
+  try {
+    const { weaponName } = req.params;
+    
+    // Obtener el arma de la base de datos
+    const weapon = await db.collection('items').findOne({
+      name: { $regex: weaponName, $options: 'i' }
+    });
+    
+    if (!weapon) {
+      return res.status(404).json({ error: 'Weapon not found' });
+    }
+    
+    // Retornar solo las URLs de imagen
+    res.json({
+      name: weapon.name,
+      image_urls: weapon.image_urls || {},
+      wiki_url: weapon.wiki_url,
+      image: weapon.image
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Maps - Aggregate items by location (using infobox_full.location)
 app.get('/api/maps', async (req, res) => {
   try {
