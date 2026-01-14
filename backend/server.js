@@ -2342,11 +2342,14 @@ app.get('/api/notifications', authenticateToken, async (req, res) => {
 // Get unread count
 app.get('/api/notifications/unread/count', authenticateToken, async (req, res) => {
   try {
+    if (!notificationService) {
+      return res.json({ count: 0 });
+    }
     const count = await notificationService.getUnreadCount(req.user.userId);
     res.json({ count });
   } catch (error) {
     console.error('Error getting unread count:', error);
-    res.status(500).json({ error: error.message });
+    res.json({ count: 0 }); // Fallback a 0 en lugar de error 500
   }
 });
 
@@ -2700,12 +2703,15 @@ app.post('/api/messages', authenticateToken, async (req, res) => {
 // Obtener conversaciones del usuario
 app.get('/api/messages/conversations', authenticateToken, async (req, res) => {
   try {
+    if (!messageService) {
+      return res.json({ conversations: [] });
+    }
     const userId = req.user.userId;
     const conversations = await messageService.getConversations(userId);
     res.json({ conversations });
   } catch (error) {
     console.error('Error al obtener conversaciones:', error);
-    res.status(500).json({ error: error.message });
+    res.json({ conversations: [] }); // Fallback
   }
 });
 
@@ -2771,12 +2777,15 @@ app.patch('/api/messages/conversation/:otherUserId/read', authenticateToken, asy
 // Obtener contador de mensajes no leídos
 app.get('/api/messages/unread/count', authenticateToken, async (req, res) => {
   try {
+    if (!messageService) {
+      return res.json({ count: 0 });
+    }
     const userId = req.user.userId;
     const count = await messageService.getUnreadCount(userId);
     res.json({ count });
   } catch (error) {
     console.error('Error al contar mensajes no leídos:', error);
-    res.status(500).json({ error: error.message });
+    res.json({ count: 0 }); // Fallback
   }
 });
 

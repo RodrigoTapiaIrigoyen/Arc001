@@ -1,286 +1,157 @@
-import { useState, useEffect } from 'react';
-import { db } from '../lib/mongodb';
-import { Weapon, Rarity } from '../types/database';
-import { Filter, SortAsc, Loader2, AlertCircle } from 'lucide-react';
+import { useState } from 'react';
+import { Search } from 'lucide-react';
+
+// Datos estáticos de armas del wiki oficial
+const WEAPONS_DATA = [
+  // Assault Rifles
+  { id: 1, name: 'Kettle', type: 'Assault Rifle', damage: 26, dps: 280, fireRate: '10', magazine: 42, description: 'Quick and accurate, but has low bullet velocity and takes a long time to reload.' },
+  { id: 2, name: 'Rattler', type: 'Assault Rifle', damage: 33.3, dps: 299.7, fireRate: '9', magazine: 36, description: 'A cheap offensive option, but has to be reloaded 2 bullets at a time.' },
+  { id: 3, name: 'Arpeggio', type: 'Assault Rifle', damage: 18.3, dps: 173.9, fireRate: '9.5', magazine: 54, description: 'Has decent damage output and accuracy.' },
+  { id: 4, name: 'Tempest', type: 'Assault Rifle', damage: 36.7, dps: 367, fireRate: '10', magazine: 30, description: 'Has moderate fire rate and accuracy.' },
+  { id: 5, name: 'Bettina', type: 'Assault Rifle', damage: 32, dps: 448, fireRate: '14', magazine: 36, description: 'Has slow fire rate and high damage output.' },
+
+  // Battle Rifles
+  { id: 6, name: 'Ferro', type: 'Battle Rifle', damage: 40, dps: 264, fireRate: '6.6', magazine: 20, description: 'Packs a punch, but must be reloaded between every shot.' },
+  { id: 7, name: 'Renegade', type: 'Battle Rifle', damage: 35, dps: 735, fireRate: '21', magazine: 30, description: 'Has high damage output, accuracy, and headshot damage.' },
+  { id: 8, name: 'Aphelion', type: 'Battle Rifle', damage: 25, dps: 216, fireRate: '9', magazine: 24, description: 'Fires high velocity energy rounds.' },
+
+  // SMG
+  { id: 9, name: 'Stitcher', type: 'SMG', damage: 7, dps: 317.1, fireRate: '45.3', magazine: 25, description: 'Deals good damage, but has a low fire-rate and can be hard to control.' },
+  { id: 10, name: 'Bobcat', type: 'SMG', damage: 6, dps: 400, fireRate: '66.7', magazine: 24, description: 'Has high fire rate but low accuracy.' },
+
+  // Shotguns
+  { id: 11, name: 'Il Toro', type: 'Shotgun', damage: 67.5, dps: 965.3, fireRate: '14.3', magazine: 20, description: 'Has a large bullet spread, sharp falloff, and high damage output.' },
+  { id: 12, name: 'Vulcano', type: 'Shotgun', damage: 49.5, dps: 1302.9, fireRate: '26.3', magazine: 26, description: 'Has good bullet spread but sharp falloff.' },
+
+  // Pistols
+  { id: 13, name: 'Hairpin', type: 'Pistol', damage: 20, dps: 180, fireRate: '9', magazine: 12, description: 'Has a built-in silencer. Great for stealth, but tricky in combat.' },
+  { id: 14, name: 'Burletta', type: 'Pistol', damage: 10, dps: 280, fireRate: '28', magazine: 20, description: 'Has decent damage output and accuracy. Can be fired as fast as you can pull the trigger.' },
+  { id: 15, name: 'Venator', type: 'Pistol', damage: 18, dps: 660.6, fireRate: '36.7', magazine: 20, description: 'Fires two shots at a time.' },
+
+  // Hand Cannons
+  { id: 16, name: 'Anvil', type: 'Hand Cannon', damage: 40, dps: 652, fireRate: '16.3', magazine: 8, description: 'Has high damage output and headshot damage, but slow handling.' },
+
+  // Light Machine Guns
+  { id: 17, name: 'Torrente', type: 'Light Machine Gun', damage: 8, dps: 466.4, fireRate: '58.3', magazine: 100, description: 'Has a large ammo capacity, but is only accurate while crouched.' },
+
+  // Sniper Rifles
+  { id: 18, name: 'Osprey', type: 'Sniper Rifle', damage: 45, dps: 796.5, fireRate: '17.7', magazine: 10, description: 'Has reliable damage output and accuracy.' },
+  { id: 19, name: 'Jupiter', type: 'Sniper Rifle', damage: 60, dps: 423.5, fireRate: '7.7', magazine: 4, description: 'Fires projectiles at an incredible velocity, capable of damaging multiple targets with one shot.' },
+
+  // Special
+  { id: 20, name: 'Hullcracker', type: 'Launcher', damage: 100, dps: 2030, fireRate: '20.3', magazine: 6, description: 'Devastating launcher weapon.' },
+  { id: 21, name: 'Equalizer', type: 'Special', damage: 8, dps: 266.4, fireRate: '33.3', magazine: 30, description: 'Energy-based special weapon.' },
+  { id: 22, name: 'Trigger Grenade', type: 'Grenade', damage: 120, dps: 240, fireRate: '2', magazine: 1, description: 'Detonates on trigger press. Quick and responsive.' },
+];
+
+const WEAPON_TYPES = ['Assault Rifle', 'Battle Rifle', 'SMG', 'Shotgun', 'Pistol', 'Hand Cannon', 'Light Machine Gun', 'Sniper Rifle', 'Launcher', 'Special', 'Grenade'];
 
 export default function WeaponsDatabase() {
-  const [weapons, setWeapons] = useState<Weapon[]>([]);
-  const [rarities, setRarities] = useState<Rarity[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedRarity, setSelectedRarity] = useState<string>('all');
-  const [selectedType, setSelectedType] = useState<string>('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10000/api';
-      // Cargar items de ArcForge + weapons de ARDB
-      const [itemsData, weaponsData, raritiesData] = await Promise.all([
-        (await fetch(`${API_URL}/items`)).json(),
-        db.collection('weapons').find().toArray(),
-        db.collection('rarities').find().toArray()
-      ]);
-      
-      // Filtrar solo armas de items de ArcForge
-      const weaponItems = itemsData.filter((item: any) => 
-        item.type && ['Weapon', 'Primary Weapon', 'Secondary Weapon', 'Melee'].includes(item.type)
-      );
-
-      // Combinar armas de ArcForge con weapons de ARDB
-      const allWeapons = [
-        ...weaponItems.map((item: any) => ({
-          id: item._id,
-          name: item.name,
-          type: item.type || 'Weapon',
-          description: item.quote || item.infobox_full?.quote,
-          damage: item.damage || item.infobox_full?.damage || 0,
-          dps: item.infobox_full?.dps || 0,
-          fire_rate: item.firerate || item.infobox_full?.firerate || 0,
-          magazine_size: item.magsize || item.infobox_full?.magsize || 0,
-          rarity: item.rarity || 'Common',
-          rarity_id: item.rarity?.toLowerCase(),
-          source: 'arcforge',
-          crafting: item.crafting || [],
-          upgrades: item.upgrades || [],
-          image_urls: item.image_urls || {}
-        })),
-        ...weaponsData as any
-      ];
-      
-      setWeapons(allWeapons);
-      setRarities(raritiesData as any);
-    } catch (error) {
-      console.error('Error loading data:', error);
-    }
-    setLoading(false);
-  };
-
-  const weaponTypes = ['Rifle', 'SMG', 'Shotgun', 'Sniper', 'Pistol', 'Heavy'];
-
-  // Armas que no se deben mostrar a los usuarios
-  const hiddenWeapons = [
-    'Viper SMG',
-    'Guardian LMG',
-    'ARC-9 Assault Rifle',
-    'Scatter Shotgun',
-    'Plasma Devastator',
-    'Precision Sniper'
-  ];
-
-  const filteredWeapons = weapons.filter(weapon => {
-    const isNotHidden = !hiddenWeapons.includes(weapon.name);
-    const matchesSearch = weapon.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesRarity = selectedRarity === 'all' || weapon.rarity_id === selectedRarity;
+  // Filtrar armas
+  const filteredWeapons = WEAPONS_DATA.filter(weapon => {
+    const matchesSearch = weapon.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         weapon.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesType = selectedType === 'all' || weapon.type === selectedType;
-    return isNotHidden && matchesSearch && matchesRarity && matchesType;
+    return matchesSearch && matchesType;
   });
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <Loader2 className="animate-spin text-red-400" size={40} />
-      </div>
-    );
-  }
+  // Agrupar por tipo
+  const groupedByType = WEAPON_TYPES.reduce((acc, type) => {
+    const typeWeapons = filteredWeapons.filter(w => w.type === type);
+    if (typeWeapons.length > 0) {
+      acc[type] = typeWeapons;
+    }
+    return acc;
+  }, {} as Record<string, typeof WEAPONS_DATA>);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight mb-2 bg-gradient-to-r from-red-500 via-yellow-400 to-green-500 bg-clip-text text-transparent">
-            Weapons Arsenal
-          </h2>
-          <p className="text-gray-500 text-sm">Complete tactical weapons database</p>
-        </div>
-        <div className="flex items-center gap-2 text-sm">
-          <span className="text-gray-500">Showing</span>
-          <span className="text-yellow-400 font-bold">{filteredWeapons.length}</span>
-          <span className="text-gray-500">weapons</span>
-        </div>
+    <div className="space-y-8">
+      {/* Header */}
+      <div>
+        <h2 className="text-4xl font-bold mb-2 text-white">Weapons</h2>
+        <p className="text-gray-400">Complete tactical weapons database</p>
       </div>
 
-      <div className="bg-gradient-to-br from-[#1a1f2e] to-[#0f1420] border border-red-500/20 rounded-xl p-4">
-        <div className="flex flex-col lg:flex-row gap-4">
-          <div className="flex-1">
+      {/* Búsqueda y Filtros */}
+      <div className="flex gap-4 flex-col md:flex-row">
+        <div className="flex-1">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={20} />
             <input
               type="text"
               placeholder="Search weapons..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-[#0a0e1a] border border-yellow-500/20 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-yellow-500/50 transition-colors"
+              className="w-full pl-10 pr-4 py-2 bg-[#0a0e1a] border border-yellow-500/30 rounded-lg text-white placeholder-gray-600 focus:outline-none focus:border-yellow-500/60"
             />
           </div>
-
-          <div className="flex gap-2">
-            <div className="relative">
-              <select
-                value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value)}
-                className="appearance-none bg-[#0a0e1a] border border-green-500/20 rounded-lg px-4 py-2.5 pr-10 text-sm focus:outline-none focus:border-green-500/50 transition-colors cursor-pointer"
-              >
-                <option value="all">All Types</option>
-                {weaponTypes.map(type => (
-                  <option key={type} value={type}>{type}</option>
-                ))}
-              </select>
-              <Filter className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={16} />
-            </div>
-
-            <div className="relative">
-              <select
-                value={selectedRarity}
-                onChange={(e) => setSelectedRarity(e.target.value)}
-                className="appearance-none bg-[#0a0e1a] border border-blue-500/20 rounded-lg px-4 py-2.5 pr-10 text-sm focus:outline-none focus:border-blue-500/50 transition-colors cursor-pointer"
-              >
-                <option value="all">All Rarities</option>
-                {rarities.map(rarity => (
-                  <option key={rarity.id} value={rarity.id}>{rarity.name}</option>
-                ))}
-              </select>
-              <SortAsc className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={16} />
-            </div>
-          </div>
         </div>
+        
+        <select
+          value={selectedType}
+          onChange={(e) => setSelectedType(e.target.value)}
+          className="px-4 py-2 bg-[#0a0e1a] border border-green-500/30 rounded-lg text-white focus:outline-none focus:border-green-500/60 cursor-pointer"
+        >
+          <option value="all">All Types</option>
+          {WEAPON_TYPES.map(type => (
+            <option key={type} value={type}>{type}</option>
+          ))}
+        </select>
       </div>
 
-      {filteredWeapons.length === 0 ? (
-        <div className="text-center py-16 bg-gradient-to-br from-[#1a1f2e] to-[#0f1420] border border-blue-500/20 rounded-xl">
-          <p className="text-gray-500 mb-2">No weapons found</p>
-          <p className="text-sm text-gray-600">Connect to external APIs to populate the database</p>
-        </div>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {filteredWeapons.map((weapon) => {
-            // Obtener imagen de múltiples fuentes en orden de prioridad
-            let imageUrl = weapon.wiki_image_url || weapon.image_urls?.wiki;
+      {/* Stats */}
+      <div className="text-sm text-gray-400">
+        Showing <span className="text-yellow-400 font-bold">{filteredWeapons.length}</span> of <span className="text-yellow-400 font-bold">{WEAPONS_DATA.length}</span> weapons
+      </div>
+
+      {/* Weapons por tipo */}
+      <div className="space-y-12">
+        {Object.entries(groupedByType).map(([type, typeWeapons]) => (
+          <div key={type}>
+            <h3 className="text-2xl font-bold mb-6 text-white border-b border-red-500/20 pb-3">
+              {type}
+            </h3>
             
-            // Si no hay imagen del wiki, intentar con otras fuentes
-            if (!imageUrl && weapon.image_urls) {
-              const imageValues = Object.values(weapon.image_urls);
-              imageUrl = imageValues.find(
-                url => typeof url === 'string' && url && url.startsWith('http')
-              ) as string;
-            }
-            
-            return (
-            <div
-              key={weapon.id}
-              className="bg-gradient-to-br from-[#1a1f2e] to-[#0f1420] border border-red-500/20 rounded-xl overflow-hidden hover:border-yellow-500/40 transition-all group cursor-pointer flex flex-col"
-            >
-              {/* Imagen del arma */}
-              <div className="relative w-full h-48 bg-gradient-to-br from-red-950/50 via-black/60 to-black/80 overflow-hidden border-b border-red-500/20 flex items-center justify-center group">
-                {imageUrl ? (
-                  <>
-                    {!loadedImages.has(weapon.id) && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 z-10">
-                        <div className="w-8 h-8 rounded-full border-2 border-yellow-500/30 border-t-yellow-500 animate-spin"></div>
-                      </div>
-                    )}
-                    <img
-                      src={imageUrl}
-                      alt={weapon.name}
-                      className={`w-full h-full object-contain p-3 group-hover:scale-105 transition-transform duration-300 ${
-                        loadedImages.has(weapon.id) ? 'opacity-100' : 'opacity-0'
-                      }`}
-                      crossOrigin="anonymous"
-                      referrerPolicy="no-referrer"
-                      onLoad={(e) => {
-                        setLoadedImages(prev => new Set([...prev, weapon.id]));
-                      }}
-                      onError={(e) => {
-                        setLoadedImages(prev => new Set([...prev, weapon.id]));
-                      }}
-                    />
-                  </>
-                ) : null}
-                
-                {/* Icono del tipo de arma */}
-                <div className="absolute top-2 right-2 bg-black/60 rounded-lg px-2 py-1">
-                  <p className="text-xs font-bold text-yellow-400">{weapon.type}</p>
-                </div>
-              </div>
-
-              {/* Contenido del card */}
-              <div className="p-5 flex-1 flex flex-col">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-bold group-hover:text-yellow-400 transition-colors">{weapon.name}</h3>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-500 uppercase tracking-wider">{weapon.type}</span>
-                      {weapon.rarity && (
-                        <>
-                          <span className="text-gray-700">•</span>
-                          <span
-                            className="text-xs font-medium uppercase tracking-wider"
-                            style={{ color: weapon.rarity.color }}
-                          >
-                            {weapon.rarity.name}
-                          </span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {weapon.description && (
-                  <p className="text-sm text-gray-400 mb-4 line-clamp-2">{weapon.description}</p>
-                )}
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-[#0a0e1a] border border-red-500/10 rounded-lg p-3">
-                    <p className="text-xs text-gray-500 mb-1">Damage</p>
-                    <p className="text-lg font-bold text-red-400">{weapon.damage}</p>
-                  </div>
-                  <div className="bg-[#0a0e1a] border border-yellow-500/10 rounded-lg p-3">
-                    <p className="text-xs text-gray-500 mb-1">DPS</p>
-                    <p className="text-lg font-bold text-yellow-400">{weapon.dps}</p>
-                  </div>
-                </div>
-
-                {(weapon.fire_rate || weapon.magazine_size) && (
-                <div className="mt-3 pt-3 border-t border-green-500/10 flex items-center justify-between text-xs">
-                  {weapon.fire_rate && (
-                    <div>
-                      <span className="text-gray-500">Fire Rate: </span>
-                      <span className="text-gray-300">{weapon.fire_rate}/s</span>
-                    </div>
-                  )}
-                  {weapon.magazine_size && (
-                    <div>
-                      <span className="text-gray-500">Mag: </span>
-                      <span className="text-gray-300">{weapon.magazine_size}</span>
-                    </div>
-                  )}
-                </div>
-              )}
-              </div>
+            {/* Tabla de armas */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-red-500/20">
+                    <th className="text-left py-3 px-4 text-gray-400 font-semibold">Name</th>
+                    <th className="text-center py-3 px-4 text-gray-400 font-semibold">Damage</th>
+                    <th className="text-center py-3 px-4 text-gray-400 font-semibold">DPS</th>
+                    <th className="text-center py-3 px-4 text-gray-400 font-semibold">Fire Rate</th>
+                    <th className="text-center py-3 px-4 text-gray-400 font-semibold">Magazine</th>
+                    <th className="text-left py-3 px-4 text-gray-400 font-semibold">Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {typeWeapons.map((weapon) => (
+                    <tr key={weapon.id} className="border-b border-red-500/10 hover:bg-red-950/20 transition-colors">
+                      <td className="py-3 px-4">
+                        <div className="font-semibold text-white">{weapon.name}</div>
+                      </td>
+                      <td className="py-3 px-4 text-center text-yellow-400 font-semibold">{weapon.damage.toFixed(1)}</td>
+                      <td className="py-3 px-4 text-center text-yellow-400 font-semibold">{weapon.dps.toFixed(1)}</td>
+                      <td className="py-3 px-4 text-center text-gray-300">{weapon.fireRate}</td>
+                      <td className="py-3 px-4 text-center text-gray-300">{weapon.magazine}</td>
+                      <td className="py-3 px-4 text-gray-400 text-xs">{weapon.description}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-            );
-          })}
+          </div>
+        ))}
+      </div>
+
+      {filteredWeapons.length === 0 && (
+        <div className="text-center py-16">
+          <p className="text-gray-500 mb-2">No weapons found</p>
+          <p className="text-sm text-gray-600">Try adjusting your search or filters</p>
         </div>
       )}
-
-      <div className="bg-gradient-to-r from-red-500/10 to-blue-500/10 border border-yellow-500/30 rounded-xl p-6">
-        <div className="flex items-start gap-4">
-          <div className="flex-shrink-0 w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
-            <Filter className="text-yellow-400" size={20} />
-          </div>
-          <div>
-            <h4 className="font-bold mb-2 text-yellow-400">Base de Datos Completa</h4>
-            <p className="text-sm text-gray-400">
-              Explora toda la información de armas disponibles en Arc Raiders. Filtra por tipo, rareza y categoría para encontrar exactamente lo que buscas.
-            </p>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
