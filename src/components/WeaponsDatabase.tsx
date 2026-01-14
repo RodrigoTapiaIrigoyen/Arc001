@@ -62,11 +62,22 @@ export default function WeaponsDatabase() {
 
   const weaponTypes = ['Rifle', 'SMG', 'Shotgun', 'Sniper', 'Pistol', 'Heavy'];
 
+  // Armas que no se deben mostrar a los usuarios
+  const hiddenWeapons = [
+    'Viper SMG',
+    'Guardian LMG',
+    'ARC-9 Assault Rifle',
+    'Scatter Shotgun',
+    'Plasma Devastator',
+    'Precision Sniper'
+  ];
+
   const filteredWeapons = weapons.filter(weapon => {
+    const isNotHidden = !hiddenWeapons.includes(weapon.name);
     const matchesSearch = weapon.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesRarity = selectedRarity === 'all' || weapon.rarity_id === selectedRarity;
     const matchesType = selectedType === 'all' || weapon.type === selectedType;
-    return matchesSearch && matchesRarity && matchesType;
+    return isNotHidden && matchesSearch && matchesRarity && matchesType;
   });
 
   if (loading) {
