@@ -155,49 +155,68 @@ export default function WeaponsDatabase() {
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {filteredWeapons.map((weapon) => (
+          {filteredWeapons.map((weapon) => {
+            // Obtener la primera imagen disponible
+            const imageUrl = weapon.image_urls && Object.values(weapon.image_urls)[0] as string;
+            return (
             <div
               key={weapon.id}
-              className="bg-gradient-to-br from-[#1a1f2e] to-[#0f1420] border border-red-500/20 rounded-xl p-5 hover:border-yellow-500/40 transition-all group cursor-pointer"
+              className="bg-gradient-to-br from-[#1a1f2e] to-[#0f1420] border border-red-500/20 rounded-xl overflow-hidden hover:border-yellow-500/40 transition-all group cursor-pointer flex flex-col"
             >
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-bold group-hover:text-yellow-400 transition-colors">{weapon.name}</h3>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-500 uppercase tracking-wider">{weapon.type}</span>
-                    {weapon.rarity && (
-                      <>
-                        <span className="text-gray-700">•</span>
-                        <span
-                          className="text-xs font-medium uppercase tracking-wider"
-                          style={{ color: weapon.rarity.color }}
-                        >
-                          {weapon.rarity.name}
-                        </span>
-                      </>
-                    )}
-                  </div>
+              {/* Imagen del arma */}
+              {imageUrl && (
+                <div className="relative w-full h-40 bg-black/40 overflow-hidden border-b border-red-500/20">
+                  <img
+                    src={imageUrl}
+                    alt={weapon.name}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
                 </div>
-              </div>
-
-              {weapon.description && (
-                <p className="text-sm text-gray-400 mb-4 line-clamp-2">{weapon.description}</p>
               )}
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-[#0a0e1a] border border-red-500/10 rounded-lg p-3">
-                  <p className="text-xs text-gray-500 mb-1">Damage</p>
-                  <p className="text-lg font-bold text-red-400">{weapon.damage}</p>
+              {/* Contenido del card */}
+              <div className="p-5 flex-1 flex flex-col">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-bold group-hover:text-yellow-400 transition-colors">{weapon.name}</h3>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-500 uppercase tracking-wider">{weapon.type}</span>
+                      {weapon.rarity && (
+                        <>
+                          <span className="text-gray-700">•</span>
+                          <span
+                            className="text-xs font-medium uppercase tracking-wider"
+                            style={{ color: weapon.rarity.color }}
+                          >
+                            {weapon.rarity.name}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div className="bg-[#0a0e1a] border border-yellow-500/10 rounded-lg p-3">
-                  <p className="text-xs text-gray-500 mb-1">DPS</p>
-                  <p className="text-lg font-bold text-yellow-400">{weapon.dps}</p>
-                </div>
-              </div>
 
-              {(weapon.fire_rate || weapon.magazine_size) && (
+                {weapon.description && (
+                  <p className="text-sm text-gray-400 mb-4 line-clamp-2">{weapon.description}</p>
+                )}
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-[#0a0e1a] border border-red-500/10 rounded-lg p-3">
+                    <p className="text-xs text-gray-500 mb-1">Damage</p>
+                    <p className="text-lg font-bold text-red-400">{weapon.damage}</p>
+                  </div>
+                  <div className="bg-[#0a0e1a] border border-yellow-500/10 rounded-lg p-3">
+                    <p className="text-xs text-gray-500 mb-1">DPS</p>
+                    <p className="text-lg font-bold text-yellow-400">{weapon.dps}</p>
+                  </div>
+                </div>
+
+                {(weapon.fire_rate || weapon.magazine_size) && (
                 <div className="mt-3 pt-3 border-t border-green-500/10 flex items-center justify-between text-xs">
                   {weapon.fire_rate && (
                     <div>
@@ -213,8 +232,10 @@ export default function WeaponsDatabase() {
                   )}
                 </div>
               )}
+              </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
