@@ -157,13 +157,14 @@ export default function WeaponsDatabase() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {filteredWeapons.map((weapon) => {
-            // Intentar obtener imagen de múltiples fuentes
-            let imageUrl = weapon.image_urls?.wiki;
+            // Obtener imagen de múltiples fuentes en orden de prioridad
+            let imageUrl = weapon.wiki_image_url || weapon.image_urls?.wiki;
             
             // Si no hay imagen del wiki, intentar con otras fuentes
             if (!imageUrl && weapon.image_urls) {
-              imageUrl = Object.values(weapon.image_urls).find(
-                url => typeof url === 'string' && url.length > 0
+              const imageValues = Object.values(weapon.image_urls);
+              imageUrl = imageValues.find(
+                url => typeof url === 'string' && url && url.startsWith('http')
               ) as string;
             }
             
@@ -173,7 +174,7 @@ export default function WeaponsDatabase() {
               className="bg-gradient-to-br from-[#1a1f2e] to-[#0f1420] border border-red-500/20 rounded-xl overflow-hidden hover:border-yellow-500/40 transition-all group cursor-pointer flex flex-col"
             >
               {/* Imagen del arma */}
-              <div className="relative w-full h-48 bg-gradient-to-br from-black/60 to-red-950/40 overflow-hidden border-b border-red-500/20 flex items-center justify-center">
+              <div className="relative w-full h-48 bg-gradient-to-br from-red-950/50 via-black/60 to-black/80 overflow-hidden border-b border-red-500/20 flex items-center justify-center group">
                 {imageUrl ? (
                   <>
                     {!loadedImages.has(weapon.id) && (
@@ -182,7 +183,6 @@ export default function WeaponsDatabase() {
                       </div>
                     )}
                     <img
-                      key={`${weapon.id}-image`}
                       src={imageUrl}
                       alt={weapon.name}
                       className={`w-full h-full object-contain p-3 group-hover:scale-105 transition-transform duration-300 ${
@@ -194,23 +194,16 @@ export default function WeaponsDatabase() {
                         setLoadedImages(prev => new Set([...prev, weapon.id]));
                       }}
                       onError={(e) => {
-                        // Si falla, intentar con una URL alternativa
-                        const fallbackUrl = `https://arcraiders.wiki/wiki/File:${weapon.name.replace(/ /g, '_')}-Level1.png`;
-                        if (e.currentTarget.src !== fallbackUrl) {
-                          e.currentTarget.src = fallbackUrl;
-                        } else {
-                          // Si ambas fallan, mostrar icono
-                          setLoadedImages(prev => new Set([...prev, weapon.id]));
-                        }
+                        setLoadedImages(prev => new Set([...prev, weapon.id]));
                       }}
                     />
                   </>
-                ) : (
-                  <div className="text-center text-gray-500">
-                    <AlertCircle className="mx-auto mb-2 opacity-50" size={32} />
-                    <p className="text-xs">No image</p>
-                  </div>
-                )}
+                ) : null}
+                
+                {/* Icono del tipo de arma */}
+                <div className="absolute top-2 right-2 bg-black/60 rounded-lg px-2 py-1">
+                  <p className="text-xs font-bold text-yellow-400">{weapon.type}</p>
+                </div>
               </div>
 
               {/* Contenido del card */}

@@ -84,6 +84,9 @@ async function getItemsRelation() {
 function transformItem(item) {
   const infobox = item.infobox || {};
   
+  // Obtener imagen del wiki
+  const wikiImageUrl = weaponImages.getWeaponImageUrl(item.name);
+  
   return {
     // Identificadores
     arcforge_name: item.name,
@@ -99,12 +102,13 @@ function transformItem(item) {
     special_types: infobox.special_types || [],
     quote: infobox.quote || null,
     
-    // Imágenes
+    // Imágenes - Priorizar imagen del wiki, luego otras fuentes
     image: infobox.image || null,
     image_urls: {
-      ...item.image_urls,
-      wiki: weaponImages.getWeaponImageUrl(item.name)
+      ...(item.image_urls || {}),
+      ...(wikiImageUrl && { wiki: wikiImageUrl })
     },
+    wiki_image_url: wikiImageUrl,
     
     // Estadísticas
     weight: infobox.weight || 0,

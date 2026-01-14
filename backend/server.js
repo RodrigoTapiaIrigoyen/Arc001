@@ -194,7 +194,12 @@ let friendsService;
 let groupsService;
 let socketService;
 let useMockData = false;
-const client = new MongoClient(process.env.MONGODB_URI);
+
+// Validar que MONGODB_URI esté configurada
+const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/arc_raiders';
+console.log(`📡 MongoDB URI: ${mongoUri.replace(/\/\/.*:.*@/, '//**:**@')}`); // Ocultar credenciales
+
+const client = new MongoClient(mongoUri);
 
 // Mock data mientras resolvemos la conexión
 const mockDB = {
@@ -209,7 +214,8 @@ const mockDB = {
 async function connectDB() {
   try {
     await client.connect();
-    db = client.db(process.env.DB_NAME);
+    const dbName = process.env.DB_NAME || 'arc_raiders';
+    db = client.db(dbName);
     syncService = new SyncService(db);
     seedService = new SeedService(db);
     enemiesService = new EnemiesService(db);
@@ -692,6 +698,58 @@ app.post('/api/sync/items', async (req, res) => {
     const result = await syncService.syncArcForgeItems();
     res.json(result);
   } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Sincronizar solo imágenes de armas
+app.post('/api/sync/weapon-images', async (req, res) => {
+  try {
+    if (useMockData) {
+      return res.json({ error: 'MongoDB not connected' });
+    }
+    
+    // Importar el servicio de imágenes de armas
+    const weaponImagesModule = await import('./services/weaponImages.js');
+    const weaponImages = weaponImagesModule.default;
+    
+    // Obtener todas las armas de la base de datos
+    const weapons = await db.collection('items')
+      .find({ type: { $in: ['Weapon', 'Primary Weapon', 'Secondary Weapon'] } })
+      .toArray();
+    
+    console.log(`📦 Encontradas ${weapons.length} armas para actualizar imágenes`);
+    
+    let updated = 0;
+    
+    // Actualizar cada arma con su imagen del wiki
+    for (const weapon of weapons) {
+      const imageUrl = weaponImages.getWeaponImageUrl(weapon.name);
+      
+      if (imageUrl) {
+        const result = await db.collection('items').updateOne(
+          { _id: weapon._id },
+          {
+            $set: {
+              'image_urls.wiki': imageUrl,
+              'wiki_image_url': imageUrl
+            }
+          }
+        );
+        if (result.modifiedCount > 0) updated++;
+      }
+    }
+    
+    console.log(`✅ Actualizadas imágenes de ${updated} armas`);
+    
+    res.json({
+      success: true,
+      message: `Weapon images updated for ${updated} weapons`,
+      total: weapons.length,
+      updated
+    });
+  } catch (error) {
+    console.error('❌ Error syncing weapon images:', error);
     res.status(500).json({ error: error.message });
   }
 });
