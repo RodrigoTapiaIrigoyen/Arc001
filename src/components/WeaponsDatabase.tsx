@@ -156,8 +156,8 @@ export default function WeaponsDatabase() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {filteredWeapons.map((weapon) => {
-            // Obtener la primera imagen disponible
-            const imageUrl = weapon.image_urls && Object.values(weapon.image_urls)[0] as string;
+            // Priorizar imagen del wiki, luego otros sources
+            const imageUrl = weapon.image_urls?.wiki || Object.values(weapon.image_urls || {})[0] as string;
             return (
             <div
               key={weapon.id}

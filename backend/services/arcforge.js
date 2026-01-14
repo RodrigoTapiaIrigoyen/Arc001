@@ -1,4 +1,5 @@
 import fetch from 'node-fetch';
+import weaponImages from './weaponImages.js';
 
 const ARCFORGE_BASE_URL = 'https://raw.githubusercontent.com/wangyz1999/arcforge/main/data';
 
@@ -100,7 +101,10 @@ function transformItem(item) {
     
     // Imágenes
     image: infobox.image || null,
-    image_urls: item.image_urls || {},
+    image_urls: {
+      ...item.image_urls,
+      wiki: weaponImages.getWeaponImageUrl(item.name)
+    },
     
     // Estadísticas
     weight: infobox.weight || 0,
