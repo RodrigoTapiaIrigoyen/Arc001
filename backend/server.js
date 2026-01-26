@@ -197,9 +197,23 @@ let useMockData = false;
 
 // Validar que MONGODB_URI esté configurada
 const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/arc_raiders';
-console.log(`📡 MongoDB URI: ${mongoUri.replace(/\/\/.*:.*@/, '//**:**@')}`); // Ocultar credenciales
 
-const client = new MongoClient(mongoUri);
+// Log con más detalles (sin exponer credenciales)
+const uriDisplay = mongoUri.replace(/\/\/.*:.*@/, '//**:**@');
+console.log(`📡 MongoDB URI: ${uriDisplay}`);
+
+// Validar estructura de URI
+if (!mongoUri.includes('@')) {
+  console.error('❌ MONGODB_URI parece inválida (no contiene @). Verifica la configuración.');
+}
+if (!mongoUri.includes('mongodb')) {
+  console.error('❌ MONGODB_URI debe comenzar con mongodb:// o mongodb+srv://');
+}
+
+const client = new MongoClient(mongoUri, {
+  serverSelectionTimeoutMS: 10000, // Timeout después de 10 segundos
+  socketTimeoutMS: 10000
+});
 
 // Mock data mientras resolvemos la conexión
 const mockDB = {
@@ -253,7 +267,24 @@ async function connectDB(retryCount = 0, maxRetries = 3) {
       code: error.code,
       message: error.message
     });
-    console.log('💡 Verifica: 1) MONGODB_URI configurada, 2) Usuario activo, 3) IP autorizada, 4) Contraseña correcta');
+    
+    // Mensajes específicos según el tipo de error
+    if (error.message.includes('authentication failed') || error.code === 8000) {
+      console.error('❌ ERROR DE AUTENTICACIÓN: Usuario, contraseña o base de datos incorrectos');
+      console.log('💡 Acciones:');
+      console.log('   1. Verifica que MONGODB_URI sea correcta');
+      console.log('   2. Usuario debe ser: staioirish_db_user');
+      console.log('   3. Verifica la contraseña en Render (variable MONGODB_URI)');
+      console.log('   4. Asegúrate que la URI incluya /arc_raiders al final');
+    } else if (error.message.includes('getaddrinfo ENOTFOUND')) {
+      console.error('❌ ERROR DE RED: No se puede resolver el host');
+      console.log('💡 Verifica: 1) Conexión a internet, 2) URL del cluster es correcta');
+    } else if (error.message.includes('ECONNREFUSED')) {
+      console.error('❌ ERROR DE CONEXIÓN: Servidor MongoDB no responde');
+      console.log('💡 Verifica: IP autorizada en MongoDB Atlas Network Access');
+    } else {
+      console.log('💡 Verifica: 1) MONGODB_URI configurada, 2) Usuario activo, 3) IP autorizada, 4) Contraseña correcta');
+    }
     
     // Reintentar si hay intentos disponibles
     if (retryCount < maxRetries) {
