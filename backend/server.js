@@ -211,11 +211,17 @@ const mockDB = {
   marketplace_listings: []
 };
 
-async function connectDB() {
+async function connectDB(retryCount = 0, maxRetries = 3) {
   try {
+    console.log(`🔄 Attempting MongoDB connection (attempt ${retryCount + 1}/${maxRetries + 1})...`);
     await client.connect();
+    
     const dbName = process.env.DB_NAME || 'arc_raiders';
     db = client.db(dbName);
+    
+    // Verificar que la conexión funciona
+    await db.admin().ping();
+    
     syncService = new SyncService(db);
     seedService = new SeedService(db);
     enemiesService = new EnemiesService(db);
@@ -237,19 +243,60 @@ async function connectDB() {
     await wishlistService.createIndexes();
     await adminService.createIndexes();
     
-    console.log('✅ Connected to MongoDB Atlas');
+    console.log('✅ Connected to MongoDB Atlas successfully');
     useMockData = false;
+    return true;
   } catch (error) {
-    console.warn('⚠️ MongoDB connection failed, usando datos mock:', error.message);
-    console.log('💡 Verifica: 1) Usuario activo, 2) IP autorizada, 3) Contraseña correcta');
+    console.error('❌ MongoDB connection error:', error.message);
+    console.error('Error details:', {
+      name: error.name,
+      code: error.code,
+      message: error.message
+    });
+    console.log('💡 Verifica: 1) MONGODB_URI configurada, 2) Usuario activo, 3) IP autorizada, 4) Contraseña correcta');
+    
+    // Reintentar si hay intentos disponibles
+    if (retryCount < maxRetries) {
+      console.log(`⏳ Reintentando conexión en 5 segundos...`);
+      await new Promise(resolve => setTimeout(resolve, 5000));
+      return connectDB(retryCount + 1, maxRetries);
+    }
+    
+    // Si todos los reintentos fallan
+    console.error('❌ MongoDB connection failed after all retries. Users will not be able to log in.');
     useMockData = true;
-    // Retornar normalmente para que el .then() se ejecute incluso sin DB
-    return;
+    db = null; // Asegurar que db sea null, no undefined
+    return false;
   }
 }
 
 // Aplicar rate limiting global a todas las rutas API
 app.use('/api/', apiLimiter);
+
+// Health check endpoint (sin verificación de DB)
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    db: db ? 'connected' : 'disconnected',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Middleware para verificar que db esté disponible
+const checkDBConnection = (req, res, next) => {
+  if (!db) {
+    console.error(`❌ Request to ${req.path} but DB is not connected`);
+    return res.status(503).json({ 
+      error: 'Database connection unavailable',
+      message: 'The server is currently unable to connect to the database. Please try again later.',
+      status: 'SERVICE_UNAVAILABLE'
+    });
+  }
+  next();
+};
+
+// Aplicar middleware a todas las rutas de API (excepto health check)
+app.use('/api/', checkDBConnection);
 
 // Routes
 
@@ -2342,14 +2389,11 @@ app.get('/api/notifications', authenticateToken, async (req, res) => {
 // Get unread count
 app.get('/api/notifications/unread/count', authenticateToken, async (req, res) => {
   try {
-    if (!notificationService) {
-      return res.json({ count: 0 });
-    }
     const count = await notificationService.getUnreadCount(req.user.userId);
     res.json({ count });
   } catch (error) {
     console.error('Error getting unread count:', error);
-    res.json({ count: 0 }); // Fallback a 0 en lugar de error 500
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -2703,15 +2747,12 @@ app.post('/api/messages', authenticateToken, async (req, res) => {
 // Obtener conversaciones del usuario
 app.get('/api/messages/conversations', authenticateToken, async (req, res) => {
   try {
-    if (!messageService) {
-      return res.json({ conversations: [] });
-    }
     const userId = req.user.userId;
     const conversations = await messageService.getConversations(userId);
     res.json({ conversations });
   } catch (error) {
     console.error('Error al obtener conversaciones:', error);
-    res.json({ conversations: [] }); // Fallback
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -2777,15 +2818,12 @@ app.patch('/api/messages/conversation/:otherUserId/read', authenticateToken, asy
 // Obtener contador de mensajes no leídos
 app.get('/api/messages/unread/count', authenticateToken, async (req, res) => {
   try {
-    if (!messageService) {
-      return res.json({ count: 0 });
-    }
     const userId = req.user.userId;
     const count = await messageService.getUnreadCount(userId);
     res.json({ count });
   } catch (error) {
     console.error('Error al contar mensajes no leídos:', error);
-    res.json({ count: 0 }); // Fallback
+    res.status(500).json({ error: error.message });
   }
 });
 
